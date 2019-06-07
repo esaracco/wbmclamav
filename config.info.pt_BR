@@ -1,0 +1,16 @@
+clamav_working_path=Caminho de trabalho,7
+line1=Quarentena,11
+clamav_quarantine_soft=Utilizar o seguinte scanner de conteúdo,4,0-Nenhum,1-amavisd new,2-amavis ng,3-Clamav Milter,4-MailScanner,5-QMailScanner
+clamav_quarantine=Caminho para o diretório de quarentena,7
+line2=ClamAV,11
+clamav_bin=Caminho dos binários do ClamAV,7
+clamav_init_script=Caminho para o arquivo de inicialização do daemon,8
+clamav_clamav_log=Caminho do arquivo de log,8
+clamav_clamav_conf=Caminho do arquivo de configuração,8
+clamav_db1=Caminho do banco de dados principal,8
+clamav_db2=Caminho do banco de dados diário,8
+line3=Freshclam,11
+clamav_freshclam_conf=Caminho do arquivo de configuração,8
+clamav_refresh_use_cron=Método para atualização automática do banco de dados de vírus?,1,0-Daemon,1-Cron
+clamav_freshclam_log=Caminho para o arquivo de log,8
+clamav_freshclam_init_script=Caminho para o arquivo de inicialização do daemon,8

@@ -1,0 +1,1356 @@
+2019-06-07 Emmanuel Saracco <emmanuel@esaracco.fr>
+
+	* wbmclamav is now hosted on GitHub.
+
+2019-05-12 Emmanuel Saracco <esaracco@users.labs.libre-entreprise.org>
+
+	* Version: 0.17
+
+	* Other:
+
+	  - Fixed clamav version check.
+
+	  - Updated for new clamav 0.100.3. Old versions of ClamAV are not
+	    supported anymore.
+
+	  - Added the following clamav options:
+		PreludeEnable
+		PreludeAnalyzerName
+		ScanXMLDOCS
+		ScanHWP3
+		MaxIconsPE
+		MaxRecHWP3
+		PCREMatchLimit
+		PCRERecMatchLimit
+		PCREMaxFileSize
+		BlockMax
+		OnAccessMountPath
+		OnAccessExcludeRootUID
+		OnAccessDisableDDD
+		OnAccessPrevention
+		OnAccessExtraScanning
+	  - Removed the following clamav options:
+		AllowSupplementaryGroups
+		StatsEnabled
+		StatsPEDisabled
+		StatsHostID
+		StatsTimeout
+	  - Removed the following freshclam option:
+		AllowSupplementaryGroups
+		SubmitDetectionStats
+		DetectionStatsCountry
+		DetectionStatsHostID
+
+	  - Added the following clamd remote actions:
+		SHUTDOWN
+		COMMANDS
+		STATS
+		IDSESSION
+		INSTREAM
+		DETSTATSCLEAR
+		DETSTATS
+		ALLMATCHSCAN
+	  - Removed the following clamd remote actions:
+		QUIT
+		SESSION
+
+2015-07-15 Emmanuel Saracco <esaracco@users.labs.libre-entreprise.org>
+
+	* Version: 0.16
+
+	* System:
+
+	  - Added systemd support.
+
+	* Other:
+
+	  - Updated for new clamav 0.98.7. Old versions of ClamAV are not
+	    supported anymore.
+
+	  - Added the following clamav options:
+		ForceToDisk
+		DisableCache
+		DisableCertCheck
+		ScanSWF
+		PartitionIntersection
+		MaxEmbeddedPE
+		MaxHTMLNormalize
+		MaxHTMLNoTags
+		MaxScriptNormalize
+		MaxZipTypeRcg
+		MaxPartitions
+		ScanOnAccess
+		OnAccessMaxFileSize
+		OnAccessIncludePath
+		OnAccessExcludePath
+		OnAccessExcludeUID
+		StatsEnabled
+		StatsPEDisabled
+		StatsHostID
+		StatsTimeout
+	  - Removed the following clamav options:
+		ClamukoScanOnAccess
+		ClamukoScannerCount
+		ClamukoMaxFileSize
+		ClamukoScanOnOpen
+		ClamukoScanOnClose
+		ClamukoScanOnExec
+		ClamukoIncludePath
+		ClamukoExcludePath
+		ClamukoExcludeUID
+	  - Added the following freshclam option:
+		LogRotate
+		PrivateMirror
+
+2012-10-30 Emmanuel Saracco <esaracco@users.labs.libre-entreprise.org>
+
+	* Version: 0.15
+
+	* Database update:
+
+	  - Fixed bug with recent ClamAV.
+
+	* Quarantine:
+
+	  - Fixed bug with select/unselect all.
+
+	* Directories scan:
+
+	  - Fixed clamscan report parsing.
+	  - Fixed double-display.
+
+	* Viruses search database:
+
+	  - Removed viruspool (dead link), added F-Secure.
+
+	* Other:
+
+	  - Updated for new clamav 0.97.6. Older versions of ClamAV are not
+	    supported anymore.
+	  - Added the following clamav options:
+		OLE2BlockMacros
+		ClamukoExcludeUID
+	  - Added the following freshclam option:
+		DatabaseCustomURL
+		ExtraDatabase
+	  - Fixed a bug with environment variable PATH.
+	  - Renamed "virii" to "viruses".
+	  - Updated deprecated URLs.
+
+2010-10-02 Emmanuel Saracco <esaracco@users.labs.libre-entreprise.org>
+
+	* Version: 0.14
+
+2010-09-30 Emmanuel Saracco <esaracco@users.labs.libre-entreprise.org>
+
+	* Configuration:
+	
+	  - Use clamdscan if no clamscan were found.
+
+	* Other:
+
+	  - Updated for new clamav 0.96.3. Old versions of ClamAV are not
+	    supported anymore.
+	  - Added the following clamav options:
+		ExtendedDetectionInfo
+		ClamukoScannerCount
+	  - Added the following freshclam option:
+		TestDatabases
+
+2010-07-17 Emmanuel Saracco <esaracco@users.labs.libre-entreprise.org>
+
+	* Version: 0.13.1
+
+2010-07-01 Emmanuel Saracco <esaracco@users.labs.libre-entreprise.org>
+
+	* Other:
+
+	  - Added the following missed clamav option:
+		BytecodeTimeout
+
+2010-06-20 Emmanuel Saracco <esaracco@users.labs.libre-entreprise.org>
+
+	* Version: 0.13
+
+2010-06-17 Emmanuel Saracco <esaracco@users.labs.libre-entreprise.org>
+
+	* Other:
+
+	  - Updated for new clamav 0.96.1. Old versions of ClamAV are not
+	    supported anymore.
+	  - Added the following clamav options:
+		OfficialDatabaseOnly
+		LocalSocketGroup
+		LocalSocketMode
+		CrossFilesystems
+		Bytecode
+		BytecodeSecurity
+	  - Added the following freshclam option:
+		DetectionStatsHostID
+		Bytecode
+	  - Removed the following clamav options:
+		MailFollowURLs
+
+2010-02-13 Emmanuel Saracco <esaracco@users.labs.libre-entreprise.org>
+
+	* version : 0.12.1
+
+2010-02-10 Emmanuel Saracco <esaracco@users.labs.libre-entreprise.org>
+
+	* Quarantine section:
+
+	  - Fixed a bug in quarantine purge script that was resulting in total
+	    quarantine deletion instead of deleting only files >= to a given
+	    number of days.
+	  - Big simplification of quarantine purge script.
+
+2009-12-17 Emmanuel Saracco <esaracco@users.labs.libre-entreprise.org>
+
+	* Quarantine section:
+
+	  - Fixed a problem on resending email when port is specified.
+	
+
+2009-05-15 Emmanuel Saracco <esaracco@users.labs.libre-entreprise.org>
+
+	* Version: 0.12
+
+2009-05-14 Emmanuel Saracco <esaracco@users.labs.libre-entreprise.org>
+
+	* Directories check section:
+
+	  - Fixed a problem with spaces in filename.
+
+2009-05-12 Emmanuel Saracco <esaracco@users.labs.libre-entreprise.org>
+
+	* Other:
+
+	  - Updated for new clamav 0.95.1. Old versions of ClamAV are not
+	    supported anymore.
+	  - Added the following clamav options:
+		CommandReadTimeout
+		SendBufTimeout
+		MaxQueue
+	  - Added the following freshclam option:
+		ReceiveTimeout
+		SubmitDetectionStats
+		DetectionStatsCountry
+		SafeBrowsing
+	  - Removed the following clamav options:
+		PhishingRestrictedScan
+		ArchiveLimitMemoryUsage
+
+2009-01-25 Emmanuel Saracco <esaracco@users.labs.libre-entreprise.org>
+
+	* Quarantine section:
+
+	  - Fixed a bug in resend mail function (thanks to Dirk Jakobsmeier).
+
+2008-11-27 Emmanuel Saracco <esaracco@users.labs.libre-entreprise.org>
+
+	* Version: 0.11
+
+2008-11-22 Emmanuel Saracco <esaracco@users.labs.libre-entreprise.org>
+
+	* Quarantine section:
+
+	  - We now support mbox quarantine format for amavisd-new.
+
+	* Dependencies:
+
+	  - Added dependencie on the Mail::Mbox::MessageParser perl module
+	    for amavisd-new content scanner.
+
+2008-10-25 Emmanuel Saracco <esaracco@users.labs.libre-entreprise.org>
+
+	* Version: 0.10
+
+	* Quarantine section:
+
+	  - Fixed a problem with some qmailscanner quarantines. Should work
+	    fine with any of them now.
+
+2008-10-17 Emmanuel Saracco <esaracco@users.labs.libre-entreprise.org>
+
+	* Version: 0.10rc3
+
+	* Quarantine section:
+
+	  - Fixed a important bug (resulting in /etc/init.d/clamav-freshclam
+	    emptying).
+
+	* Other:
+
+	  - Fixed a important bug (resulting in /etc/crontab removal on 
+	    some systems) in module uninstallation.
+
+2008-10-14 Emmanuel Saracco <esaracco@users.labs.libre-entreprise.org>
+
+	* Version: 0.10rc2
+
+	* Quarantine section:
+
+	  - Some GD style works for evolution graph.
+
+2008-10-13 Emmanuel Saracco <esaracco@users.labs.libre-entreprise.org>
+
+	* Quarantine section:
+
+	  - Page load enhancement by caching statistics data. Also added a
+	    button to force statistics processing.
+	  - Optimized pagination processing time for quarantine results.
+	  - Added evolution graph support for mailscanner and qmailscanner.
+	  - Fixed a bug in mailscanner statistics.
+
+2008-10-12 Emmanuel Saracco <esaracco@users.labs.libre-entreprise.org>
+
+	* Quarantine section:
+
+	  - Added quarantine evolution graph for amavisd-new.
+
+	* Dependencies:
+
+	  - Added dependencie on the following perl modules:
+		GD
+		GD::Graph::lines
+
+2008-10-12 Emmanuel Saracco <esaracco@users.labs.libre-entreprise.org>
+
+	* Version: 0.10rc1
+
+2008-10-11 Emmanuel Saracco <esaracco@users.labs.libre-entreprise.org>
+
+	* Dependencies:
+
+	  - Smarter Perl modules dependencies management.
+
+	* Global settings section:
+	
+	  - Fixed a bug that was preventing boolean variable to be added.
+
+	* Other:
+
+	  - Removed unused function.
+	  - Updated for new clamav 0.94. Old versions of ClamAV are not
+	    supported anymore.
+	  - Added the following clamav options:
+		ExcludePath
+		ExcludePUA
+		IncludePUA
+		ScanPartialMessages
+		HeuristicScanPrecedence
+		StructuredDataDetection
+		StructuredMinCreditCardCount
+		StructuredMinSSNCount
+		StructuredSSNFormatNormal
+		StructuredSSNFormatStripped
+	  - Added the following freshclam option:
+		CompressLocalDatabase
+	  - Removed the following clamd remote action:
+		RAWSCAN
+	  - Added the following clamd remote actions:
+		FILDES
+		QUIT
+	  - Now multiple variables are handled correctly (ExcludePath,
+	    ExcludePUA and so on).
+
+2008-10-07 Emmanuel Saracco <esaracco@users.labs.libre-entreprise.org>
+
+	* Version: 0.9.2
+
+2008-09-13 Emmanuel Saracco <esaracco@users.labs.libre-entreprise.org>
+
+	* Quarantine section:
+
+	  - Fixed a bug on resend mail function (thanks to Bram Schoenmakers).
+
+2008-07-11 Emmanuel Saracco <esaracco@users.labs.libre-entreprise.org>
+
+	* Configuration:
+	  
+	  - Updated config-* files.
+	  - Added "config-ubuntu-file".
+
+	* Other:
+
+	  - Now should handle both *.cld and *.cvd database files.
+
+2008-06-15 Emmanuel Saracco <esaracco@users.labs.libre-entreprise.org>
+
+	* Version: 0.9.1
+
+2008-06-10 Emmanuel Saracco <esaracco@users.labs.libre-entreprise.org>
+
+	* Quarantine section:
+
+	  - Fixed a deletion problem with some particular filenames.
+
+2008-05-13 Emmanuel Saracco <esaracco@users.labs.libre-entreprise.org>
+
+	* Configuration:
+
+	  - Added the following option in config.info:
+	  	clamav_spam_user
+
+	* Dependencies:
+
+	  - Added dependencie on "Mail::SpamAssassin" perl module.
+
+	* Quarantine section:
+
+	  - Now use SpamAssassin API instead of command line tool for
+	    spam management.
+
+	* Other:
+
+	  - Updated for new clamav 0.93. Old versions of ClamAV are not
+	    supported anymore.
+	  - Added the following clamav options:
+	  	MaxScanSize
+		MaxFileSize
+		MaxRecursion
+		MaxFiles
+	  - Removed the following clamav options:
+	  	MailMaxRecursion
+		ArchiveMaxFileSize
+		ArchiveMaxRecursion
+		ArchiveMaxFiles
+		ArchiveMaxCompressionRatio
+		ArchiveBlockMax
+
+2008-02-18 Emmanuel Saracco <esaracco@users.labs.libre-entreprise.org>
+
+	* Configuration:
+
+	  - Fixed a include issue (thanks to Kosta Djordjevic).
+
+2008-01-08 Emmanuel Saracco <esaracco@users.labs.libre-entreprise.org>
+
+	* Security:
+
+	  - Fixed a include issue in ACL management file (thanks to 
+	    Lorenzo Lolli).
+
+2007-12-10 Emmanuel Saracco <esaracco@users.labs.libre-entreprise.org>
+
+	* Version: 0.9.0
+
+2007-10-26 Emmanuel Saracco <esaracco@users.labs.libre-entreprise.org>
+
+	* Version: 0.9rc1
+
+	* WARNING:
+
+	  - Backup your data.
+	  - Please do the following actions after installing this new 
+	    release candidate:
+
+	  	. Review module configuration and save it.
+		. Review "Global settings" section and click the "Apply
+		  button".
+
+	* Configuration:
+
+	  - Fixed some problems with restore process.
+
+	* Other:
+
+	  - Fixed a problem with the following freshclam option:
+	  	NotifyClamd
+	  - Code cleaning and comments.
+
+2007-10-24 Emmanuel Saracco <esaracco@users.labs.libre-entreprise.org>
+
+	* Configuration:
+
+	  - Added the following options in config.info:
+	  	clamav_sys_user
+		clamav_sys_group
+	  - Fixed issues in clamav/freshclam configuration files management.
+
+	* Other:
+
+	  - Updated for new clamav 0.91.2. Old versions of ClamAV are not
+	    supported anymore.
+	  - Fixed a typo in freshclam options.
+	  - Added the following clamav option: 
+		DetectPUA
+	  - Added the following clamd remote commands: 
+		MULTISCAN
+		STREAM
+		SESSION
+		END
+	  - Some security stuff and code cleaning.
+
+2007-10-22 Emmanuel Saracco <esaracco@users.labs.libre-entreprise.org>
+
+	* Quarantine:
+
+	  - It should also work now with amavisd-new quantines splitted into 
+	    mutiple subdirectories (task #1563).
+
+2007-10-21 Emmanuel Saracco <esaracco@users.labs.libre-entreprise.org>
+
+	* Configuration:
+
+	  - Fixed a problem with clamav init script detection on some
+	    condition.
+
+2007-04-08 Emmanuel Saracco <esaracco@users.labs.libre-entreprise.org>
+
+	* Quarantine section:
+
+	  - Now take in account the Cc field of quarantined E-Mails when
+	    resending them (thanks to Aritza Sobrinos).
+
+2007-03-03 Emmanuel Saracco <esaracco@users.labs.libre-entreprise.org>
+
+	* Version: 0.8.0
+
+	* Global settings section:
+	  
+	  - Now use the "clamconf" utility when available to check
+	    clamav/freshclam configuration before restarting clamav.
+
+	* Other:
+
+	  - Updated for new clamav 0.90.1. Old versions of ClamAV are not
+	    supported anymore.
+	  - Added the following clamav options:
+	  	AlgorithmicDetection
+		ScanELF
+		ScanPDF
+		MailMaxRecursion
+		PhishingSignatures
+		PhishingScanURLs
+		PhishingRestrictedScan
+		PhishingAlwaysBlockSSLMismatch
+		PhishingAlwaysBlockCloak
+		NodalCoreAcceleration
+	  - Removed the following clamav options:
+	  	DisableDefaultScanOptions
+		ScanRAR
+		ClamukoScanArchive
+	  - Added the following freshclam options:
+	  	ScriptedUpdates
+		HTTPUserAgent
+		OnUpdateExecute
+		ConnectTimeout
+		ReceiveTimeout
+		LogVerbose
+		LogFileMaxSize
+		Foreground
+	  - Updated some outdated links.
+
+2006-11-20 Emmanuel Saracco <esaracco@users.labs.libre-entreprise.org>
+
+	* Version: 0.7.4
+
+2006-11-13 Emmanuel Saracco <esaracco@users.labs.libre-entreprise.org>
+
+	* Configuration:
+
+	  - Fixed a problem with backup/restore process.
+	  - Fixed a problem with clamav init script detection on Fedora.
+
+2006-11-10 Emmanuel Saracco <esaracco@users.labs.libre-entreprise.org>
+
+	* Version: 0.7.3
+
+2006-11-09 Emmanuel Saracco <esaracco@users.labs.libre-entreprise.org>
+
+	* Quarantine section:
+
+	  - This time *really* Fixed the problem when resending E-Mails with 
+	    multiple recipients (thanks to Aritza Sobrinos) :-)
+
+2006-10-31 Emmanuel Saracco <esaracco@users.labs.libre-entreprise.org>
+
+	* Quarantine section:
+
+	  - Fixed a problem when resending E-Mails with multiple
+	    recipients (thanks to Aritza Sobrinos).
+
+2006-09-24 Emmanuel Saracco <esaracco@users.labs.libre-entreprise.org>
+
+	* Version: 0.7.2
+
+2006-09-22 Emmanuel Saracco <esaracco@users.labs.libre-entreprise.org>
+
+	* Quarantine section:
+
+	  - Fixed a bug with empty sender E-Mail headers (thanks to Tom 
+	    Sasbrink).
+
+	* Other:
+
+	  - Fixed a permission problem on a executable script.
+	  - Code cleaning.
+
+2006-09-16 Emmanuel Saracco <esaracco@users.labs.libre-entreprise.org>
+
+	* Remote control section:
+
+	  - Fixed a problem with commands arguments detection.
+
+	* Quarantine section:
+
+	  - Added some basic SpamAssassin learning support using "sa-learn" if 
+	    available (task #969).
+	  - Updated search results pagination mode to be more suitable for
+	    large quarantines.
+
+	* Other:
+
+	  - Added a very basic script to simulate the gunzip command but
+	    without returning error if files are not gziped.
+
+2006-09-13 Emmanuel Saracco <esaracco@users.labs.libre-entreprise.org>
+
+	* Version: 0.7.1
+
+2006-09-12 Emmanuel Saracco <esaracco@users.labs.libre-entreprise.org>
+
+	* Other:
+	  
+	  - Fixed problems with module uninstallation (thanks to Jason Singh).
+
+2006-07-14 Emmanuel Saracco <esaracco@users.labs.libre-entreprise.org>
+
+	* Other:
+
+	  - Fixed a bad command call to "chmod" instead of "chown".
+
+2006-07-02 Emmanuel Saracco <esaracco@users.labs.libre-entreprise.org>
+
+	* Quarantine section:
+
+	  - Added "banned" and "bad header" support for amavisd-new
+	    quarantine should be ok now (tasks #394 and #603).
+	  - Added "CVS Export" of search results.
+
+2006-06-28 Emmanuel Saracco <esaracco@users.labs.libre-entreprise.org>
+
+	* Version: 0.7.0
+
+2006-06-27 Emmanuel Saracco <esaracco@users.labs.libre-entreprise.org>
+
+	* Quarantine section:
+	  - It is now possible to choose to delete/not delete E-Mails after
+	    resending them.
+
+2006-06-24 Emmanuel Saracco <esaracco@users.labs.libre-entreprise.org>
+
+	* Directories check section:
+	  - Some inputs checks and cleaning.
+
+2006-06-24 Emmanuel Saracco <esaracco@users.labs.libre-entreprise.org>
+
+	* Version 0.7rc2
+
+	* Dependencies:
+	  - Removed "Net::Ping" dependency.
+	  - Added "IO::Socket" dependency.
+
+2006-06-23 Emmanuel Saracco <esaracco@users.labs.libre-entreprise.org>
+
+	* Viruses database search section:
+	  - Updated link to viruspool.
+
+2006-06-22 Emmanuel Saracco <esaracco@users.labs.libre-entreprise.org>
+
+	* Quarantine section:
+	  - Fixed a problem with SMTP host:port.
+
+2006-06-22 Emmanuel Saracco <esaracco@users.labs.libre-entreprise.org>
+
+	* Version 0.7rc1
+
+2006-06-21 Emmanuel Saracco <esaracco@users.labs.libre-entreprise.org>
+
+	* Dependencies:
+	  - Added dependency on 'Net::Ping'.
+
+	* Quarantine section:
+	  - Code cleaning and debugging for mail resend/delete part.
+
+	* Other:
+	  - Much better error handling on some command execution.
+	  - Updated uninstall script.
+
+2006-06-18 Emmanuel Saracco <esaracco@users.labs.libre-entreprise.org>
+
+	* Other:
+	  - Fixed a problem's assumption with module name (thanks to Tom 
+	    Sasbrink).
+
+2006-05-25 Emmanuel Saracco <esaracco@users.labs.libre-entreprise.org>
+
+	* Quarantine section: 
+	  - Task #850 (Quarantine support for Qmail-Scanner) should be ok 
+	    now.
+
+	* Other:
+	  - Added a "LeaveTemporaryFiles" clamd option.
+
+2006-03-23 Emmanuel Saracco <esaracco@users.labs.libre-entreprise.org>
+
+	* Quarantine section:
+	  - Some debugging to avoid piping E-Mail in MTA when calling
+	    amavis-inject with '-S' option.
+
+	* Dependencies:
+	  - Added dependencies on 'Getopt::Long', 'IO::File' and
+	    'Net::SMTP' for amavis-inject.
+
+2006-03-05 Emmanuel Saracco <esaracco@users.labs.libre-entreprise.org>
+
+	* Configuration:
+	  - wbmclamav now backup all the system files that it will
+	    work with. User can restore them at any moment. It is very
+	    experimental, so please backup your system before executing
+	    this new version.
+	
+	* Other:
+	  - Fixed a lot of bugs with BSD systems.
+	
+
+2006-01-18 Emmanuel Saracco <esaracco@users.labs.libre-entreprise.org>
+
+	* Configuration:
+	  - Removed a unused variable.
+
+	* Quarantine section:
+	  - Now user can indicate sender, recipient an SMTP to use when
+	    resending E-mails from quarantine (task #397).
+	
+	* Other:
+	  - Fixed a problem with amavis-ng detection.
+
+2006-01-14 Emmanuel Saracco <esaracco@users.labs.libre-entreprise.org>
+
+	* Configuration:
+	  - Added new update method "Manual update".
+
+	* Other:
+	  - We now rely exclusively on Webmin environment PATH variable 
+	    to find binaries. please, review your Webmin settings.
+	  - Some debug.
+
+2005-11-23 Emmanuel Saracco <esaracco@users.labs.libre-entreprise.org>
+
+	* Version: 0.6.2
+
+	* Configuration:
+	  - Added Mandriva compatibility (thanks to Ralph Lerale).
+
+	* Quarantine section:
+	  - Fixed Bug #602 (Quarantine filename).
+
+	* Other:
+	  - Updated for clamav 0.87.1.
+	  - Added the following options: PidFile, Example, 
+	    TemporaryDirectory, DatabaseDirectory, IdleTimeout, 
+	    ClamukoScanOnAccess.
+	  - Removed the following options: DataDirectory, 
+	    ClamukoScanOnLine.
+
+2005-08-22 Emmanuel Saracco <esaracco@users.labs.libre-entreprise.org>
+
+	* Version: 0.6.1
+
+2005-08-21 Emmanuel Saracco <esaracco@users.labs.libre-entreprise.org>
+
+	* Clamav-milter:
+	  - Fixed a problem with "Activate/Deactivate" button for
+	    clamav-milter deamon (thanks to Robert Betts).
+
+2005-05-14 Emmanuel Saracco <esaracco@users.labs.libre-entreprise.org>
+
+	* Other:
+	  - Task #446 (add label tags around text for checkboxes) is ok
+	    now.
+
+2005-04-30 Emmanuel Saracco <esaracco@users.labs.libre-entreprise.org>
+
+	* Version: 0.6.0
+
+	* Other: 
+	  - Updated for new clamav 0.84. Old versions of ClamAV are not
+	    supported anymore.
+
+2005-04-28 Emmanuel Saracco <esaracco@users.labs.libre-entreprise.org>
+
+	* Other: 
+	  - Updated for clamav 0.84rc2.
+	    Added "LocalIPAddress".
+
+2005-04-26 Emmanuel Saracco <esaracco@users.labs.libre-entreprise.org>
+
+	* Quarantine section:
+	  - Bug #415 (Amavisd new is not found on Mandrake) should be
+	    fixed now.
+
+2005-03-06 Emmanuel Saracco <esaracco@users.labs.libre-entreprise.org>
+
+	* Quarantine section:
+	  - Fixed a problem with directories removal on quarantine
+	    purge (thanks to Ed Kasky).
+
+2005-02-25 Emmanuel Saracco <esaracco@users.labs.libre-entreprise.org>
+
+	* Version: 0.6rc2
+
+2005-02-19 Emmanuel Saracco <esaracco@users.labs.libre-entreprise.org>
+
+	* Quarantine section:
+	  - Fixed a problem with maxdays for quarantine purge (thanks
+	    to Gary Buckmaster).
+
+2005-02-01 Emmanuel Saracco <esaracco@users.labs.libre-entreprise.org>
+
+	* Version: 0.6rc1
+
+2005-01-30 Emmanuel Saracco <esaracco@users.labs.libre-entreprise.org>
+
+	* Viruses database search section:
+	  - Removed Trend-Micro link and added Viruspool.
+
+	* Quarantine section:
+	  - Quarantine purge have been rewrited. Please test it.
+
+2005-01-29 Emmanuel Saracco <esaracco@users.labs.libre-entreprise.org>
+
+	* Directories check section:
+	  - Added possibility to use the new '--move' clamscan option.
+
+	* Dependencies:
+	  - Added dependencie on "File::Find".
+
+	* Other: 
+	  - Updated for new clamav 0.81. Old versions of ClamAV are not
+	    supported anymore. Added "ExitOnOOM", "StreamMinPort",
+	    "StreamMaxPort" and "AllowSupplementaryGroups".
+	  - Updated Copyright years.
+
+2005-01-23 Emmanuel Saracco <esaracco@users.labs.libre-entreprise.org>
+
+	* Quarantine section:
+	  - Reverted a pseudo-fix on quarantine purge problem. Removing
+	    the '*' is not a good idea because quarantine repository is
+	    also removed :-( So I add it again until someone send me a
+	    patch that both do not generate PERL errors and do not
+	    remove quarantine repository.
+	  - Fixed a regression in quarantine size display.
+
+2005-01-16 Emmanuel Saracco <esaracco@users.labs.libre-entreprise.org>
+
+	* Quarantine section:
+	  - Task #381 (Quarantined spam does not show on quarantine list)
+	    should be ok now.
+	  - Task #396 (Display informations on Viruses and spams count)
+	    should be ok now for MailScanner and amavisd-new.
+	  - Fixed a problem with quarantine purge. Thanks to
+	    Eric Gerbier.
+
+2004-12-29 Emmanuel Saracco <esaracco@users.labs.libre-entreprise.org>
+
+	* Version: 0.5.3
+
+2004-12-28 Emmanuel Saracco <esaracco@users.labs.libre-entreprise.org>
+
+	* Quarantine section:
+	  - Fixed bug #388 ('Older than' day limit for quarantine
+	    purging not retained).
+	  - Fixed bug #387 (Quarantine sort order incorrect).
+
+2004-12-21 Emmanuel Saracco <esaracco@users.labs.libre-entreprise.org>
+
+	* Version: 0.5.3rc3
+
+	* Configuration:
+	  - Fixed a problem with ClamAV binaries detection.
+	  - Added 1 more optionnal configuration variable.
+
+2004-12-07 Emmanuel Saracco <esaracco@users.labs.libre-entreprise.org>
+
+	* Quarantine section:
+	  - Fixed a problem with quarantine purge. Thanks to Gary
+	    Buckmaster.
+	  - Fixed a problem with E-Mails and Spams resending. Thanks
+	    again to Gary Buckmaster.
+
+2004-12-01 Emmanuel Saracco <esaracco@users.labs.libre-entreprise.org>
+
+	* Version: 0.5.3rc2
+
+	* Update section:
+	  - Fixed a problem with Linux/Mandrake and cron configuration.
+
+2004-11-30 Emmanuel Saracco <esaracco@users.labs.libre-entreprise.org>
+
+	* quarantine section:
+	  - Fixed a problem with quarantine size display.
+
+	* Viruses database search section:
+	  - Added 2 more virus links and updated symantec search syntax.
+
+2004-11-29 Emmanuel Saracco <esaracco@users.labs.libre-entreprise.org>
+
+	* quarantine section:
+	  - Fixed a nasty bug in purge management.
+
+2004-11-27 Emmanuel Saracco <esaracco@users.labs.libre-entreprise.org>
+
+	* version: 0.5.3rc1
+
+	* other:
+	  - Please backup you data before using this first release
+	    candidate. Once the module is installed, edit its 
+	    configuration (added a new parameter) and save it. 
+	    Quarantine purge and database update have changed. Please, 
+	    report any disfunctionment or bug. Thanks for testing :-)
+
+2004-11-25 Emmanuel Saracco <esaracco@users.labs.libre-entreprise.org>
+
+	* quarantine section:
+	  - Fixed a bug in quarantine purge...
+
+2004-11-22 Emmanuel Saracco <esaracco@users.labs.libre-entreprise.org>
+
+	* quarantine section:
+	  - Fixed a bug in quarantine purge. It now really delete all
+	    the quarantine (viruses + spams).
+
+2004-11-21 Emmanuel Saracco <esaracco@users.labs.libre-entreprise.org>
+
+	* quarantine section:
+	  - Added virus name display in search result for clamav-milter.
+
+2004-11-11 Emmanuel Saracco <esaracco@users.labs.libre-entreprise.org>
+
+	* update section:
+	  - Debugging. 
+
+2004-11-08 Emmanuel Saracco <esaracco@users.labs.libre-entreprise.org>
+
+	* update section:
+	  - First try to fix bug #370 (Ploblem on Debian with freshclam
+	    management). All the update method functions have been
+	    modified. Please test the CVS snapshot on many platforms
+	    and tell me if it is ok.
+
+	* configuration:
+	  - Removed clamav_rcd_path from config.info file.
+	  - Added clamav_working_path to config.info.
+
+	* quarantine section:
+	  - Fixed a problem in E-Mails header parser.
+
+2004-10-19 Emmanuel Saracco <esaracco@users.labs.libre-entreprise.org>
+	
+	* version: 0.5.2
+
+	* WARNING:
+	  - Please edit the module configuration before using this new
+	    release.
+
+	* quarantine section:
+	  - Task #262 (Quarantine listing - Button behavior) is ok now.
+	  - Added E-Mail body in E-Mail viewer for MailScanner (this
+	    content scanner put header and body in two distinct files).
+
+	* clamav:
+	  - Changed "clamav.conf" to "clamd.conf".
+	  - Added the following directives: LogClean, LogVerbose,
+	    DisableDefaultScanOptions, ScanPE, DetectBrokenExecutables,
+	    ScanOLE, ScanHTML, MailFollowURLs,
+	    ArchiveMaxCompressionRatio, ArchiveBlockMax.
+	  - Removed the following directives: LeaveTemporaryFiles,
+	    StreamSaveToDisk, ArchiveDetectEncrypted.
+
+	* freshclam:
+	  - Added the following directives: DNSDatabaseInfo,
+	    LogFacility, Example, DatabaseDirectory, LogSyslog,
+	    LogVerbose.
+
+	* other: 
+	  - Updated for new clamav 0.80. Old versions of ClamAV are not
+	    supported anymore. 
+
+2004-09-23 Emmanuel Saracco <esaracco@users.labs.libre-entreprise.org>
+
+	* version: 0.5.1
+
+	* clamav: Updated to support ClamAV 0.80 (stable and CVS).
+
+2004-08-21 Emmanuel Saracco <esaracco@users.labs.libre-entreprise.org>
+
+	* version: 0.5.0
+
+2004-08-19 Emmanuel Saracco <esaracco@users.labs.libre-entreprise.org>
+
+	* quarantine section: Added support for another MailScanner format.
+
+2004-08-19 Emmanuel Saracco <esaracco@users.labs.libre-entreprise.org>
+
+	* quarantine section: Some little fixes, enhancements and formatting.
+
+2004-08-18 Emmanuel Saracco <esaracco@users.labs.libre-entreprise.org>
+
+	* quarantine section: Some little fixes and formatting.
+
+2004-08-17 Emmanuel Saracco <esaracco@users.labs.libre-entreprise.org>
+
+	* quarantine section: Fixed 2 bugs in quarantine search by date.
+
+2004-08-12 Emmanuel Saracco <esaracco@users.labs.libre-entreprise.org>
+
+	* quarantine section: When year is not specified on quarantine
+	search, current year is the default.
+
+2004-08-12 Emmanuel Saracco <esaracco@users.labs.libre-entreprise.org>
+
+	* configuration: Removed "clamav_daemon_name" in module 
+	configuration (because it is always set to 'clamd').
+
+	* other: Fixed a nasty bug in clamav start/stop management (this bug
+	was present only with translation languages that need some encoding).
+
+2004-08-12 Emmanuel Saracco <esaracco@users.labs.libre-entreprise.org>
+
+	* signature creation section: Updated URL of virus sample submission
+	form.
+
+2004-08-12 Emmanuel Saracco <esaracco@users.labs.libre-entreprise.org>
+
+	* quarantine section: Now time of the E-Mail is also displayed.
+
+2004-08-11 Emmanuel Saracco <esaracco@users.labs.libre-entreprise.org>
+
+	* translations: Some encoding update and 1 item was removed.
+
+2004-08-11 Emmanuel Saracco <esaracco@users.labs.libre-entreprise.org>
+
+	* clamav: Updated for clamav 0.71. Old versions of ClamAV are not
+	supported anymore. Added "LogFacility" and "LeaveTemporaryFiles".
+
+	* quarantine section: A lot of updates and code optimization. Please
+	test it seriously because it could be broken now (I hope it is 
+	not :-) ).
+
+2004-08-10 Emmanuel Saracco <esaracco@users.labs.libre-entreprise.org>
+
+	* security: Fixed bug #250 (Problem when disabling an option in
+	webinterface).
+
+2004-08-10 Emmanuel Saracco <esaracco@users.labs.libre-entreprise.org>
+
+	* quarantine section: Fixed bug #249 (When viewing the quarantine
+	directory e-mails with no subject can't be viewed).
+
+2004-08-10 Emmanuel Saracco <esaracco@users.labs.libre-entreprise.org>
+
+	* global settings section: Check if ClamAV daemon restarting was ok
+	after commiting modifications.
+
+	* other: Added a "Remote control" section to control clamav daemon
+	by remote.
+
+2004-08-07 Emmanuel Saracco <esaracco@users.labs.libre-entreprise.org>
+
+	* quarantine section: Task #186 (Quarantine support for MailScanner)
+	should be ok now. Fixed a bug in search by date.
+
+	* configuration: Config file was changed. Please, review your wbmclamav
+	module configuration before installing this new release.
+
+2004-08-05 Emmanuel Saracco <esaracco@users.labs.libre-entreprise.org>
+
+	* quarantine section: Now we display quarantine size information.
+
+2004-08-05 Emmanuel Saracco <esaracco@users.labs.libre-entreprise.org>
+
+	* version: 0.4.0
+
+2004-08-05 Emmanuel Saracco <esaracco@users.labs.libre-entreprise.org>
+
+	* quarantine section: Fixed a problem with E-Mails header parser.
+	Fixed a problem with header informations display.
+
+2004-08-04 Emmanuel Saracco <esaracco@users.labs.libre-entreprise.org>
+
+	* security: Added a ACL to start/stop clamav daemon.	
+
+2004-08-04 Emmanuel Saracco <esaracco@users.labs.libre-entreprise.org>
+
+	* quarantine section: Fixed a problem with E-Mails header parser.
+	Added date in the quarantine list.
+
+	* global settings section: Fixed a problem with multiple
+	DatabaseMirror entries.
+
+2004-08-03 Emmanuel Saracco <esaracco@users.labs.libre-entreprise.org>
+
+	* quarantine section: Task #207 (When not using amavis, quarantine
+	viewer doesn't work) should be ok now.
+
+2004-08-03 Emmanuel Saracco <esaracco@users.labs.libre-entreprise.org>
+
+	* quarantine and database update sections: Task #192 (Database Updates
+	/ Automatic Updates) should be ok now.
+
+2004-08-02 Emmanuel Saracco <esaracco@users.labs.libre-entreprise.org>
+
+	* global settings section: Task #219 (Global settings for
+	freshclam.conf only allows one entry for DatabaseMirror variable)
+	should be ok now.
+
+	* database update section: Task #220 (In Database updates screen it
+	doesn't show database version) should be ok now.
+
+2004-06-29 Emmanuel Saracco <esaracco@users.labs.libre-entreprise.org>
+
+	* quarantine section: Fixed another bug that was disturbing navigation
+	when comin from viruses search to spams search.
+
+2004-06-26 Emmanuel Saracco <esaracco@users.labs.libre-entreprise.org>
+
+	* cron: Correction of a big bug in cron line (confusion between minutes
+	and hours) for database update.
+
+2004-06-24 Emmanuel Saracco <esaracco@users.labs.libre-entreprise.org>
+
+	* version: 0.3.9
+
+	* quarantine section: Fixed a bug that was prevented navigation in
+	quarantine search results.
+
+	* security: Added ACLs management. Now webmin administrator can
+	control entire access to module's sections and to their 
+	functionnalities.
+
+2004-06-22 Emmanuel Saracco <esaracco@users.labs.libre-entreprise.org>
+
+	* version: 0.3.8
+
+	* quarantine section: Fixed a bug in E-Mails addresses display. Task
+	#173 (Quarantine management also for spam messages) is ok now.
+
+	* dependencies: Added dependencie on "Compress::Zlib" and
+	"HTML::Entities" perl modules.
+
+	* other: Fixed some typo.
+
+2004-06-01  Cristian Rigamonti <cri@linux.it>
+
+	* config.info.it: fixed Italian translation
+
+2004-05-16 Emmanuel Saracco <esaracco@users.labs.libre-entreprise.org>
+
+	* version: 0.3.7
+
+2004-05-13 Emmanuel Saracco <esaracco@users.labs.libre-entreprise.org>
+
+	* quarantine section: Correction of a big bug in cron line (confusion
+	between minutes and hours). Task #144 (specify max age of file
+	to be deleted on purge) is now ok.
+
+2004-05-10 Emmanuel Saracco <esaracco@users.labs.libre-entreprise.org>
+
+	* quarantine section: Correction of a bug that prevented amavisd-new
+	quarantine repository to be purged. Correction of bug #150 (Postfix
+	does not support "sendmail -bS" for re-sending a quarantined message).
+	Task #151 (Multiple selection of quarantined messages) is now ok.
+
+2004-04-30 Emmanuel Saracco <esaracco@users.labs.libre-entreprise.org>
+
+	* version: 0.3.6
+
+	* directories check section: Task #117 (repositories check enhancement)
+	is ok now. It is now possible to tell this module to only display
+	infected files, and they can be deleted.
+
+	* dependencies: Added code to check for unsatisfied perl modules
+	dependencies.
+	
+	* other: Tasks #119 (ClamAV homepage link) and #118 (Display the
+	ClamAV and wbmclamav versions) ar ok now.
+
+2004-04-23 Emmanuel Saracco <esaracco@users.labs.libre-entreprise.org>
+
+	* version: 0.3.5
+
+	* clamav: Updated for clamav 0.70. Old versions of ClamAV are not
+	supported anymore. Correction of a bug in clamav detection (we now can
+	detect and accept CVS snapshots (>= 20040417)). 
+	Added "ArchiveDetectEncrypted", "ArchiveBlockEncrypted" and replaced 
+	"ThreadTimeout" with "ReadTimeout". You should manually remove 
+	"ThreadTimeout" from your clamav configuration file and replace it 
+	with "ReadTimeout".
+
+	* translations: Bernhard Krieger <bkrieger@easter-eggs.com> maintain
+	the german translation.
+
+	* configuration: Added a "config-suse-linux", "config-freebsd" and
+	"config-openbsd" files. Also added a "clamav_rcd_path" in the config 
+	file to indicate the path of "rc*.d" directories. It should now work 
+	well on FreeBSD and other BSD systems (please send me feedback).
+
+	* update section: Updated cron and daemon methods to work on BSD 
+	systems.
+
+	* documentation: Updated README file.
+
+2004-04-03 Emmanuel Saracco <esaracco@users.labs.libre-entreprise.org>
+
+	* translations: Added config.info.it and updated module.info,
+	lang/it and THANKS files.
+
+2004-04-02 Emmanuel Saracco <esaracco@users.labs.libre-entreprise.org>
+
+	* version: 0.3.4-1
+
+	* quarantine section: Correction of a bug in amavisd-new automatic
+	detection... again :-)
+
+	* translations: Cristian Rigamonti <cri@linux.it> maintain the
+	italian translation.
+
+2004-03-31 Emmanuel Saracco <esaracco@users.labs.libre-entreprise.org>
+
+	* version: 0.3.4
+
+	* quarantine section: Correction of a bug in amavisd-new automatic
+	detection. Search's result is now paginated.
+
+	* configuration: Updated redhat/fedora/mandrake default config files.
+
+2004-03-26 Emmanuel Saracco <esaracco@users.labs.libre-entreprise.org>
+
+	* version: 0.3.3-1
+	
+	* quarantine section: Correction of a bug in result display for
+	amavisd-new quarantine.
+	
+2004-03-25 Emmanuel Saracco <esaracco@users.labs.libre-entreprise.org>
+
+	* version: 0.3.3
+
+	* configuration: Updated debian/woody config file.
+
+	* quarantine section: Correction of a big bug that prevented quarantine
+	files to being displayed. Added code to detect which version of amavis
+	was installed on the server (amavisd-new or amavis-ng). Now
+	quarantine section should be compliant with both amavis-ng and 
+	amavisd-new. In fact, quarantine directory management is really very 
+	dependent of used softwares. So, if you want your quarantine to be 
+	supported by wbmclamav, please tell me about those softwares and send 
+	me a snapshot of your quarantine. Task #115 (Search engine for
+	quarantine) is ok now. Also added a search form and informationals 
+	tooltips on result's rows.
+	
+	* global settings section: Displayed values are now sorted. Also,
+	comboboxes do not display anymore values that was already in config 
+	files. Some other enhancements.
+
+	* translations: Some corrections.
+
+	* other: Added a dependencie on perl "Date::Manip" module.
+
+2004-03-06 Emmanuel Saracco <esaracco@users.labs.libre-entreprise.org>
+
+	* version: 0.3.2
+
+	* configuration: Ticket #112 ("Not compatible with this module" error 
+	with version Clamav 0.67, Webmin 1.130 on Darwin 7.0.1) has been
+	closed. Now wbmclamav intent to guess itself the right path for each
+	binary it use. clamav and freshclam log files are touched by
+	this module, so no error message will be display if they do not
+	exist.
+
+	* signature creation section: Added both a way to submit newly created
+	signature to ClamAV team using their online form, and a web link to
+	the clamav-virusdb@lists.sourceforge.net mailing-list page. Also
+	updated the ClamAV "signatures.pdf" link.
+
+	* database search section: Enhancement of the search on commercial
+	antivirus editors web sites (we now try to guess the "generic" name
+	of a given ClamAV registered virus).
+
+2004-02-29 Emmanuel Saracco <esaracco@users.labs.libre-entreprise.org>
+
+	* version: 0.3.1
+	
+	* warning: Before installing this new release, remove previous
+	release, stop webmin, then remove webmin cache directory (normally 
+	/etc/webmin/clamav) and restart webmin. I also strongly advise you 
+	to save both your clamav and freshclam configuration files before 
+	using this new release.
+
+	* global settings section: Task #111 (Add/Remove predefined variables 
+	in "Global settings") is now ok.
+
+	* update section: Correction of bug #109 (Obsolete proxy management).
+	Proxy settings (server, port and authentication) are no longer managed 
+	by wbmclamav's webmin module config. Now you must set them in 
+	the "Global Settings" section.
+
+	* other: Language corrections.
+
+2004-02-24 Emmanuel Saracco <esaracco@users.labs.libre-entreprise.org>
+
+	* version: 0.3.0
+
+	* warning: Before installing this new release, remove previous
+	release, stop webmin, then remove webmin cache directory (normally 
+	/etc/webmin/clamav) and restart webmin.
+
+	* configuration: Updated module's configuration file. Removed the
+	os_support line in module.info to be more flexible. Correction
+	of bug #100 (Remove hard dependency with AMaViS): we now automatically
+	detect the existence of a "amavis-inject" script on the server; if
+	not present, we use our own copy of this perl script (which is
+	in the ./bin/ directory of this module). Correction of 
+	bug #101 (Remove hard dependency with rsmtp): we now automatically
+	detect the MTA to use; for the moment we support "exim", "sendmail"
+	and "postfix". Correction of bug #108 (Better errors handling).
+
+	* quanrantine section: Correction of a bug that prevented falses
+	positives emails from being resent.
+
+	* other: Task #102 (Add viruses database search section) is now ok.
+	Task #103 (Add viruses signatures creation section) is now ok.
+
+2004-02-22 Emmanuel Saracco <esaracco@users.labs.libre-entreprise.org>
+
+	* version: 0.2.0
+
+	* configuration: Updated module's configuration file. Removed the
+	dependency on webmin 1.121. Added Mandrake compatibility, but like 
+	Redhat and Fedora config, it need to be updated with correct 
+	settings (please, send me your config file if you run wbmclamav on 
+	those systems).
+
+	* update section: Correction of a bug in HTML form parameters.
+
+	* other: Added 2 new sections: one section to edit all ClamAV 
+	configuration files and another to view ClamAV/Freshclam logs.
+
+2004-02-21 Emmanuel Saracco <esaracco@users.labs.libre-entreprise.org>
+
+	* version: 0.1.1
+
+	* documentation: Added ChangeLog for translations.
+	Added installation/configuration informations in the README.
+
+	* configuration: Updated Fedora and Redhat config file.
+
+	* other: Updated for clamav 0.67. Old versions of ClamAV are not
+	supported anymore.
+
+2004-02-07 Emmanuel Saracco <esaracco@users.labs.libre-entreprise.org>
+
+	* version: 0.1.0
+
+	* Initial version

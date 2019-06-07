@@ -1,0 +1,13 @@
+clamav_working_path=/tmp
+clamav_init_restore_path=/var/backups
+clamav_clamav_log=/var/log/clamav/clamd.log
+clamav_freshclam_log=/var/log/clamav/freshclam.log
+clamav_db1=/usr/local/share/clamav/main.cld
+clamav_quarantine_soft=0
+clamav_quarantine=
+clamav_init_script=/usr/local/etc/rc.d/clamav-clamd.sh
+clamav_db2=/usr/local/share/clamav/daily.cvd
+clamav_clamav_conf=/usr/local/etc/clamd.conf
+clamav_freshclam_conf=/usr/local/etc/freshclam.conf
+clamav_refresh_use_cron=0
+clamav_freshclam_init_script=/usr/local/etc/rc.d/clamav-freshclam.sh

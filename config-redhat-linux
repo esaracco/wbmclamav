@@ -1,0 +1,14 @@
+clamav_working_path=/tmp
+clamav_init_restore_path=/root
+clamav_init_script=/etc/init.d/clamd
+clamav_clamav_log=/var/log/clamav/clamav.log
+clamav_clamav_conf=/etc/clamd.conf
+clamav_quarantine_soft=1
+clamav_quarantine=/var/spool/amavis/virusmails
+clamav_db1=/var/lib/clamav/main.cld
+clamav_db2=/var/lib/clamav/daily.cvd
+
+clamav_freshclam_conf=/etc/freshclam.conf
+clamav_refresh_use_cron=1
+clamav_freshclam_log=/var/log/clamav/freshclam.log
+clamav_freshclam_init_script=/etc/cron.daily/freshclam

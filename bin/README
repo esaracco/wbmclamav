@@ -1,0 +1,6 @@
+
+- amavis-inject: used only when it is not found on the webmin server.
+- gunzip: used to bypass gunzip error when file is not gziped.
+- purge_quarantine: used to delete quarantine directory content.
+
+All those scripts must have the execute flag on.

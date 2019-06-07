@@ -1,0 +1,9 @@
+name=clamav
+version=0.17git201906061
+category=system
+desc=ClamAV Antivirus
+desc_fr=Antivirus ClamAV
+desc_it=ClamAV Antivirus
+desc_de=ClamAV Antivirus
+desc_pt_BR=Antivírus ClamAV
+desc_hu=ClamAV Antivirus

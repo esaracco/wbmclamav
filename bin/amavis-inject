@@ -1,0 +1,245 @@
+#!/usr/bin/perl -w
+#
+# Program to reinject messages that were quarantined by AMaViS
+#
+# Based on Furio Ercolessi's "infect" script
+
+use Getopt::Long;
+use IO::File;
+use Net::SMTP;
+
+use strict;
+
+sub help {
+  print STDERR <<EOF;
+amavis-inject
+
+Usage: amavis-inject [ options ] [ -- ] [ file ...]
+Options are:
+ -s, --sender
+    Set Sender address in envelope, ignoring information from file
+ -r, --recipient
+    Set Recipients in envelope, ignoring information from file
+ -b, --bsmtp
+    Generate BSMTP output (default)
+ -S[host:[port]] --smtp [host:[port]]
+    Send mail via SMTP
+ -a, --add-recipient
+    Add Recipient address to envelope
+ -h, --help
+    This message
+
+If no files are specified, one message is read from STDIN.
+
+Unless specified, Envelope-From and Envelope-To are taken from
+X-Quarantine-[From,To] headers in message file. These headers will be
+removed when sending.
+
+EOF
+}
+
+my $o_sender;
+my @o_recipients=();
+my @o_add_recipients=();
+my $o_smtp;
+my $o_bsmtp;
+my $o_help=0;
+
+Getopt::Long::Configure('no_ignore_case');
+
+GetOptions(
+	   'sender|s=s' => \$o_sender,
+	   'recipients|r=s' => \@o_recipients,
+	   'add-recipient|a=s' => \@o_add_recipients,
+	   'smtp|S:s' => \$o_smtp,
+	   'bsmtp|b|B' => \$o_bsmtp,
+	   'help|h' => \$o_help
+	  );
+
+sub read_headers {
+  my $fh=shift;
+  my @headers;
+  my $sender;
+  my @recipients;
+  while (<$fh>) {
+    last if ( /^\s*$/ );		# read till an empty line
+    if ( /^X-Quarantined-From:\s*(.*)\s*$/ ) {
+      $sender = $1 unless ( $sender );
+    } elsif ( /^X-Quarantined-To:\s*(.*)\s*$/ ) {
+      push @recipients,split(/ *, */,$1);
+    } elsif ( /^Return-Path:\s*(.*)\s*$/ ) {
+      $sender = $1 unless ( $sender );
+    } elsif ( /^X-Would-Be-Delivered-To:\s*(.*)\s*$/ ) {
+      push @recipients,split(/ *, */,$1);
+    } else {			# other headers line
+      push(@headers,$_);	# stored in @headers
+    }
+  }
+  # Add brackets around sender, recipients if necessary
+  foreach ($sender, @recipients) {
+    $_='' unless (defined $_);
+    /^<.*>$/ || do {
+      $_="<$_>";
+    }
+  }
+  return ($sender, \@recipients, \@headers);
+}
+
+sub do_bsmtp {
+  my $fh=shift;
+  my $sender=shift;
+  my @recipients=@{shift()};
+  my @headers=@{shift()};
+
+  print "HELO localhost\n";
+  print "MAIL FROM: $sender\n";
+  foreach (@recipients) {
+    print "RCPT TO: $_\n";
+  }
+  print "DATA\n";
+  foreach (@headers) {
+    chomp;
+    print "$_\n";
+  }
+  print "\n";
+  while (<$fh>) {
+    chomp;
+    if (/^\./) {
+      print '.';
+    }
+    print "$_\n";
+  }
+  print ".\n";
+  return 1;
+}
+
+sub do_smtp {
+  my $fh=shift;
+  my $sender=shift;
+  my @recipients=@{shift()};
+  my @headers=@{shift()};
+  my $mailhost=shift;
+
+  my $smtp=Net::SMTP->new($mailhost) or return 0;
+  $smtp->mail($sender) or return 0;
+  $smtp->recipient(@recipients) or return 0;
+  $smtp->data() or return 0;
+  foreach (@headers) {
+    chomp;
+    $smtp->datasend("$_\n") or return 0;
+  }
+  $smtp->datasend("\n");
+  while (<$fh>) {
+    chomp;
+    $smtp->datasend("$_\n") or return 0;
+  }
+  $smtp->dataend() or return 0;
+  $smtp->quit() or return 0;
+  return 1;
+}
+
+########################################################################
+
+if ($o_help
+   || (defined $o_bsmtp && defined $o_smtp)) {
+  help();
+  exit 0;
+}
+
+my @files;
+
+if ($#ARGV>=0) {
+  push @files, @ARGV;
+}
+else {
+  push @files, "/dev/stdin";
+}
+
+if ((defined $o_smtp) && (! $o_smtp)) {
+  $o_smtp='localhost:25';
+}
+
+foreach (@files) {
+  my $fh=IO::File->new($_) or die;
+  my $sender;
+  my $recipients_ref;
+  my $headers_ref;
+  ($sender,$recipients_ref,$headers_ref)=read_headers($fh);
+
+  my $result;
+
+  if (defined $o_sender) {
+    $sender=$o_sender;
+  }
+  ;
+  if (@o_recipients) {
+    @$recipients_ref=@o_recipients;
+  }
+  if (@o_add_recipients) {
+    push @$recipients_ref,@o_add_recipients;
+  }
+
+  if (defined $o_smtp) {
+    $result=do_smtp($fh,$sender,$recipients_ref,$headers_ref,$o_smtp);
+  } else {
+    $result=do_bsmtp($fh,$sender,$recipients_ref,$headers_ref);
+  }
+  unless (defined $result) {print STDERR "An error occured while sending $_\n"};
+}
+
+=head1 NAME
+
+amavis-inject - Resend AMaViS-ng's quarantined messages
+
+=head1 SYNOPSIS
+
+amavis-inject [ options ] [ -- ] [ file ...]
+
+=head1 DESCRIPTION
+
+amavis-inject can process a message that has been put into a
+quarantine directroy by AMaViS-ng.
+
+If no files are specified, one message is read from STDIN.
+
+Unless specified, Envelope-From and Envelope-To are taken from
+X-Quarantine-[From,To] headers in message file. These headers will be
+removed when sending.
+
+=head1 OPTIONS
+
+=item -s, --sender
+
+Set Sender address in envelope, ignoring information from file
+
+=item -r, --recipient
+
+Set Recipients in envelope, ignoring information from file
+
+=item -b, --bsmtp
+
+Generate BSMTP output (default)
+
+=item -S[host:[port]] --smtp [host:[port]]
+
+Send mail via SMTP
+
+=item -a, --add-recipient
+
+Add Recipient address to envelope
+
+ -h, --help
+
+Display a short usage summary.
+
+=head1 AUTHOR
+
+amavis-inject was written by Hilko Bengen
+E<lt>bengen+amavis@hilluzination.deE<gt>
+
+=head1 COPYRIGHT
+
+amavis-inject may be copied amd modified under the terms of the GNU
+General Public License.
+
+=cut

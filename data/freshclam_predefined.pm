@@ -1,0 +1,42 @@
+# freshclam predefined variables
+# name => 0 = alone (boolean)
+#	  1 = need value
+#	  2 = need value and can appear several time on separate lines
+%freshclam_predefined = (
+  'DatabaseDirectory' => 1,
+  'UpdateLogFile' => 1,
+  'LogFileMaxSize' => 1,
+  'LogTime' => 0,
+  'LogVerbose' => 0,
+  'LogSyslog' => 0,
+  'LogFacility' => 1,
+  'LogRotate' => 0,
+  'PidFile' => 1,
+  'DatabaseOwner' => 1,
+  'DNSDatabaseInfo' => 1,
+  'DatabaseMirror' => 2,
+  'MaxAttempts' => 1,
+  'ScriptedUpdates' => 0,
+  'CompressLocalDatabase' => 0,
+  'DatabaseCustomURL' => 2,
+  'PrivateMirror' => 2,
+  'Checks' => 1,
+  'HTTPProxyServer' => 1,
+  'HTTPProxyPort' => 1,
+  'HTTPProxyUsername' => 1,
+  'HTTPProxyPassword' => 1,
+  'HTTPUserAgent' => 1,
+  'LocalIPAddress' => 1,
+  'NotifyClamd' => 1,
+  'OnUpdateExecute' => 1,
+  'OnErrorExecute' => 1,
+  'OnOutdatedExecute' => 1,
+  'Foreground' => 0,
+  'Debug' => 0,
+  'ConnectTimeout' => 1,
+  'ReceiveTimeout' => 1,
+  'TestDatabases' => 0,
+  'SafeBrowsing' => 0,
+  'Bytecode' => 0,
+  'ExtraDatabase' => 2
+);

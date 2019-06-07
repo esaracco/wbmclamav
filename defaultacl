@@ -1,0 +1,16 @@
+backup_restore_manage=1
+clamav_start_stop=1
+clamav_remote_control=1
+quarantine_view=1
+quarantine_delete=1
+quarantine_resend=1
+quarantine_export=1
+database_update_view=1
+database_update_update=1
+directories_check_view=1
+directories_check_delete=1
+global_settings_view=1
+global_settings_write=1
+logs_viewer_view=1
+database_search_search=1
+signature_use=1
