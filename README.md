@@ -14,12 +14,12 @@ Open the Webmin modules manager and upload the wbmclamav file.
 
 1. Change the owner and permissions of the entire tree :
 ```bash
-chmod -R 755 wbmclamav/
-chown -R root:bin wbmclamav/
+chmod -R 755 clamav/
+chown -R root:bin clamav/
 ```
 2. Build a gzipped tarball archive :
 ```bash
-tar zcvf wbmclamav.wbm.gz wbmclamav/
+tar zcvf wbmclamav.wbm.gz clamav/
 ```
 3. Open the Webmin modules manager and upload your brand new wbmclamav file.
 
