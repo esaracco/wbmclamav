@@ -1,3 +1,5 @@
+<p align="center"><img src="http://wbmclamav.esaracco.fr/images/wbmclamav.png"/></p>
+
 # wbmclamav
 
 [Project homepage](http://wbmclamav.esaracco.fr)
