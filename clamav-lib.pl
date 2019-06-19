@@ -660,13 +660,21 @@ sub clamav_signatures_check_config
 #
 # print a message and exit
 # 
-sub clamav_check_config_exit ( $ )
+sub clamav_check_config_exit ( $ $ )
 {
   my $msg = shift;
+  my $main_page = shift;
 
   print qq(<p>$msg</p>) if ($msg);
   print qq(<hr>);
-  &footer("/", $text{'index'});
+  if ($main_page)
+  {
+    &footer("/", $text{'index'});
+  }
+  else
+  {
+    &footer('', $text{'RETURN_INDEX_MODULE'});
+  }
 
   exit (1);
 }
@@ -4359,7 +4367,7 @@ sub clamav_check_perl_deps ()
   foreach my $mod (keys %perl_deps) {print qq(<li><b>$mod</b></li>\n);}
   print qq(</ul>);
   
-  &clamav_check_config_exit ("");
+  &clamav_check_config_exit ('', 1);
 }
 
 # clamav_get_quarantine_infos ()

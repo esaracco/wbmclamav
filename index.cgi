@@ -1,6 +1,6 @@
 #!/usr/bin/perl
 
-# Copyright (C) 2003-2015
+# Copyright (C) 2003-2019
 # Emmanuel Saracco <emmanuel@esaracco.fr>
 #
 # This program is free software; you can redistribute it and/or modify
@@ -107,7 +107,9 @@ print qq(<p>);
 print qq(</p>);
 
 print qq(<hr>);
+print '<p>';
 &clamav_footer ();
+print '</p>';
 &footer("/", $text{'index'});
 
 
