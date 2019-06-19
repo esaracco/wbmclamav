@@ -184,7 +184,7 @@ SHOW_INFECTED_ONLY=Mostrar apenas arquivos infectados
 SIGNATURE=Assinatura
 SIGNATURES_BUILD_END_STEP=Fim do processo de construção de assinaturas
 SIGNATURES_BUILD_END_STEP_DESCRIPTION=A nova assinatura está agora pronta para ser adicionada ao banco de dados do ClamAV: <ul><li>Você pode enviar ao time do ClamAV utilizando o <a href="http://cgi.clamav.net/sendvirus.cgi?virusname=%s&signature=%s&description=%s" target="_BLANK">método online</a> ou enviar um e-mail para virus@clamav.net (método antigo). </li><li>Se você quiser se manter informado às mudanças no banco de dados de vírus, assine a <a href="http://lists.sourceforge.net/lists/listinfo/clamav-virusdb" target="_BLANK">lista</a> de e-mail clamav-virusdb@lists.sourceforge.net. </li></ul>
-SIGNATURES_DESCRIPTION=Esta sessão ajuda você à extrair manualmente a assinatura de um dado arquivo de vírus. Veja o <a href="http://www.clamav.net/doc/0.75.1/signatures.pdf" target="_BLANK">tutorial</a> para maiores detalhes de como gerenciar assinaturas de vírus.
+SIGNATURES_DESCRIPTION=Esta sessão ajuda você à extrair manualmente a assinatura de um dado arquivo de vírus. Veja o <a href="https://www.clamav.net/documents/creating-signatures-for-clamav" target="_BLANK">tutorial</a> para maiores detalhes de como gerenciar assinaturas de vírus.
 SIGNATURES_EXTRACTION=Extração de assinaturas
 SIGNATURES_FIRST_STEP=Primeiro passo: enviar o arquivo infectado
 SIGNATURES_SECOND_STEP=Segundo passo: Identificar um bloco de dados relevantes
