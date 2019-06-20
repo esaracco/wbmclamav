@@ -183,7 +183,7 @@ SHOW_INFECTED_ONLY=Csak a fertõzött fájlokat mutassa
 SIGNATURE=Szignatúra
 SIGNATURES_BUILD_END_STEP=A szingatúra felépítés befejezõdött
 SIGNATURES_BUILD_END_STEP_DESCRIPTION=Az új szignatúra készen van hogy hozzáadjuk a ClamAV adatbázishoz:  <ul><li>Ön elküldheti a ClamAV fejlesztõknek a <a href="https://www.clamav.net/reports/signature" target="_BLANK">online formon</a> vagy küldje el a virus@clamav.net (érvénytelenített eljárás).</li><li> Ha Ön szeretne értesítést kapni a vírus adatbázis változásáról, akkor  <a href="http://lists.sourceforge.net/lists/listinfo/clamav-virusdb" target="_BLANK">csatlakozzon</a> a clamav-virusdb@lists.sourceforge.net levelezési listához.</li></ul>
-SIGNATURES_DESCRIPTION=Ez a rész segít Önnek manuálisan kinyerni egy vírusos fájl szignatúráját. Kérem nézze meg a <a href="https://www.clamav.net/documents/creating-signatures-for-clamav" target="_BLANK">ClamAV oktatót</a> hogy hogyan kell kezelni a vírus szignatúrákat.
+SIGNATURES_DESCRIPTION=Ez a rész segít Önnek manuálisan kinyerni egy vírusos fájl szignatúráját. Kérem nézze meg <a href="https://www.clamav.net/documents/creating-signatures-for-clamav" target="_BLANK">Creating signatures for ClamAV</a> és <a href="https://www.clamav.net/documents/file-hash-signatures" target="_blank">File hash signatures</a> hogy hogyan kell kezelni a vírus szignatúrákat.
 SIGNATURES_EXTRACTION=Szignatúra kinyerés
 SIGNATURES_FIRST_STEP=elsõ lépés: a hibás állomány feltöltése
 SIGNATURES_SECOND_STEP=Második lépés: Azonosítani a releváns adatblokkot

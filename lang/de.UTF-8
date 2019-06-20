@@ -161,7 +161,7 @@ SETTINGS_TITLE=Allgemeine Konfiguration
 SIGNATURE=Signatur
 SIGNATURES_BUILD_END_STEP=Ende des Vorgangs der Unterschriftenerzeugung
 SIGNATURES_BUILD_END_STEP_DESCRIPTION=Die neue Unterschrift kann jetzt der ClamAV Datenbank zugefügt werden: <ul><li>Sie können sie entweder dem ClamAV Team zukommen lassen indem sie deren <a href="https://www.clamav.net/reports/signature">Online Formular</a> benutzen oder sie per email an virus@clamav.net senden (diese zweite Methode ist nicht mehr aktuell).</li><li> Wenn Sie über die weitere Entwicklung der ClamAV Antivirusdatenbank auf dem Laufenden gehalten werden wollen können Sie die <a href="http://lists.sourceforge.net/lists/listinfo/clamav-virusdb">clamav-virusdb@lists.sourceforge.net mailing-list</a> Mailing Liste abonieren.</li></ul>
-SIGNATURES_DESCRIPTION=Diese Sektion hilft Ihnen händisch eine Signatur eines vorhandenen Virus zu extrahieren. Siehe <a href="https://www.clamav.net/documents/creating-signatures-for-clamav">ClamAV tutorial</a> um mehr über das Management von Virensignaturen zu erfahren.
+SIGNATURES_DESCRIPTION=Diese Sektion hilft Ihnen händisch eine Signatur eines vorhandenen Virus zu extrahieren. Siehe <a href="https://www.clamav.net/documents/creating-signatures-for-clamav">Creating signatures for ClamAV</a> und <a href="https://www.clamav.net/documents/file-hash-signatures" target="_blank">File hash signatures</a> um mehr über das Management von Virensignaturen zu erfahren.
 SIGNATURES_EXTRACTION=Signatur extrahieren
 SIGNATURES_FIRST_STEP=Erster Schritt: Hochladen der befallenen Datei
 SIGNATURES_SECOND_STEP=Zweiter Schritt: Identifizierung eines signifikanten Datenblocks
