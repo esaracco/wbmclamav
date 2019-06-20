@@ -1,6 +1,6 @@
 #!/usr/bin/perl
 
-# Copyright (C) 2003-2008
+# Copyright (C) 2003-2019
 # Emmanuel Saracco <emmanuel@esaracco.fr>
 #
 # This program is free software; you can redistribute it and/or modify
@@ -45,10 +45,7 @@ print qq(<p>$text{'SIGNATURES_DESCRIPTION'}</p>);
 
 print qq(<h2>$text{'SIGNATURES_BUILD_END_STEP'}</h2>);
 
-printf "<p>$text{'SIGNATURES_BUILD_END_STEP_DESCRIPTION'}</p>", 
-  &urlize ($in{'virus_name'}), &urlize ($in{'signature'}), &urlize (
-  "-- signature created with wbmclamav --\n\n"
-  );
+print qq(<p>$text{'SIGNATURES_BUILD_END_STEP_DESCRIPTION'}</p>);
 
 print qq(<p>$text{'MSG_WHITE_CHARS_REMOVED'}</p>) if ($whites);
 
