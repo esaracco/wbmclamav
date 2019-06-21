@@ -91,6 +91,7 @@ DOWNLOAD=Download
 END=End
 EVERYDAY=Every day
 FILES_DELETED=Selected files were deleted
+FILE_SIZE=File size
 FORM_TITLE=ClamAV Antivirus management
 REMOTE_CONTROL_TITLE=Remote control
 DESCRIPTION=Description
@@ -149,6 +150,7 @@ MSG_CONFIG_ALERT_QUARANTINE=<b>WARNING: </b>Please fill in the location of the q
 MSG_CONFIG_ALERT_REFRESH=<b>WARNING: </b>The <code>freshclam</code> binary need to be present on the server. If it is, please fill in the ClamAV binaries location in the module's configuration.
 MSG_CONFIG_ALERT_USE_CRON=<b>WARNING: </b>Please fill in the method to be used to update the signatures' database in the module's configuration.
 MSG_ERROR_BAD_SIZE=<b>The recommended size of the hex signature is 40 up to 200 characters</b>
+MSG_ERROR_BAD_SIGNATURE=Unauthorized characters in the signature (only alphanumeric characters, dash (-), dot (.), underscore (_) and slash (/) are accepted)
 MSG_ERROR_BAD_START=<b>The signature should not start with '00'</b>
 MSG_ERROR_FILE_UPLOAD=<b>No file to upload</b>
 MSG_ERROR_NO_NAME=<b>No name has been specified</b>
@@ -170,7 +172,7 @@ MSG_SUCCESS_UPDATE_AUTO=The automatic management of updates has been modified.
 MSG_SUCCESS_UPDATE_MANUAL=The signatures database has been updated.
 MSG_SUCCES_APPLY_GLOBAL_SETTINGS=Configuration files have been updated
 MSG_VIRUS_NAME=Please enter a string to search for
-MSG_WHITE_CHARS_REMOVED=<b>White characters have been removed from the virus name</b>
+MSG_WHITE_CHARS_REMOVED=<b>Spaces have been removed</b>
 NAME=Name
 NEVER_REFRESH=Never update automatically.
 NEXT=Next
@@ -226,13 +228,13 @@ SETTINGS_TITLE=Global settings
 SHOW_INFECTED_ONLY=Only show infected files
 SIGNATURE=Signature
 SIGNATURES_BUILD_END_STEP=End of signature building process
-SIGNATURES_BUILD_END_STEP_DESCRIPTION=The new signature is now ready to be added in ClamAV database: <ul><li>You can either submit it to ClamAV team using their <a href="https://www.clamav.net/reports/signature" target="_BLANK">online form</a> or send it to <a href="mailto:virus@clamav.net">virus@clamav.net</a> (deprecated method).</li><li> And if you want to be notified of changes in the virus database, <a href="http://lists.sourceforge.net/lists/listinfo/clamav-virusdb" target="_BLANK">join</a> the <a href="mailto:clamav-virusdb@lists.sourceforge.net">clamav-virusdb@lists.sourceforge.net</a> mailing-list.</li></ul>
-SIGNATURES_DESCRIPTION=This section helps you to build a signature for a given virus file. See <a href="https://www.clamav.net/documents/creating-signatures-for-clamav" target="_blank">Creating signatures for ClamAV</a> and <a href="https://www.clamav.net/documents/file-hash-signatures" target="_blank">File hash signatures</a> for more details on how to manage viruses signatures.
+SIGNATURES_BUILD_END_STEP_DESCRIPTION=The new signature is now ready to be added in a local *.hdb file or in the official ClamAV database : <ul><li>You can either submit it to ClamAV team using their <a href="https://www.clamav.net/reports/signature" target="_BLANK">online form</a> or send it to <a href="mailto:virus@clamav.net">virus@clamav.net</a> (deprecated method).</li><li> And if you want to be notified of changes in the virus database, <a href="http://lists.sourceforge.net/lists/listinfo/clamav-virusdb" target="_BLANK">join</a> the <a href="mailto:clamav-virusdb@lists.sourceforge.net">clamav-virusdb@lists.sourceforge.net</a> mailing-list.</li></ul>
+SIGNATURES_DESCRIPTION=This section helps you to build a basic SHA1 signature from a given file. See <a href="https://www.clamav.net/documents/creating-signatures-for-clamav" target="_blank">Creating signatures for ClamAV</a> and <a href="https://www.clamav.net/documents/file-hash-signatures" target="_blank">File hash signatures</a> for more details on how to manage viruses signatures.
 SIGNATURES_FIRST_STEP=First step: Upload corrupted file
 SIGNATURES_SECOND_STEP=Second step: Identify a revelant block of data
 SIGNATURES_SECOND_STEP_DESCRIPTION=First, search for a revelant string in '%s' mode. Then search for the same string in '%s' mode and identify the corresponding hexadecimal codes (please refer to ClamAV tutorial for this particular step). To end the identification step, just let the hexa string (delete all other characters) in the textarea and go to the next step by clicking on the "%s" button.
 SIGNATURES_THIRD_STEP=Third step: End signature's creation
-SIGNATURES_THIRD_STEP_DESCRIPTION=Now it is necessary to associate a virus name with the new signature.
+SIGNATURES_THIRD_STEP_DESCRIPTION=Please check the signature name :
 SIGNATURES_TITLE=Signatures extraction
 SPAMS=Spams
 SPAM_LEVEL=Spam level

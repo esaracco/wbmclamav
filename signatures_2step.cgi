@@ -1,6 +1,6 @@
 #!/usr/bin/perl
 
-# Copyright (C) 2003-2008
+# Copyright (C) 2003-2019
 # Emmanuel Saracco <emmanuel@esaracco.fr>
 #
 # This program is free software; you can redistribute it and/or modify
@@ -22,29 +22,38 @@ require './clamav-lib.pl';
 &clamav_check_acl ('signature_use');
 &ReadParse();
 
-&header($text{'FORM_TITLE'}, "", undef, 1, 0);
-print "<hr>\n";
+my $p1 = $in{'prefix0'}||'';
+my $p2 = $in{'prefix1'}||'';
+my $virus_name = '';
+my $updated = 0;
+$updated = 1 if ($in{'virus_name'} =~ s/\s//g);
+$updated = 1 if ($in{'sha1'} =~ s/\s//g);
 
-print qq(<form method="POST" action="signatures_3step.cgi">);
-print qq(<input type="hidden" name="signature" value="$in{'signature'}">);
+$virus_name .= "$p1." if ($p1);
+$virus_name .= "$p2." if ($p2);
+$virus_name .= $in{'virus_name'} if ($in{'virus_name'});
+
+
+
+# check the validity of the given signature
+if (my $ret = &clamav_check_signature ($in{'sha1'}.':'.$in{'size'}.':'.$virus_name))
+{
+  &redirect (sprintf (qq(/$module_name/signatures_1step.cgi?error=%s&sha1=%s&size=%s&virus_name=%s&prefix0=%s&prefix1=%s), &urlize($ret), &urlize($in{'sha1'}), &urlize($in{'size'}), &urlize($in{'virus_name'}), &urlize($p1), &urlize($p2)));
+}
+
+&header ($text{'FORM_TITLE'}, '', undef, 1, 0);
+print "<hr>\n";
 
 print qq(<h1>$text{'SIGNATURES_TITLE'}</h1>);
 print qq(<p>$text{'SIGNATURES_DESCRIPTION'}</p>);
 
-print qq(<h2>$text{'SIGNATURES_THIRD_STEP'}</h2>);
+print qq(<h2>$text{'SIGNATURES_BUILD_END_STEP'}</h2>);
 
-print qq(<p>$text{'MSG_ERROR_NO_NAME'}</p>) if ($in{'error'});
+print qq(<p>$text{'MSG_WHITE_CHARS_REMOVED'}</p>) if ($updated);
 
-print qq(<p>$text{'SIGNATURES_THIRD_STEP_DESCRIPTION'}</p>);
+printf qq(<pre style=\"background:silver;display:inline-block;padding:3px\">%s:%s:%s</pre>), &html_escape($in{'sha1'}), &html_escape($in{'size'}), &html_escape($virus_name);
 
-print qq(<table border=1>);
-print qq(<tr><td $cb valign="top" nowrap>$text{'NAME'}:</td><td><input type="text" name="virus_name" value="$in{'virus_name'}" size="60"></td>);
-printf "<tr><td $cb valign=\"top\" nowrap>$text{'SIGNATURE'}:</td><td>%s</td>", &clamav_html_cut ($in{'signature'}, 60);
-print qq(</table>);
-
-print qq(<p><input type="submit" name="next3" value="$text{'END'}"></p>);
-
-print qq(</form>);
+print qq(<p>$text{'SIGNATURES_BUILD_END_STEP_DESCRIPTION'}</p>);
 
 print qq(<hr>);
-&footer("signatures_main.cgi", $text{'RETURN_SIGNATURES_MAIN'});
+&footer ('signatures_main.cgi', $text{'RETURN_SIGNATURES_MAIN'});

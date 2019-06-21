@@ -50,6 +50,7 @@ EVERY_X_HOURS=Toutes les X heure(s)
 EXPORT=Export CSV
 FILE=Fichier
 FILES_DELETED=Les fichiers sélectionnés ont été supprimés
+FILE_SIZE=Taille du fichier
 FORM_TITLE=Gestion de l'antivirus ClamAV
 FREQUENCY=Fréquence
 FRIDAY=Vendredi
@@ -112,6 +113,7 @@ MSG_CONFIG_ALERT_USE_CRON=<b>ATTENTION : </b>Veuillez renseigner la méthode à 
 MSG_CONFIG_ALERT_WORKING_PATH=<b>ATTENTION: </b> Veuillez indiquer le répertoire de travail dans la configuration du module.
 MSG_CONFIG_WARNING_QUARANTINE_TO_SHORT=<b>ATTENTION: </b>Le chemin de la quarantaine est trop court (%s)! pour éviter une destruction irrémédiable de votre système de fichier lors des purges, une limite arbitraire de 8 caractères minimum à été mise en place.
 MSG_ERROR_APPLY_GLOBAL_SETTINGS=Une erreur est survenue lors du redémarrage de ClamAV. Editez le <a href="logs_main.cgi?lines=20&logfile=%s" target="_BLANK">fichier de log</a> pour plus de détails.
+MSG_ERROR_BAD_SIGNATURE=Caractères non autorisés dans la signature (seuls les caractères alphanumériques, le tiret (-), le point (.), le tiret bas (_) et le slash (/) sont acceptés)
 MSG_ERROR_BAD_SIZE=<b>La taille recommandée pour la signature hexadécimale se situe entre 40 et 200 caractères</b>
 MSG_ERROR_BAD_START=<b>La signature ne doit pas commencer par '00'</b>
 MSG_ERROR_FILE_READ=<b>Une erreur est survenue durant la lecture du fichier suivant:<p /><i>%s</i></b>
@@ -148,7 +150,7 @@ MSG_SUCCESS_UPDATE_MANUAL=La base de signatures à été mise à jour.
 MSG_SUCCES_APPLY_GLOBAL_SETTINGS=Les fichiers de configuration ont été modifiés
 MSG_VIRUS_NAME=Veuillez saisir une chaîne à rechercher
 MSG_WARNING_RESTORE_BACKUP_FLAG=<b>ATTENTION: </b>Il apparaît que vous n'avez encore jamais sauvegardé ce système avec wbmclamav. Par conséquent rien ne peut être restauré.
-MSG_WHITE_CHARS_REMOVED=<b>Les espaces ont été supprimés du nom du virus</b>
+MSG_WHITE_CHARS_REMOVED=<b>Les espaces ont été supprimés</b>
 NAME=Nom
 NEVER_REFRESH=Ne jamais mettre à jour automatiquement.
 NEXT=Suivant
@@ -222,14 +224,14 @@ SETTINGS_TITLE=Configuration générale
 SHOW_INFECTED_ONLY=N'afficher que les fichiers infectés
 SIGNATURE=Signature
 SIGNATURES_BUILD_END_STEP=Fin du processus de construction de la signature
-SIGNATURES_BUILD_END_STEP_DESCRIPTION=La signature est prête à être ajoutée dans la base de ClamAV: <ul><li>Vous pouvez la faire parvenir à l'équipe ClamAV en utilisant leur <a href="https://www.clamav.net/reports/signature" target="_BLANK">formulaire en ligne</a> ou bien encore leur envoyer par email à l'adresse <a href="mailto:virus@clamav.net">virus@clamav.net</a> (mais cette seconde méthode n'est plus d'actualité).</li><li>Si vous désirez être tenu au courant des évolutions de la base antivirus de ClamAV vous pouvez <a href="http://lists.sourceforge.net/lists/listinfo/clamav-virusdb" target="_BLANK">vous inscrire</a> à la liste de diffusion <a href="mailto:clamav-virusdb@lists.sourceforge.net">clamav-virusdb@lists.sourceforge.net</a>.</li></ul>
-SIGNATURES_DESCRIPTION=Cette section vous permet de construire une signature à partir d'un fichier corrompu. Voir <a href="https://www.clamav.net/documents/creating-signatures-for-clamav" target="_blank">Creating signatures for ClamAV</a> et <a href="https://www.clamav.net/documents/file-hash-signatures" target="_blank">File hash signatures</a> pour plus de détails quant à la gestion des signatures.
+SIGNATURES_BUILD_END_STEP_DESCRIPTION=La nouvelle signature est prête à être ajoutée dans une base locale *.hdb ou dans la base officielle de ClamAV : <ul><li>Vous pouvez la faire parvenir à l'équipe ClamAV en utilisant leur <a href="https://www.clamav.net/reports/signature" target="_BLANK">formulaire en ligne</a> ou bien encore leur envoyer par email à l'adresse <a href="mailto:virus@clamav.net">virus@clamav.net</a> (mais cette seconde méthode n'est plus d'actualité).</li><li>Si vous désirez être tenu au courant des évolutions de la base antivirus de ClamAV vous pouvez <a href="http://lists.sourceforge.net/lists/listinfo/clamav-virusdb" target="_BLANK">vous inscrire</a> à la liste de diffusion <a href="mailto:clamav-virusdb@lists.sourceforge.net">clamav-virusdb@lists.sourceforge.net</a>.</li></ul>
+SIGNATURES_DESCRIPTION=Cette section vous aide à construire une signature SHA1 basique à partir d'un fichier. Voir <a href="https://www.clamav.net/documents/creating-signatures-for-clamav" target="_blank">Creating signatures for ClamAV</a> et <a href="https://www.clamav.net/documents/file-hash-signatures" target="_blank">File hash signatures</a> pour plus de détails quant à la gestion des signatures.
 SIGNATURES_EXTRACTION=Extraction de signatures
 SIGNATURES_FIRST_STEP=Première étape: Uploader le fichier corrompu
 SIGNATURES_SECOND_STEP=Deuxième étape: Identifier un bloc de données significatif
 SIGNATURES_SECOND_STEP_DESCRIPTION=Commencez par rechercher une chaîne propre à ce virus en mode '%s'. Ensuite recherchez la même chaîne en mode '%s' et identifiez les codes hexadécimaux correspondants (veuillez vous référer au tutoriel ClamAV pour cette opération). Afin de terminer la phase d'identification, laissez uniquement la chaîne hexadécimale (supprimer tout ce qui ne doit pas faire partie de la signature) dans la zone de texte et passez à l'étape suivante en cliquant sur le bouton "%s".
 SIGNATURES_THIRD_STEP=Troisième étape: Terminer la signature
-SIGNATURES_THIRD_STEP_DESCRIPTION=A présent il faut associer un nom de virus à cette nouvelle signature.
+SIGNATURES_THIRD_STEP_DESCRIPTION=Veuillez vérifier le nom de la signature :
 SIGNATURES_TITLE=Extraction de signatures
 SPAMS=Spams
 SPAM_LEVEL=Niveau de Spam

@@ -232,15 +232,17 @@ sub clamav_is_amavisd_new ()
 sub clamav_is_mbox_format ($)
 {
   my $f = shift;
+
   return 0 if (! -f $f);
+
   my $h = new FileHandle ($f);
   my $folder_reader =
     new Mail::Mbox::MessageParser ({
       'file_name' => $f,
       'file_handle' => $h
     });
-  return 0 if (!ref ($folder_reader));
-  return 1;
+
+  return (!ref ($folder_reader)) ? 0 : 1;
 }
 
 # clamav_has_clamscan ()
@@ -715,29 +717,71 @@ sub clamav_html_cut ( $ $ )
   return $new;
 }
 
+# clamav_get_uniq_id ()
+# OUT: a numeric uniq id
+#
+# Build a numeric uniq id
+#
+sub clamav_get_uniq_id ()
+{
+  return time().int(rand(1000000));
+}
+
 # clamav_check_signature ( $ )
 # IN: new virus signature
-# OUT: 1 => the signature begun with 00
-#      2 => the signature is not between 40-200 characters
-#      3 => signature is ok
+# OUT: A error message if the signature is not valid
 #
 # check the ClamAV compatibility for a given virus signature
 #      
 sub clamav_check_signature ( $ )
 {
   my $signature = shift;
-  my $ret = 3;
+  my $clamscan = &clamav_has_clamscan ();
+  my $ret;
 
-  if ($signature =~ /^00/)
+  if ($signature !~ /^[a-z0-9\._\-\/:]+$/i)
   {
-    $ret = 1;
+    return $text{'MSG_ERROR_BAD_SIGNATURE'};
   }
-  elsif (length ($signature) < 40 || length ($signature) > 200)
+
+  my $tmp_file = &tempname (&clamav_get_uniq_id().'.hdb');
+  open (H, '>', $tmp_file); print H $signature; close (H);
+
+  my $r = `$clamscan -d $tmp_file $tmp_file 2>&1`;
+  if ($r =~ /rror\s*:\s*(.*)/)
   {
-    $ret = 2;
+    $ret = $1;
   }
+
+  unlink ($tmp_file);
 
   return $ret;
+}
+
+# clamav_build_signature ( $ )
+# IN: hashref \%in
+# OUT: SHA1 sum, filesize, name
+#
+# build a SHA1 signature
+#
+sub clamav_build_signature ( $ )
+{
+  my $in = shift;
+  my $sigtool = &has_command ('sigtool');
+  my ($signature, $virus_name);
+  my $id = &clamav_get_uniq_id();
+
+  my $tmp_file = &tempname($id.$in->{'upload_filename'});
+  open (H, '>', $tmp_file); print H $in->{'upload'}; close (H);
+
+  my $r = `$sigtool --sha1 \Q$tmp_file`;
+  unlink ($tmp_file);
+
+  my ($a, $b, $c) = $r =~ /^([^:]+):([^:]+):([^\.]+)\.?/;
+
+  $c =~ s/$id//;
+
+  return ($a, $b, ucfirst($c));
 }
 
 # clamav_get_version ()
@@ -977,13 +1021,45 @@ sub clamav_vdb_search ( $ $ )
 # 
 sub clamav_get_db_viruses_count
 {
-  my $sigtool = &has_command ("sigtool");
-  my $wc = &has_command ("wc");
+  my $sigtool = &has_command ('sigtool');
+  my $wc = &has_command ('wc');
   my $count = `$sigtool --list-sigs | $wc -l`;
   
-  $count =~ s/ //g;
+  $count =~ s/\s//g;
   
   return $count;
+}
+
+# clamav_display_combos_viruses_prefixes ()
+# IN: 1 if combo must not display values that already exist
+#     in the config file
+# OUT: 1 if combo box has been displayed (if there is result)
+#
+# Display a combo box with freshclam predifined variables
+#
+sub clamav_display_combos_viruses_prefixes ()
+{
+  require "$root_directory/$module_name/data/viruses_prefixes.pm";
+  my @defaults = @_;
+  my $display1 = ($defaults[0]) ? 'inline-block':'none';
+  my $ret = '';
+
+  for (my $i = 0; $i < 2; $i++)
+  {
+    my $default = $defaults[$i]||'';
+
+    $ret .= ($i == 0) ?
+              qq(<select name="prefix$i" onchange="(this.selectedIndex) ? getElementById('prefix1').style.display='inline-block':getElementById('prefix1').style.display='none'">\n) :
+              qq(<select id="prefix$i" name="prefix$i" style="display:$display1">\n);
+    $ret .= '<option value="">Choose prefix '.($i+1).'</option>'."/n";
+    foreach my $p (@{$viruses_prefixes[$i]})
+    {
+      $ret .= '<option value="'.$p.'"'.(($default eq $p)?' selected="selected"':'').'>'.$p.'</option>'."\n";
+    }
+    $ret .= qq(</select>\n);
+  }
+
+  return $ret;
 }
 
 # clamav_get_freshclam_daemon_state ()

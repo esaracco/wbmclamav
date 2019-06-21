@@ -1,6 +1,6 @@
 #!/usr/bin/perl
 
-# Copyright (C) 2003-2008
+# Copyright (C) 2003-2019
 # Emmanuel Saracco <emmanuel@esaracco.fr>
 #
 # This program is free software; you can redistribute it and/or modify
@@ -22,93 +22,52 @@ require '../webmin/webmin-lib.pl';
 require './clamav-lib.pl';
 &clamav_check_acl ('signature_use');
 
-if ($ENV{REQUEST_METHOD} eq "POST") { &ReadParseMime(); }
+if ($ENV{REQUEST_METHOD} eq 'POST') { &ReadParseMime(); }
 else { &ReadParse(); }
 
-$upload = ($in{'upload'}) ? 1 : 0;
+my $sha1 = $in{'sha1'}||'';
+my $size = $in{'size'}||0;
+my $virus_name = $in{'virus_name'}||'';
+my $error = $in{'error'}||'';
+my $upload = ($in{'upload'}) ? 1 : 0;
 
 # if there is no file to upload, error
-if ($in{'main'} and not $upload)
+if ($in{'main'} && !$upload)
 {
   &redirect ("/$module_name/signatures_main.cgi?error=1");
 }
 
-# check the validity of the given signature
-$msg = '';
-if ($in{'next2'})
-{
-  $signature = $in{'file_content'};
-  $signature =~ s/[ \n\r\t]//g;
-  
-  $ret = &clamav_check_signature ($signature);
-  if ($ret == 1)
-  {
-    $msg = $text{'MSG_ERROR_BAD_START'}; 
-  }
-  elsif ($ret == 2)
-  {
-    $msg = $text{'MSG_ERROR_BAD_SIZE'}; 
-  }
-  # if all is ok, go to the next step
-  else
-  {
-    $signature = &urlize ($signature);
-    &redirect ("/$module_name/signatures_2step.cgi?signature=$signature");
-  }
-}
-
-&header($text{'FORM_TITLE'}, "", undef, 1, 0);
+&header($text{'FORM_TITLE'}, '', undef, 1, 0);
 print "<hr>\n";
 
-print qq(<form method="POST" action="$scriptname" enctype="multipart/form-data">);
+if ($upload)
+{
+  ($sha1, $size, $virus_name) = &clamav_build_signature (\%in);
+}
+
+print qq(<form method="POST" action="signatures_2step.cgi">);
+
+printf qq(<input type="hidden" name="sha1" value="%s">), &html_escape($sha1);
+printf qq(<input type="hidden" name="size" value="%s">), &html_escape($size);
 
 print qq(<h1>$text{'SIGNATURES_TITLE'}</h1>);
 print qq(<p>$text{'SIGNATURES_DESCRIPTION'}</p>);
 
-print qq(<h2>$text{'SIGNATURES_SECOND_STEP'}</h2>);
+print qq(<h2>$text{'SIGNATURES_THIRD_STEP'}</h2>);
 
-print $msg if ($msg);
+print qq(<p><b>$error</b></p>) if ($error);
 
-printf "<p>$text{'SIGNATURES_SECOND_STEP_DESCRIPTION'}</p>", 
-  $text{'DISPLAY_STRINGS'}, $text{'DISPLAY_HEXA_ASCII'}, $text{'NEXT'};
+print qq(<p>$text{'SIGNATURES_THIRD_STEP_DESCRIPTION'}</p>);
 
-print qq(<p><input type="submit" name="op" value="$text{'DISPLAY_STRINGS'}"> );
-print qq(<input type="submit" name="op" value="$text{'DISPLAY_HEXA_ASCII'}"> );
-print qq(<input type="submit" name="op" value="$text{'DISPLAY_HEXA'}"></p>);
+print qq(<table border=1>);
+print qq(<tr><td $cb valign="top" nowrap>$text{'NAME'}:</td><td>);
+print &clamav_display_combos_viruses_prefixes ($in{'prefix0'}, $in{'prefix1'});
+printf qq(<input type="text" name="virus_name" value="%s" size="60"></td>), &html_escape($virus_name);
+printf qq(<tr><td $cb valign="top" nowrap>$text{'SIGNATURE'}:</td><td>%s</td>), &html_escape($sha1);
+printf qq(<tr><td $cb valign="top" nowrap>$text{'FILE_SIZE'}:</td><td>%s</td>), &html_escape($size);
+print qq(</table>);
 
-if ($upload)
-{
-  $op = $text{'DISPLAY_STRINGS'};
-  $tmp_file = &tempname(&file_basename($in{'upload_filename'}));
-  open (H, ">$tmp_file");
-  print H $in{'upload'};
-  close (H);
-}
-else
-{
-  $op = $in{'op'};
-  $tmp_file = $in{'tmp_file'};
-}
-
-if ($op eq $text{'DISPLAY_HEXA_ASCII'})
-{
-  open (H, "$all_path{'hexdump'}hexdump -C $tmp_file |");
-}
-elsif ($op eq $text{'DISPLAY_HEXA'})
-{
-  open (H, "$all_path{'hexdump'}hexdump $tmp_file |");
-}
-else
-{
-  open (H, "$all_path{'strings'}strings $tmp_file |");
-}
-@content = <H>;
-close (H);
-
-print qq(<input type="hidden" name="tmp_file" value="$tmp_file">);
-print qq(<textarea cols="80" rows="30" name="file_content">@content</textarea>\n);
-
-print qq(<p><input type="submit" name="next2" value="$text{'NEXT'}"></p>);
+print qq(<p><input type="submit" name="next3" value="$text{'END'}"></p>);
 
 print qq(</form>);
 
