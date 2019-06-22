@@ -931,21 +931,21 @@ sub clamav_vdb_get_pure_name ( $ )
   return $name;
 }
 
-# clamav_vdb_search ( $ $ )
+# clamav_vdb_search ( $ $ $ $ )
 # IN: virus name, TRUE if we must do a strict search
 # OUT: -
 #
 # Do a search in ClamAV database and display the result
 # 
-sub clamav_vdb_search ( $ $ )
+sub clamav_vdb_search ( $ $ $ $ )
 {
   my ($virus, $strict, $case, $sortr) = @_;
   my $string = '';
   my $escaped = '';
   my $first = 1;
-  my $grep = &has_command ("grep");
+  my $grep = &has_command('grep');
 
-  return if (!&is_secure ($virus));
+  return if ($virus !~ /^[a-z0-9\._\-\/:]+$/i);
 
   # case sensitive search?
   $case = ($case) ? ' ' : ' -i ';
@@ -963,7 +963,7 @@ sub clamav_vdb_search ( $ $ )
         &has_command ("sigtool") . " --list-sigs | $sortr";
 
   # display results
-  open (H, '<', $string);
+  open (H, $string);
   while (<H>)
   {
     chomp ();
