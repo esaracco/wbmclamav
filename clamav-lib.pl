@@ -79,8 +79,12 @@ eval "use POSIX";
 $perl_deps{'POSIX'} if ($@ ne '');
 eval "use File::Basename";
 $perl_deps{'File::Basename'} = 1 if ($@ ne '');
+eval "use File::Path qw(make_path)";
+$perl_deps{'File::Path'} = 1 if ($@ ne '');
 eval "use File::Find";
-$perl_deps{'File::File'} = 1 if ($@ ne '');
+$perl_deps{'File::Find'} = 1 if ($@ ne '');
+eval "use File::Copy";
+$perl_deps{'File::Copy'} = 1 if ($@ ne '');
 eval "use Date::Manip";
 $perl_deps{'Date::Manip'} if ($@ ne '');
 eval "use Compress::Zlib";
@@ -264,7 +268,7 @@ sub clamav_has_clamscan ()
 #
 sub clamav_check_systemd ()
 {
-  return !system (&has_command ("pidof").' systemd 2>&1 > /dev/null');
+  return !system (&has_command('pidof').' systemd 2>&1 > /dev/null');
 }
 
 # clamav_check_config ()
@@ -419,29 +423,25 @@ sub clamav_setup ()
         !&is_secure ($config{'clamav_sys_group'}));
 
   # create module's temporary directory
-  $dir = "$config{'clamav_working_path'}/.clamav/$remote_user";
-  system (&has_command ("mkdir") . ' -p ' . quotemeta ($dir)) if (! -d $dir);
-  $dir = "$root_directory/$module_name/tmp";
-  system (&has_command ("mkdir") . ' -p ' . quotemeta ($dir)) if (! -d $dir);
+  make_path (
+    "$config{'clamav_working_path'}/.clamav/$remote_user",
+    "$root_directory/$module_name/tmp",
+    {'chmod' => 0700}
+  );
 
   # modify permissions
-  $dir = "$config{'clamav_working_path'}/.clamav";
-  system (&has_command ("chmod") . ' 700 ' . quotemeta ($dir));
-  system (&has_command ("chmod") . " 755 $root_directory/$module_name/bin/*");
-
+  system (&has_command('chmod')." 755 $root_directory/$module_name/bin/*");
 
   # touch log files
   foreach my $l (($config{'clamav_clamav_log'}, 
                   $config{'clamav_freshclam_log'}))
   {
-    next if ($l eq '' || -f $l);
+    next if (!$l || -f $l);
 
-    system (&has_command ("touch") . ' ' . quotemeta ($l));
-    system (&has_command ("chmod") . ' 640 ' . quotemeta ($l));
-    system (&has_command ("chown") . ' ' .
-            quotemeta ($config{'clamav_sys_user'}) . ':' .
-            quotemeta ($config{'clamav_sys_group'}) . ' ' .
-            quotemeta ($l));
+    open (H, '>', $l);close (H);
+    chmod (0600, $l);
+    chown (getpwnam($config{'clamav_sys_user'}),
+           getgrnam($config{'clamav_sys_group'}), $l);
   }
 }
 
@@ -963,7 +963,7 @@ sub clamav_vdb_search ( $ $ )
         &has_command ("sigtool") . " --list-sigs | $sortr";
 
   # display results
-  open (H, $string);
+  open (H, '<', $string);
   while (<H>)
   {
     chomp ();
@@ -1097,7 +1097,7 @@ sub clamav_bsd_get_state ( $ )
   my $daemon = shift;
   my $ret = 'NO';
 
-  open (H, "</etc/rc.conf");
+  open (H, '<', '/etc/rc.conf');
   while (my $line = <H>)
   {
     if ($line =~ /clamav_${daemon}_enable/)
@@ -1511,10 +1511,10 @@ sub clamav_bsd_update_state ( $ $ )
   my ($daemon, $state) = @_;
   my $found = 0;
 
-  system (&has_command ("cp") . " -f /etc/rc.conf /etc/rc.conf_wbmclamav");
+  copy ('/etc/rc.conf', '/etc/rc.conf_wbmclamav');
 
-  open (SRC, "</etc/rc.conf_wbmclamav");
-  open (DST, ">/etc/rc.conf"); 
+  open (SRC, '<', '/etc/rc.conf_wbmclamav');
+  open (DST, '>', '/etc/rc.conf');
 
   while (my $line = <SRC>)
   {
@@ -1536,7 +1536,7 @@ sub clamav_bsd_update_state ( $ $ )
 
 sub clamav_get_cron_path ()
 {
-  return (-d "/etc/cron.d/") ? CRONTAB_MODULE_PATH : CRONTAB_PATH;
+  return (-d '/etc/cron.d/') ? CRONTAB_MODULE_PATH : CRONTAB_PATH;
 }
 
 # clamav_delete_cron ( $ )
@@ -1557,19 +1557,11 @@ sub clamav_delete_cron ( $ )
 
   # First time, make a backup of the original 
   # crontab file
-  if (! -f $path_sav)
-  {
-    system (&has_command ("cp") . ' -f ' .
-            quotemeta ($path) . ' ' .
-            quotemeta ("$path.orig-wbmclamav"));
-  }
+  copy ($path, "$path.orig-wbmclamav") if (! -f $path_sav);
+  copy ($path, $path_sav);
 
-  system (&has_command ("cp") . ' -f ' .
-          quotemeta ($path) . ' ' .
-          quotemeta ($path_sav));
-
-  open (SRC, "<$path_sav");
-  open (DST, ">$path"); 
+  open (SRC, '<', $path_sav);
+  open (DST, '>', $path); 
   while (my $line = <SRC>)
   {
     print DST $line
@@ -1667,11 +1659,11 @@ sub daemon_control
   {
     #&daemon_control ($bin, "stop");
     #&daemon_control ($bin, "start");
-    system ("$bin restart")
+    system ($bin, 'restart')
   }
   else
   {
-    system ("$bin $op");
+    system ($bin, $op);
   }
   sleep (1);
 }
@@ -1688,7 +1680,7 @@ sub clamav_save_freshclam_config
   my @tmp = ();
   
   &lock_file ($config{'clamav_freshclam_conf'});
-  open (H, ">$config{'clamav_freshclam_conf'}");
+  open (H, '>', $config{'clamav_freshclam_conf'});
   foreach my $key (keys %freshclam_config)
   {
     next if $freshclam_config{$key} eq "$text{'UNDEFINED'}";
@@ -1736,8 +1728,8 @@ sub clamav_save_global_settings
     $fc = "$config{'clamav_working_path'}/.clamav/$remote_user/freshclam.conf";
   }
   
-  &lock_file ($cc); open (CLAMAV, ">$cc");
-  &lock_file ($fc); open (FRESHCLAM, ">$fc");
+  &lock_file ($cc); open (CLAMAV, '>', $cc);
+  &lock_file ($fc); open (FRESHCLAM, '>', $fc);
   
   foreach my $key (sort keys %in)
   {
@@ -2100,7 +2092,7 @@ sub clamav_load_clamav_config
     $cc = "$config{'clamav_working_path'}/.clamav/$remote_user/clamav.conf" 
   }
   
-  open (H, "<$cc");
+  open (H, '<', $cc);
   while (my $l = <H>)
   {
     next if $l =~ /^\s*#/;
@@ -2129,7 +2121,7 @@ sub clamav_load_freshclam_config
   $fc = "$config{'clamav_working_path'}/.clamav/$remote_user/freshclam.conf" 
     if (-f "$config{'clamav_working_path'}/.clamav/$remote_user/freshclam.conf");
   
-  open (H, "<$fc");
+  open (H, '<', $fc);
   while (my $l = <H>)
   {
     next if $l =~ /^(\s*#|\n)/;
@@ -2174,7 +2166,7 @@ sub clamav_set_cron_update ( $ $ )
     "--datadir $datadir) " .
     "#update";
 
-  open (H, ">>$path");
+  open (H, '>>', $path);
   print H "$new_line\n";
   close (H);
 }
@@ -2220,7 +2212,7 @@ sub clamav_set_cron_purge ( $ $ )
     " $maxdays" .
     ") #purge";
 
-  open (H, ">>$path");
+  open (H, '>>', $path);
   print H "$new_line\n";
   close (H);
 }
@@ -2264,7 +2256,7 @@ sub clamav_get_cron_settings ( $ )
 
   return undef if (! -e "$path");
 
-  open (H, "<$path");
+  open (H, '<', $path);
   @lines = <H>;
   close (H);
                                                                                 
@@ -2493,7 +2485,7 @@ sub clamav_get_filtered_email_content ( $ @)
   $cmd .= " $file > $tmp_dir/$new_file";
   system ($cmd);
 
-  open (H, "$tmp_dir/$new_file");
+  open (H, '<', "$tmp_dir/$new_file");
   my $m = new Mail::Internet (*H);
   close (H);
   unlink ("$tmp_dir/$new_file");
@@ -2520,13 +2512,13 @@ sub clamav_get_file_content ( $ )
   if ($file =~ /\.gz$/)
   {
     my $buf = '';
-    my $gz = gzopen ($file, "rb");
+    my $gz = gzopen ($file, 'rb');
     $content .= $buf while ($gz->gzread ($buf, 4096));
     $gz->gzclose ();
   }
   else
   {
-    open (H, $file);
+    open (H, '<', $file);
     $content = join ('', <H>);
     close (H);
   }
@@ -2579,7 +2571,7 @@ sub clamav_get_email_header_values ( $ @ )
   {
     my $gzip = undef;
     
-    $gzip = gzopen ($file, "rb");
+    $gzip = gzopen ($file, 'rb');
     LOOP2: while ($gzip->gzreadline ($item) && ($i <= $#names))
     {
       chomp ($item);
@@ -2601,7 +2593,7 @@ sub clamav_get_email_header_values ( $ @ )
     $gzip->gzclose ();
   }
   # uncompressed file
-  elsif (open (H, $file))
+  elsif (open (H, '<', $file))
   {
     LOOP3: while (defined ($item = <H>) && ($i <= $#names))
     {
@@ -2641,7 +2633,7 @@ sub clamav_get_log_values ( $ $ )
   my $item = '';
   my $i = 0;
                                                                                 
-  if (open (H, $file))
+  if (open (H, '<', $file))
   {
     LOOP1: while (defined ($item = <H>) && ($i <= $#names))
     {
@@ -2859,7 +2851,7 @@ sub clamav_resend_email
          FCC));
   }
 
-  open (H, ">$tmp_dir/email.txt"); print H $content; close (H);
+  open (H, '>', "$tmp_dir/email.txt"); print H $content; close (H);
 
   %header = &clamav_get_email_header_values ("$tmp_dir/email.txt", 
                                              qw(From To Cc));
@@ -3025,7 +3017,7 @@ sub clamav_remove_email
       } );
 
     $tmppath = "$config{'clamav_working_path'}/.clamav/$remote_user/" . time ();
-    open (H, ">$tmppath");
+    open (H, '>', $tmppath);
     while (!$folder_reader->end_of_file ())
     {
       my $email = $folder_reader->read_next_email ();
@@ -3033,9 +3025,7 @@ sub clamav_remove_email
     }
     close (H);
 
-    system (&has_command ('mv') . ' -f ' .
-      quotemeta ($tmppath) . ' ' .
-      quotemeta ($config{'clamav_quarantine'}));
+    move ($tmppath, $config{'clamav_quarantine'});
 
     return OK;
   }
@@ -3044,7 +3034,7 @@ sub clamav_remove_email
   if (&clamav_is_amavis_ng ())
   {
     $res = 
-      system (&has_command ("rm") . ' -f ' .
+      system (&has_command('rm') . ' -f ' .
               quotemeta ($config{'clamav_quarantine'}) . '/' .
               quotemeta ($base) . '.*');
   }
@@ -3052,17 +3042,15 @@ sub clamav_remove_email
   elsif (&clamav_is_mailscanner ())
   {
     $res = 
-      system (&has_command ("rm") . ' -rf ' .
-              quotemeta ($config{'clamav_quarantine'}) . '/' . 
-              quotemeta (dirname ($base)));
+      system (&has_command('rm'), '-rf',
+              $config{'clamav_quarantine'}.'/'.dirname($base));
   }
   # if amavisd-new, qmailscanner or clamav-milter is installed
   else
   {
     $res = 
-      system (&has_command ("rm") . ' -f ' .
-              quotemeta ($config{'clamav_quarantine'}) . '/' .
-              quotemeta ($base));
+      system (&has_command('rm'), '-f',
+              $config{'clamav_quarantine'}."/$base");
   }
 
   return ($res != 0) ? KO : OK;
@@ -3082,7 +3070,7 @@ sub clamav_print_log
 
   return if (!&is_secure ($file) || !&is_secure ($lines));
   
-  open (H, "$file");
+  open (H, '<', $file);
   if (!$lines)
     {@content = <H>}
   else
@@ -3943,7 +3931,7 @@ sub clamav_download ()
   }
   print "\n";
 
-  open (F, "<$file");
+  open (F, '<', $file);
   while (<F>) {print;}
   close (F);
 
@@ -4036,7 +4024,7 @@ sub clamav_print_quarantine_table_display ( $ $ \% \@ )
   print qq(</tr>);
 
   my $dir = "$config{'clamav_working_path'}/.clamav/$remote_user";
-  open (F, ">$dir/quarantine-export.csv");
+  open (F, '>', "$dir/quarantine-export.csv");
   my $export_line = "type;date;hour;subject;description;level;virus;from;to\n";
   print F $export_line;
 
@@ -4588,7 +4576,7 @@ sub clamav_get_quarantine_infos ()
       if ($gd)
       {
         system (
-          &has_command ("rm") . ' -f ' .
+          &has_command('rm') . ' -f ' .
           "$root_directory/$module_name/tmp/" .
           "$remote_user-quarantine_graph-*.png");
         open OUT, ">$root_directory/$module_name/tmp/" . $infos{'graph_name'}
@@ -4998,10 +4986,8 @@ sub clamav_system_ok
 sub clamav_backup_item_exists ()
 {
   my $i = shift;
-  my $cpath = 
-    $config{'clamav_init_restore_path'} . '/wbmclamav_system_backups/';
 
-  return (-f "$cpath/$i" || -d "$cpath/$i");
+  return(-e $config{'clamav_init_restore_path'}."/wbmclamav_system_backups/$i");
 }
 
 # clamav_system_backup ()
@@ -5014,8 +5000,6 @@ sub clamav_backup_item_exists ()
 sub clamav_system_backup
 {
   require "$root_directory/$module_name/data/system_files.pm";
-  my $mkdir = &has_command ("mkdir");
-  my $cp = &has_command ("cp");
   my $cpath = 
     $config{'clamav_init_restore_path'} . '/wbmclamav_system_backups/';
 
@@ -5025,25 +5009,23 @@ sub clamav_system_backup
     
     &clamav_reactivate_system_file ($freshclam);
     
-    if (-f "/var/lib/clamav/interface.webmon_NO")
+    if (-f '/var/lib/clamav/interface.webmon_NO')
     {
-      system (
-        &has_command ("mv") . " /var/lib/clamav/interface.webmon_NO " .
-	  " /var/lib/clamav/interface ");
+      move ('/var/lib/clamav/interface.webmon_NO',
+            '/var/lib/clamav/interface');
     }
-    if (-f "/var/lib/clamav/clamav-freshclam.webmin_NO")
+    if (-f '/var/lib/clamav/clamav-freshclam.webmin_NO')
     {
-      system (
-        &has_command ("mv") . " /var/lib/clamav/clamav-freshclam.webmin_NO " .
-	  " /etc/cron.d/clamav-freshclam ");
+      move ('/var/lib/clamav/clamav-freshclam.webmin_NO',
+            '/etc/cron.d/clamav-freshclam');
     }
-    ##
   }
 
-  if (system ("$mkdir -p " . quotemeta ($cpath)) != 0)
+  make_path ($cpath);
+  if (! -d $cpath)
   {
     &clamav_check_config_exit (sprintf $text{"MSG_FATAL_ERROR_BACKUP_PATH"},
-      $cpath);
+                                 $cpath);
   }
 
   while (my ($path, $empty) = each (%system_files))
@@ -5053,30 +5035,29 @@ sub clamav_system_backup
     $path =~ /^(.*)\/(.*)$/;
     my ($dir, $file) = ($1, $2);
     
-    if (system ("$mkdir -p " . quotemeta ("$cpath/$dir")) != 0)
+    make_path ("$cpath/$dir");
+    if (! -d "$cpath/$dir")
     {
       &clamav_check_config_exit (sprintf $text{"MSG_FATAL_ERROR_BACKUP_PATH"},
-        "$cpath/$dir");
+                                   "$cpath/$dir");
     }
-    if (system ("$cp -f " . 
-                quotemeta ($path) . ' ' . 
-                quotemeta ("$cpath/$dir/")) != 0)
+    if (!copy ($path, "$cpath/$dir/"))
     {
       &clamav_check_config_exit (sprintf $text{"MSG_FATAL_ERROR_BACKUP_FILE"},
-        $path, "$cpath/$dir/$file");
+                                   $path, "$cpath/$dir/$file");
     }
 
     next if (!$empty);
-    open (H, ">$path") || 
+    open (H, '>', $path) || 
       &clamav_check_config_exit (sprintf $text{"MSG_FATAL_ERROR_BACKUP_EMPTY"}, 
-        "$cpath/$dir/$file");
+                                   "$cpath/$dir/$file");
     print H 
       "# Deactivated by wbmclamav\n" .
       "# Backup file is : $cpath/$dir/$file\n";
     close (H);
   }
 
-  open (H, ">$cpath/.backup_flag"); close (H);
+  open (H, '>', "$cpath/.backup_flag"); close (H);
 }
 
 # clamav_first_backup ()
@@ -5115,14 +5096,12 @@ sub clamav_system_restore
 {
   require "$root_directory/$module_name/data/system_files.pm";
   my ($files, $uninstall) = @_;
-  my $cp = &has_command ("cp");
-  my $cpath = 
-    $config{"clamav_init_restore_path"} . "/wbmclamav_system_backups/";
+  my $cpath = $config{'clamav_init_restore_path'}.'/wbmclamav_system_backups/';
   my $res = 0;
   
   if (!defined ($uninstall))
   {
-    if (!&clamav_system_ok ("restore"))
+    if (!&clamav_system_ok ('restore'))
     {
       &clamav_check_config_exit (
         sprintf $text{"MSG_WARNING_RESTORE_BACKUP_FLAG"}, $cpath);
@@ -5147,24 +5126,19 @@ sub clamav_system_restore
  
     # Backup existant system file before restoring version saved by our module,
     # just in case somthing wrong happened
-    system ("$cp -f " .
-                   quotemeta ("$path/$file") . ' ' .
-                   quotemeta ("$path.clamav-backup-" . time ()));
+    copy ("$path/$file", "$path.clamav-backup-".time());
 
     # Restore file
-    system ("$cp -f " .
-                   quotemeta ("$cpath/$dir/$file") . ' ' .
-                   quotemeta ($path));
+    copy ("$cpath/$dir/$file", $path);
 
     if (!defined ($uninstall) && $res != 0)
     {
       &clamav_check_config_exit (sprintf $text{"MSG_FATAL_ERROR_RESTORE_FILE"},
-        "$cpath/$dir/$file", $path);
+                                   "$cpath/$dir/$file", $path);
     }
   }
 
-  system (&has_command ("rm") . ' -f ' .
-          quotemeta ($cpath) . '/.backup_flag');
+  unlink ("$cpath/.backup_flag");
 }
 
 1;
