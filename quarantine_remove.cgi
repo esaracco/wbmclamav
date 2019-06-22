@@ -1,6 +1,6 @@
 #!/usr/bin/perl
 
-# Copyright (C) 2003-2008
+# Copyright (C) 2003-2019
 # Emmanuel Saracco <emmanuel@esaracco.fr>
 #
 # This program is free software; you can redistribute it and/or modify
@@ -37,7 +37,7 @@ if (not $in{'next'})
   print qq(<p><input type="submit" name="next" value="$text{'DELETE'}"></p>\n);
   print qq(</form>\n);
 
-  print qq(<hr);
+  print qq(<hr/>);
   &footer ("quarantine_main.cgi", $text{'RETURN_QUARANTINE_LIST'});
 }
 else
