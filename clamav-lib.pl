@@ -931,21 +931,40 @@ sub clamav_vdb_get_pure_name ( $ )
   return $name;
 }
 
-# clamav_vdb_search ( $ $ $ $ )
-# IN: virus name, TRUE if we must do a strict search
+# clamav_vdb_search ( $ )
+# IN: script args
 # OUT: -
 #
 # Do a search in ClamAV database and display the result
 # 
-sub clamav_vdb_search ( $ $ $ $ )
+sub clamav_vdb_search ( $ )
 {
-  my ($virus, $strict, $case, $sortr) = @_;
+  my $in = shift;
+  my $p1 = $in->{'prefix0'};
+  my $p2 = $in->{'prefix1'};
+  my $virus = $in->{'virus'};
+  my $strict = ($in->{'strict'} eq 'on');
+  my $case = ($in->{'case'} eq 'on');
+  my $sortr = ($in->{'sort'} eq 'on');
   my $string = '';
   my $escaped = '';
   my $first = 1;
   my $grep = &has_command('grep');
 
-  return if ($virus && $virus !~ /^[a-z0-9\._\-\/:]+$/i);
+  return if (
+    $p1 && $p1 !~ /^[a-z]+$/i ||
+    $p2 && $p2 !~ /^[a-z]+$/i ||
+    $virus && $virus !~ /^[a-z0-9\._\-\/:]+$/i
+  );
+
+  if ($p1)
+  {
+    my $tmp = $p1;
+
+    $tmp .= ".$p2" if ($p2);
+
+    $virus = ($virus) ? "$tmp.$virus" : $tmp;
+  }
 
   # case sensitive search?
   $case = ($case) ? ' ' : ' -i ';
@@ -966,6 +985,7 @@ sub clamav_vdb_search ( $ $ $ $ )
   open (H, $string);
   while (<H>)
   {
+    next if (/^ERROR/);
     chomp ();
     my $escaped_pure = &urlize (&clamav_vdb_get_pure_name ($_));
     my $escaped = &urlize ($_);
@@ -989,14 +1009,14 @@ sub clamav_vdb_search ( $ $ $ $ )
         <table border=1>
         <tr $tb>
 	<th>$text{'NAME'}</th>
-        <th>Viruslist (fr)</th>
+<!--        <th>Viruslist (fr)</th>-->
         </tr>
       );
     }
       
     print qq(
       <tr><td $cb>$_</td>
-      <td $cb><a href="$viruslist_url" target="_BLANK">$text{'MORE'}</a></td>
+<!--      <td $cb><a href="$viruslist_url" target="_BLANK">$text{'MORE'}</a></td>-->
       </tr>
     );
   }
