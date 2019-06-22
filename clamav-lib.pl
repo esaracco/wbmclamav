@@ -945,22 +945,22 @@ sub clamav_vdb_search ( $ $ $ $ )
   my $first = 1;
   my $grep = &has_command('grep');
 
-  return if ($virus !~ /^[a-z0-9\._\-\/:]+$/i);
+  return if ($virus && $virus !~ /^[a-z0-9\._\-\/:]+$/i);
 
   # case sensitive search?
   $case = ($case) ? ' ' : ' -i ';
 
   # sort results
-  $sortr = ($sortr) ? ' ' . &has_command ('sort') . ' |' : '';
+  $sortr = ($sortr) ? ' '.&has_command('sort'). ' |' : '';
   
   # strict check (exact match)?
   $string = ($virus ne '') ? 
     (($strict) ? 
-      &has_command ("sigtool") . 
+      &has_command('sigtool').
         " --list-sigs | $grep $case \"^$virus\$\" | $sortr" :
-      &has_command ("sigtool") . 
+      &has_command('sigtool').
         " --list-sigs | $grep $case $virus | $sortr") :
-        &has_command ("sigtool") . " --list-sigs | $sortr";
+        &has_command('sigtool')." --list-sigs | $sortr";
 
   # display results
   open (H, $string);

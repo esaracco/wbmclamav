@@ -1,6 +1,6 @@
 #!/usr/bin/perl
 
-# Copyright (C) 2003-2008
+# Copyright (C) 2003-2019
 # Emmanuel Saracco <emmanuel@esaracco.fr>
 #
 # This program is free software; you can redistribute it and/or modify
@@ -26,34 +26,36 @@ my $cp = $in{'cp'};
 my $maxdays = $in{'maxdays'};
 my $search_type = $in{'search_type'};
 my $old_search_type = $in{'old_search_type'};
-my $search_type_virus = ($search_type eq 'virus');
+my $search_type_virus = ($search_type eq 'virus' || !$search_type);
 my $search_type_spam = ($search_type eq 'spam');
 my %quarantine_infos = ();
 my $msg = '';
-$search_type_virus = 1 if ($search_type eq '');
+
 $cp = 0 if ($old_search_type ne '');
 
-if ($in{"resend"})
+if ($in{'resend'})
 {
-  my $args = &clamav_join_from_url ("quarantine_file");
-  
-  &redirect (
-    "/$module_name/quarantine_resend.cgi?" .
-    "notaspam=1&" .
-    "deleteafter=1&" .
-    "newto=1&" .
-    $args) if ($args);
+  my $args = &clamav_join_from_url ('quarantine_file');
+  if ($args)
+  {
+    &redirect (
+      "/$module_name/quarantine_resend.cgi?" .
+      'notaspam=1&'.
+      'deleteafter=1&'.
+      'newto=1&'.
+      $args);
+  }
 
   delete $in{'resend'};
 }
 elsif ($in{'export'})
 {
-  my $dir = "$config{'clamav_working_path'}/.clamav/$remote_user";
-  &clamav_download ("$dir/quarantine-export.csv");
+  &clamav_download (
+   "$config{'clamav_working_path'}/.clamav/$remote_user/quarantine-export.csv");
 }
 
-&header($text{'FORM_TITLE'}, "", undef, 1, 0);
-print "<hr>\n";
+&header($text{'FORM_TITLE'}, '', undef, 1, 0);
+print "<hr/>\n";
 
 print qq(
   <form action="$scriptname" method="post">
@@ -110,7 +112,7 @@ elsif ($in{'delete'})
 elsif ($in{'delete_all'})
 {
   $res = &clamav_purge_quarantine ();
-  if (!&clamav_value_is ($res, "OK"))
+  if (!&clamav_value_is ($res, 'OK'))
   {
     $msg = sprintf (qq(
       <b>$text{'MSG_ERROR_STATUS_PURGE_ALL'}</b>
@@ -119,7 +121,7 @@ elsif ($in{'delete_all'})
         <b>Message</b>: %s
       </blockquote>
      ), 
-      $clamav_error);
+     $clamav_error);
   }
   else
   {
@@ -134,8 +136,10 @@ if (!%in || $in{'refresh'} || $in{'delete_all'})
 else
 {
   %quarantine_infos = ();
-  $quarantine_infos{$_} = $in{$_} 
-    foreach (qw(directory size viruses spams badh banned graph_name));
+  foreach my $item (qw(directory size viruses spams badh banned graph_name))
+  {
+    $quarantine_infos{$item} = $in{$item};
+  }
 }
 
 print qq(<h1>$text{'QUARANTINE_PAGE_TITLE'}</h1>);
@@ -364,5 +368,5 @@ if ($in{'search'})
 
 print qq(</form>);
   
-print qq(<hr>);
-&footer("", $text{'RETURN_INDEX_MODULE'});
+print qq(<hr/>);
+&footer('', $text{'RETURN_INDEX_MODULE'});
