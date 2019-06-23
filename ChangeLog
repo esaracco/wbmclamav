@@ -1,3 +1,23 @@
+2019-06-23 Emmanuel Saracco <emmanuel@esaracco.fr>
+
+	* Version: 0.18
+
+	* Viruses search database:
+
+	  - Added search by viruses prefixes, and removed virus information
+	    link for now (it seems that no more online database offers it).
+
+	* Signature creation section:
+
+	  - Complete remodeling of the signatures creation helper.
+
+	* Other:
+
+	  - Attempt to avoid calls to the system() function as much as
+	    possible by using File::Path, File::Copy etc. (WIP)
+	  - New wbmclamav logo.
+	  - External links update.
+
 2019-06-07 Emmanuel Saracco <emmanuel@esaracco.fr>
 
 	* wbmclamav is now hosted on GitHub.
