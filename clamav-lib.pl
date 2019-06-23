@@ -696,27 +696,6 @@ sub clamav_trim_config
   }
 }
 
-# clamav_html_cut ( $ $ )
-# IN: the string to cut, the max length before cutting
-# OUT: the cutted string with HTML <br> tags
-#
-# cut a string with HTML <br> tags
-# 
-sub clamav_html_cut ( $ $ )
-{
-  my ($string, $len) = @_;
-  my $i = 0;
-  my $new = '';
-
-  for ($i = 0; $i < length ($string); $i++)
-  {
-    $new .= '<br>' if ($i > 0 && !($i % $len));
-    $new .= substr ($string, $i, 1);
-  }
-
-  return $new;
-}
-
 # clamav_get_uniq_id ()
 # OUT: a numeric uniq id
 #
