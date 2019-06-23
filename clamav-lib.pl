@@ -26,7 +26,7 @@ my %ACLs = &get_module_acl ();
 
 # min stable clamav version supported by this module
 use constant SUPPORTED_VERSION => '0.100.3';
-# min devel (CVS) clamav version supported by this module
+# min devel (Git) clamav version supported by this module
 use constant SUPPORTED_DEVEL_DATE => '20150427';
 # max items to display/page for quarantine search result
 use constant MAX_PAGE_ITEMS => 50;
@@ -455,16 +455,11 @@ sub clamav_get_proxy_settings
 {
   &clamav_load_freshclam_config ();
 
-  return (
-    "$freshclam_config{'HTTPProxyServer'}",
-    "$freshclam_config{'HTTPProxyPort'}"
-  )
-    if (
-      $freshclam_config{'HTTPProxyServer'} && 
-      $freshclam_config{'HTTPProxyPort'}
-    );
-
-  return ();
+  return 
+    ($freshclam_config{'HTTPProxyServer'} &&
+     $freshclam_config{'HTTPProxyPort'}) ?
+    ($freshclam_config{'HTTPProxyServer'},
+     $freshclam_config{'HTTPProxyPort'}) : ();
 }
 
 # clamav_remote_actions_take_arg ( $ )
@@ -613,17 +608,21 @@ sub clamav_quarantine_main_check_config
   my $ok = 0;
   my $msg = '';
 
-  if ($config{'clamav_quarantine_soft'} == CS_NONE ||
-    (!&clamav_is_amavisd_new () &&
-    !&clamav_is_amavis_ng () &&
-    !&clamav_is_milter () &&
-    !&clamav_is_mailscanner () &&
-    !&clamav_is_qmailscanner ()))
+  if (
+    $config{'clamav_quarantine_soft'} == CS_NONE ||
+    (
+      !&clamav_is_amavisd_new () &&
+      !&clamav_is_amavis_ng () &&
+      !&clamav_is_milter () &&
+      !&clamav_is_mailscanner () &&
+      !&clamav_is_qmailscanner ()
+    ))
   {
     $msg = qq(<p>$text{'MSG_CONFIG_ALERT_AMAVIS'}</p>);
   }
-  elsif ($config{'clamav_quarantine'} eq '' ||
-    ! (-d $config{'clamav_quarantine'} || -f $config{'clamav_quarantine'}))
+  elsif (
+    $config{'clamav_quarantine'} eq '' ||
+    ! -e $config{'clamav_quarantine'})
   {
     $msg = qq(<p>$text{'MSG_CONFIG_ALERT_QUARANTINE'}</p>);
   }
@@ -651,8 +650,8 @@ sub clamav_signatures_check_config
 {
   &clamav_check_config_exit ($text{'MSG_ERROR_SIGNATURES_CONFIG'})
     if (
-      !&has_command ("strings") ||
-      !&has_command ("hexdump")
+      !&has_command ('strings') ||
+      !&has_command ('hexdump')
     );
 }
 
@@ -671,7 +670,7 @@ sub clamav_check_config_exit ( $ $ )
   print qq(<hr>);
   if ($main_page)
   {
-    &footer("/", $text{'index'});
+    &footer('/', $text{'index'});
   }
   else
   {
@@ -771,18 +770,12 @@ sub clamav_build_signature ( $ )
 # 
 sub clamav_get_version
 {
-  my $out = '';
-  my $ret = '';
   my $clamscan = &clamav_has_clamscan ();
+  my $out = `$clamscan --version 2>&1`;
 
-  $out = `$clamscan --version 2>&1`;
-
-  if ($out =~ /devel-([\d+]{8})/ || 
-      $out =~ /([\d,\.]+)/ || 
-      $out =~ /ClamAV\s*([^\/]+)/) 
-    {$ret = $1}
-
-  return $ret;
+  return ($out =~ /devel-([\d+]{8})/ ||
+          $out =~ /([\d,\.]+)/ ||
+          $out =~ /ClamAV\s*([^\/]+)/) ? $1 : '';
 }
 
 # clamav_check_version ()
@@ -791,20 +784,20 @@ sub clamav_get_version
 #
 # return true if the installed version of clamav
 # is supported by this module. if this is a "stable" release, we look
-# at its version number, otherwise if it is a CVS release we look at its
-# date
+# at its version number, otherwise if it is a development release we look at
+# its date
 # 
 sub clamav_check_version
 {
-  my $out = '';
   my $ret = 0;
   my $clamscan = &clamav_has_clamscan ();
+  my $out = `$clamscan --version 2>&1`;
 
-  $out = `$clamscan --version 2>&1`;
-
-  # clamav CVS
+  # clamav devel
   if ($out =~ /devel-([\d+]{8})/)
-    {$ret = (&Date_Cmp (SUPPORTED_DEVEL_DATE, $1) <= 0)}
+  {
+    $ret = (&Date_Cmp (SUPPORTED_DEVEL_DATE, $1) <= 0);
+  }
   # clamav package
   elsif ($out =~ /([\d\.]+)/ || $out =~ /ClamAV\s+([\d\.]+)/)
   {
@@ -840,17 +833,14 @@ sub clamav_check_version
 # 
 sub clamav_get_runlevel
 {
-  my $runlevel = '';
-  my $runlevelc = &has_command ("runlevel");
+  my $runlevelc = &has_command ('runlevel');
+  my $runlevel = `$runlevelc`;
 
-  $runlevel = `$runlevelc`;
   $runlevel =~ s/N //;
   $runlevel =~ s/(^\s+|\s+$)//g;
-
   $runlevel = int ($runlevel);
-  $runlevel = '' if ($runlevel == 0);
 
-  return $runlevel;
+  return ($runlevel == 0) ? '' : $runlevel;
 }
 
 # clamav_get_freshclam_daemon_settings ()
@@ -862,52 +852,11 @@ sub clamav_get_runlevel
 #
 sub clamav_get_freshclam_daemon_settings
 {
-  my $conf = '';
-  my $ret = '';
-  
   &clamav_load_freshclam_config ();
   
-  $ret = $freshclam_config{'Checks'};
-  $ret = 1 if $ret eq '';
+  my $ret = $freshclam_config{'Checks'};
 
-  return $ret;
-}
-
-# clamav_vdb_get_pure_name ( $ )
-# IN: ClamAV registered virus name
-# OUT: Simple virus name
-#
-# Try to guess the generic name of the given virus
-# 
-# FIXME We must find a better way to guess common virus name from clamav 
-#       database name. Any idea?
-#
-sub clamav_vdb_get_pure_name ( $ )
-{
-  my $name = shift;
-  my ($b, $m, $e);
-
-  if ($name =~ /^(.*)[\.\-](.*)[\.\-](.*)$/)
-  {
-    ($b, $m, $e) = ($1, $2, $3);
-    
-      return ($m !~ /[a-z,A-Z]/ || length ($m) == 1) ?
-        &clamav_vdb_get_pure_name ("$b") : $m;
-  }
-
-  if ($name =~ /^(.*)[\.\-](.*)$/)
-  {
-    ($b, $e) = ($1, $2);
-
-    if ($e !~ /[a-z,A-Z]/) {return $b;} elsif ($e) {return $e;}
-  }
-
-  if ($name =~ /^(.*)[\.\-].*$/)
-  {
-    return $1;
-  }
-
-  return $name;
+  return ($ret eq '') ? 1 : $ret;
 }
 
 # clamav_vdb_preprocess_inputs ( $ )
@@ -965,7 +914,6 @@ sub clamav_vdb_search ( $ )
   my $case = ($in->{'case'} eq 'on');
   my $sortr = ($in->{'sort'} eq 'on');
   my $string = '';
-  my $escaped = '';
   my $first = 1;
   my $grep = &has_command('grep');
 
@@ -1004,39 +952,14 @@ sub clamav_vdb_search ( $ )
   while (<H>)
   {
     next if (/^ERROR/);
-    chomp ();
-    my $escaped_pure = &urlize (&clamav_vdb_get_pure_name ($_));
-    my $escaped = &urlize ($_);
-    my $fsecure_url =
-      "http://www.europe.f-secure.com/cgi-bin/AT-Wdescssearch.cgi?".
-      "search=$escaped_pure";
-    my $symantec_url = 
-      "http://search.symantec.com/custom/us/query.html?" .
-      "lk=1&rf=0&qt=$escaped_pure&qp=" . &urlize ("url:http://securityresponse.symantec.com/avcenter/venc/data url:/avcenter/venc/data url:/avcenter/venc/auto/index");
-    my $mcafee_url = 
-      "http://home.mcafee.com/VirusInfo/ThreatSearch.aspx?term=$escaped_pure";
-    my $viruslist_url = 
-      "http://www.viruslist.com/fr/find?" .
-        "search_mode=virus&words=$escaped_pure";
 
     if ($first)
     {
       $first = 0;
-      
-      print qq(
-        <table border=1>
-        <tr $tb>
-	<th>$text{'NAME'}</th>
-<!--        <th>Viruslist (fr)</th>-->
-        </tr>
-      );
+      print qq(<table border=1><tr $tb><th>$text{'NAME'}</th></tr>);
     }
       
-    print qq(
-      <tr><td $cb>$_</td>
-<!--      <td $cb><a href="$viruslist_url" target="_BLANK">$text{'MORE'}</a></td>-->
-      </tr>
-    );
+    print qq(<tr><td $cb>$_</td></tr>);
   }
   close (H);
   
@@ -1046,7 +969,7 @@ sub clamav_vdb_search ( $ )
   }
   else
   {
-    printf "<p>$text{'NO_RESULT'}</p>", $virus;
+    printf qq(<p>$text{'NO_RESULT'}</p>), $virus;
   }
 }
 
