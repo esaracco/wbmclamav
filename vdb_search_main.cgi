@@ -22,6 +22,8 @@ require './clamav-lib.pl';
 &clamav_check_acl ('database_search_search');
 &ReadParse ();
 
+&clamav_vdb_preprocess_inputs (\%in);
+
 &header($text{'FORM_TITLE'}, "", undef, 1, 0);
 print "<hr/>\n";
 

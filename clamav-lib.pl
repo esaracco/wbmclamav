@@ -931,6 +931,45 @@ sub clamav_vdb_get_pure_name ( $ )
   return $name;
 }
 
+# clamav_vdb_preprocess_inputs ( $ )
+# IN: hashref user inputs
+#
+# Update user inputs if needed
+#
+sub clamav_vdb_preprocess_inputs ( $ )
+{
+  my $in = shift;
+
+  return if ($in->{'prefix0'});
+
+  require "$root_directory/$module_name/data/viruses_prefixes.pm";
+
+  my $virus = $in->{'virus'}||'';
+  my @r = split (/\./, $virus, 3);
+
+  for (my $i = 0; $i < 2; $i++)
+  {
+    if ($r[$i])
+    {
+      $r[$i] = ucfirst (lc ($r[$i]));
+      if (grep (/^$r[$i]$/, @{$viruses_prefixes[$i]}))
+      {
+        $in->{"prefix$i"} = $r[$i];
+        $virus =~ s/$r[$i]\.?//i;
+      }
+    }
+  }
+
+  if ($in->{"prefix0"} && $in->{"prefix1"})
+  {
+    $in->{'virus'} = $virus;
+  }
+  else
+  {
+    $in->{"prefix0"} = $in->{"prefix1"} = '';
+  }
+}
+
 # clamav_vdb_search ( $ )
 # IN: script args
 # OUT: -
@@ -954,7 +993,7 @@ sub clamav_vdb_search ( $ )
   return if (
     $p1 && $p1 !~ /^[a-z]+$/i ||
     $p2 && $p2 !~ /^[a-z]+$/i ||
-    $virus && $virus !~ /^[a-z0-9\._\-\/:]+$/i
+    $virus && ($virus !~ /^[a-z0-9\._\-\/:]+$/i || $virus =~ /^[\s\.]+$/)
   );
 
   if ($p1)
