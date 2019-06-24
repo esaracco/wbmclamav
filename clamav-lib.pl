@@ -363,8 +363,8 @@ sub clamav_main_check_config
     }
   }
   elsif ($config{'clamav_freshclam_init_script'} ne '' &&
-         $config{'clamav_freshclam_init_script'} eq 
-         $config{'clamav_init_script'})
+         $config{'clamav_freshclam_init_script'} eq
+           $config{'clamav_init_script'})
   {
     $msg = $text{'MSG_CONFIG_ALERT_INIT_SCRIPTS_SAME'};
   }
@@ -5010,8 +5010,9 @@ sub clamav_system_backup
 
     next if (!$empty);
     open (H, '>', $path) || 
-      &clamav_check_config_exit (sprintf $text{"MSG_FATAL_ERROR_BACKUP_EMPTY"}, 
-                                   "$cpath/$dir/$file");
+      &clamav_check_config_exit (
+        sprintf $text{"MSG_FATAL_ERROR_BACKUP_FILE_EMPTY"},
+                "$cpath/$dir/$file");
     print H 
       "# Deactivated by wbmclamav\n" .
       "# Backup file is : $cpath/$dir/$file\n";
