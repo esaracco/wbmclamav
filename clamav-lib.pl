@@ -76,39 +76,40 @@ my %perl_deps = ();
 
 my $envpath_backup = $ENV{'PATH'};
 eval "use POSIX";
-$perl_deps{'POSIX'} if ($@ ne '');
+$perl_deps{'POSIX'} if ($@);
 eval "use File::Basename";
-$perl_deps{'File::Basename'} = 1 if ($@ ne '');
+$perl_deps{'File::Basename'} = 1 if ($@);
 eval "use File::Path qw(make_path)";
-$perl_deps{'File::Path'} = 1 if ($@ ne '');
+$perl_deps{'File::Path'} = 1 if ($@);
 eval "use File::Find";
-$perl_deps{'File::Find'} = 1 if ($@ ne '');
+$perl_deps{'File::Find'} = 1 if ($@);
 eval "use File::Copy";
-$perl_deps{'File::Copy'} = 1 if ($@ ne '');
+$perl_deps{'File::Copy'} = 1 if ($@);
 eval "use Date::Manip";
-$perl_deps{'Date::Manip'} if ($@ ne '');
+$perl_deps{'Date::Manip'} if ($@);
 eval "use Compress::Zlib";
-$perl_deps{'Compress::Zlib'} = 1 if ($@ ne '');
+$perl_deps{'Compress::Zlib'} = 1 if ($@);
 eval "use HTML::Entities";
-$perl_deps{'HTML::Entities'} = 1 if ($@ ne '');
+$perl_deps{'HTML::Entities'} = 1 if ($@);
 eval "use Getopt::Long";
-$perl_deps{'use Getopt::Long'} = 1 if ($@ ne '');
+$perl_deps{'use Getopt::Long'} = 1 if ($@);
 eval "use IO::File";
-$perl_deps{'use IO::File'} = 1 if ($@ ne '');
+$perl_deps{'use IO::File'} = 1 if ($@);
 eval "use Net::SMTP";
-$perl_deps{'use Net::SMTP'} = 1 if ($@ ne '');
+$perl_deps{'use Net::SMTP'} = 1 if ($@);
 eval "use IO::Socket";
-$perl_deps{'use IO::Socket'} = 1 if ($@ ne '');
+$perl_deps{'use IO::Socket'} = 1 if ($@);
 eval "use Mail::Internet";
-$perl_deps{'Mail::Internet'} = 1 if ($@ ne '');
+$perl_deps{'Mail::Internet'} = 1 if ($@);
 eval "use Mail::SpamAssassin";
-$perl_deps{'Mail::SpamAssassin'} = 1 if ($@ ne '');
+$perl_deps{'Mail::SpamAssassin'} = 1 if ($@);
 eval "use GD";
-$perl_deps{'GD'} = 1 if ($@ ne '');
+$perl_deps{'GD'} = 1 if ($@);
 eval "use GD::Graph::lines";
-$perl_deps{'GD::Graph::lines'} = 1 if ($@ ne '');
+$perl_deps{'GD::Graph::lines'} = 1 if ($@);
 eval "use Mail::Mbox::MessageParser";
-$perl_deps{'Mail::Mbox::MessageParser'} = 1 if ($@ ne '');
+$perl_deps{'Mail::Mbox::MessageParser'} = 1 if ($@);
+
 $ENV{'PATH'} = $envpath_backup;
 
 # freshclam configuration
@@ -691,7 +692,7 @@ sub clamav_trim_config
 {
   foreach my $key (keys %config)
   {
-    $config{$key} =~ s/(^\s+|\s+$)//g;
+    $config{$key} =~ s/^\s+|\s+$//g;
   }
 }
 
@@ -837,7 +838,7 @@ sub clamav_get_runlevel
   my $runlevel = `$runlevelc`;
 
   $runlevel =~ s/N //;
-  $runlevel =~ s/(^\s+|\s+$)//g;
+  $runlevel =~ s/^\s+|\s+$//g;
   $runlevel = int ($runlevel);
 
   return ($runlevel == 0) ? '' : $runlevel;
@@ -4359,28 +4360,28 @@ sub clamav_check_perl_deps ()
   # If no quarantine management, we do not need
   # the following modules, so remove them from
   # the error list
-  if ($config{"clamav_quarantine_soft"} == CS_NONE)
+  if ($config{'clamav_quarantine_soft'} == CS_NONE)
   {
-    delete $perl_deps{"Mail::SpamAssassin"};
-    delete $perl_deps{"Compress::Zlib"};
-    delete $perl_deps{"Getopt::Long"};
-    delete $perl_deps{"IO::File"};
-    delete $perl_deps{"Net::SMTP"};
-    delete $perl_deps{"Mail::Internet"};
-    delete $perl_deps{"GD"};
-    delete $perl_deps{"GD::Graph::lines"};
+    delete $perl_deps{'Mail::SpamAssassin'};
+    delete $perl_deps{'Compress::Zlib'};
+    delete $perl_deps{'Getopt::Long'};
+    delete $perl_deps{'IO::File'};
+    delete $perl_deps{'Net::SMTP'};
+    delete $perl_deps{'Mail::Internet'};
+    delete $perl_deps{'GD'};
+    delete $perl_deps{'GD::Graph::lines'};
   }
   # For the moment, quarantine evolution graphes are ony available
   # for amavisd-new, mailscanner and qmailscanner quarantines
-  elsif ($config{"clamav_quarantine_soft"} != CS_AMAVIS &&
-         $config{"clamav_quarantine_soft"} != CS_MAILSCANNER &&
-         $config{"clamav_quarantine_soft"} != CS_QMAILSCANNER)
+  elsif ($config{'clamav_quarantine_soft'} != CS_AMAVIS &&
+         $config{'clamav_quarantine_soft'} != CS_MAILSCANNER &&
+         $config{'clamav_quarantine_soft'} != CS_QMAILSCANNER)
   {
-    delete $perl_deps{"GD"};
-    delete $perl_deps{"GD::Graph::lines"};
+    delete $perl_deps{'GD'};
+    delete $perl_deps{'GD::Graph::lines'};
   }
   # Only amavisd-new mbox quarantine is supported
-  elsif ($config{"clamav_quarantine_soft"} != CS_AMAVIS)
+  elsif ($config{'clamav_quarantine_soft'} != CS_AMAVIS)
   {
     delete $perl_deps{'Mail::Mbox::MessageParser'};
   }

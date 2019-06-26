@@ -1,4 +1,4 @@
-# Copyright (C) 2003-2008
+# Copyright (C) 2003-2019
 # Emmanuel Saracco <emmanuel@esaracco.fr>
 #
 # This program is free software; you can redistribute it and/or modify
@@ -31,8 +31,8 @@ sub module_uninstall
   # Remove quanrantine update cron
   &clamav_delete_cron ('update');
 
-  system (&has_command ('rm') . ' -f /etc/cron.d/webmin_clamav');
-  system (&has_command ('rm') . ' -f /etc/cron.d/webmin_clamav.sav');
+  unlink ('/etc/cron.d/webmin_clamav');
+  unlink ('/etc/cron.d/webmin_clamav.sav');
 
   # Restore original system files
   &clamav_system_restore (undef, 1);

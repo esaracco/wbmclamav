@@ -24,7 +24,7 @@ require './clamav-lib.pl';
 
 &clamav_vdb_preprocess_inputs (\%in);
 
-&header($text{'FORM_TITLE'}, "", undef, 1, 0);
+&header($text{'FORM_TITLE'}, '', undef, 1, 0);
 print "<hr/>\n";
 
 $search = (($in{'search'} && ($in{'prefix0'} || $in{'virus'})) || $in{'all'});
@@ -41,7 +41,6 @@ if ($in{'search'} && !$in{'prefix0'} && !$in{'virus'})
 }
 
 print qq(<form method="POST" action="$scriptname">);
-
 
 print &clamav_display_combos_viruses_prefixes ($in{'prefix0'}, $in{'prefix1'});
 
@@ -79,6 +78,5 @@ if ($search)
   print qq(</p>);
 }
 
-
 print qq(<hr/>);
-&footer("", $text{'RETURN_INDEX_MODULE'});
+&footer('', $text{'RETURN_INDEX_MODULE'});
