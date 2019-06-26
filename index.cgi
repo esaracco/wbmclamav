@@ -62,7 +62,7 @@ sub clamav_add_if_acl_ok ($ $ $ $)
 &clamav_add_if_acl_ok ('signature_use', 'signatures_main.cgi',
   $text{'LINK_SIGNATURES'}, 'images/signatures.png');
 
-&header($text{'FORM_TITLE'}, undef, undef, 1, 1, 0, undef, undef, undef, "<a href=\"http://wbmclamav.esaracco.fr\" target=\"_BLANK\">$text{'HOMEPAGE'}</a>&nbsp;|&nbsp;<a href=\"http://wbmclamav.esaracco.fr/download\" target=\"_BLANK\">$text{'DOWNLOAD'}</a>&nbsp;|&nbsp<a href=\"http://www.clamav.net/download\" target=\"_BLANK\">$text{'LATEST_CLAMAV'}</a>");
+&header($text{'FORM_TITLE'}, undef, undef, 1, 1, 0, undef, undef, undef, "<img src='images/icon.gif'/><br/><a href=\"http://wbmclamav.esaracco.fr\" target=\"_BLANK\">$text{'HOMEPAGE'}</a>&nbsp;|&nbsp;<a href=\"http://wbmclamav.esaracco.fr/download\" target=\"_BLANK\">$text{'DOWNLOAD'}</a>&nbsp;|&nbsp<a href=\"http://www.clamav.net/download\" target=\"_BLANK\">$text{'LATEST_CLAMAV'}</a>");
 print "<hr>\n";
 
 &clamav_main_check_config ();
