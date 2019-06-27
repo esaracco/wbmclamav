@@ -16,7 +16,7 @@
 # Foundation, Inc., 59 Temple Place, Suite 330,
 # Boston, MA 02111-1307, USA.
 
-do '../web-lib.pl';
+use WebminCore;
 &init_config ();
 
 our $clamav_error = '';
