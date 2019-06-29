@@ -1,4 +1,4 @@
-<p align="center"><img src="http://wbmclamav.esaracco.fr/images/wbmclamav.png"/></p>
+<p align="center"><img src="https://wbmclamav.esaracco.fr/images/wbmclamav.png"/></p>
 
 # wbmclamav
 
