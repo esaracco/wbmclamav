@@ -1,3 +1,36 @@
+2019-07-13 Emmanuel Saracco <emmanuel@esaracco.fr>
+
+	* Version: 0.19
+
+	* Other:
+
+	  - Updated for new clamav 0.101.2. Old versions of ClamAV are not
+	    supported anymore.
+
+	  - Added the following clamav options:
+		HeuristicAlerts
+		AlertBrokenExecutables
+		AlertEncrypted
+		AlertEncryptedArchive
+		AlertEncryptedDoc
+		AlertOLE2Macros
+		AlertPhishingSSLMismatch
+		AlertPhishingCloak
+		AlertPartitionIntersection
+		AlertExceedsMax
+	  - Removed the following clamav options:
+		AlgorithmicDetection
+		DetectBrokenExecutable
+		OLE2BlockMacros
+		PhishingAlwaysBlockSSLMismatch
+		PhishingAlwaysBlockCloak
+		PartitionIntersection
+		ArchiveBlockEncrypted
+		BlockMax
+
+	  - Added logo on the index page.
+	  - Cleaning and optimization.
+
 2019-06-23 Emmanuel Saracco <emmanuel@esaracco.fr>
 
 	* Version: 0.18
