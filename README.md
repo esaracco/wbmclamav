@@ -8,22 +8,60 @@ wbmclamav is a [Webmin](http://www.webmin.com) module to manage the [ClamAV](htt
 
 ## Installation
 
-### From a wbm archive :
+### From a wbm archive:
 
 Open the Webmin modules manager and upload the wbmclamav file.
 
-### From the Git repository :
+### From the Git repository:
 
-1. Change the owner and permissions of the entire tree :
+1. Change the owner and permissions of the entire tree:
 ```bash
 chmod -R 755 clamav/
 chown -R root:bin clamav/
 ```
-2. Build a gzipped tarball archive :
+2. Build a gzipped tarball archive:
 ```bash
 tar zcvf wbmclamav.wbm.gz clamav/
 ```
 3. Open the Webmin modules manager and upload your brand new wbmclamav file.
+
+## Perl dependencies
+
+You need at least the following Perl modules in order to run wbmclamav:
+
+- Compress::Zlib
+- Date::Manip
+- File::Basename
+- File::Path
+- File::Find
+- File::Copy
+- GD
+- GD::Graph::lines
+- Getopt::Long
+- HTML::Entities
+- IO::File
+- IO::Socket
+- Mail::Internet
+- Mail::Mbox::MessageParser
+- Mail::SpamAssassin
+- Net::SMTP
+- POSIX
+
+They can be loaded for free from CPAN.
+
+As 'root' you can try:
+
+```bash
+# perl -MCPAN -e shell
+CPAN Shell> install Compress::Zlib Date::Manip File::Basename File::Path
+CPAN Shell> install File::Find File::Copy GD GD::Graph::lines
+CPAN Shell> install Getopt::Long HTML::Entities IO::File IO::Socket
+CPAN Shell> install Mail::Internet Mail::Mbox::MessageParser Mail::SpamAssassin
+CPAN Shell> install Net::SMTP POSIX
+```
+
+If other modules needs to be installed as well in order for this
+module to work properly, please let CPAN install them for you as well.
 
 ## License
 GPL
