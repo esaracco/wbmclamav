@@ -25,9 +25,9 @@ our $clamav_error = '';
 my %ACLs = &get_module_acl ();
 
 # min stable clamav version supported by this module
-use constant SUPPORTED_VERSION => '0.100.3';
+use constant SUPPORTED_VERSION => '0.101.2';
 # min devel (Git) clamav version supported by this module
-use constant SUPPORTED_DEVEL_DATE => '20150427';
+use constant SUPPORTED_DEVEL_DATE => '20190326';
 # max items to display/page for quarantine search result
 use constant MAX_PAGE_ITEMS => 50;
 # default SpamAssassin user (can be overrided by module configuration)
