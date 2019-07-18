@@ -1,6 +1,6 @@
 #!/usr/bin/perl
 
-# Copyright (C) 2003-2015
+# Copyright (C) 2003-2019
 # Emmanuel Saracco <emmanuel@esaracco.fr>
 #
 # This program is free software; you can redistribute it and/or modify
@@ -31,7 +31,7 @@ my $restore_enabled = 0;
 print "<hr>\n";
 
 &clamav_main_check_config ();
-&clamav_check_perl_deps ();
+&clamav_check_deps ();
 
 if ($in{"init"})
 {

@@ -66,7 +66,7 @@ sub clamav_add_if_acl_ok ($ $ $ $)
 print "<hr>\n";
 
 &clamav_main_check_config ();
-&clamav_check_perl_deps ();
+&clamav_check_deps ();
 
 print qq(<p>$text{'INDEX_PAGE_DESCRIPTION'}</p>\n);
 

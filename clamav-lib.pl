@@ -19,114 +19,99 @@
 use WebminCore;
 &init_config ();
 
+use constant {
+  # Min stable clamav version supported by this module
+  SUPPORTED_VERSION => '0.101.2',
+  # Min devel (Git) clamav version supported by this module
+  SUPPORTED_DEVEL_DATE => '20190326',
+  # Max items to display/page for quarantine search result
+  MAX_PAGE_ITEMS => 50,
+  # Default SpamAssassin user (can be overrided by module configuration)
+  DEFAULT_CLAMAV_SPAM_USER => 'amavis',
+  # Default clamav system user (can be overrided by module configuration)
+  DEFAULT_CLAMAV_SYS_USER => 'clamav',
+  # Default clamav system user (can be overrided by module configuration)
+  DEFAULT_CLAMAV_SYS_GROUP => 'clamav',
+
+  # System crontab file
+  CRONTAB_PATH => '/etc/crontab',
+  # Module specific crontab file (in case CRONTAB_PATH was not available)
+  CRONTAB_MODULE_PATH => '/etc/cron.d/webmin_clamav',
+
+  # Content scanner constants
+  CS_NONE => 0,
+  CS_AMAVIS => 1,
+  CS_AMAVIS_NG => 2,
+  CS_CLAMAV_MILTER => 3,
+  CS_MAILSCANNER => 4,
+  CS_QMAILSCANNER => 5,
+
+  # Quarantine graph constants
+  QG_WIDTH => 900,
+  QG_HEIGHT => 500,
+
+  # Update method constants
+  UP_DAEMON => 0,
+  UP_CRON => 1,
+  UP_MANUAL => 2,
+
+  KO => 0,
+  OK => 1,
+
+  # Cron/daemon errors for clamav refresh method
+  ER_DAEMON_NOEXIST => 2,
+  ER_DAEMON_CRONEXIST => 3,
+  ER_CRON_DAEMONEXIST => 4,
+  ER_MANUAL_CRONEXIST => 5,
+  ER_MANUAL_DAEMONEXIST => 6,
+  ER_CRON_PACKAGE => 7,
+
+  NET_PING_KO => 8
+};
+
 our $clamav_error = '';
 
-# retreive ACLs for this module
+# Retreive ACLs for this module
 my %ACLs = &get_module_acl ();
 
-# min stable clamav version supported by this module
-use constant SUPPORTED_VERSION => '0.101.2';
-# min devel (Git) clamav version supported by this module
-use constant SUPPORTED_DEVEL_DATE => '20190326';
-# max items to display/page for quarantine search result
-use constant MAX_PAGE_ITEMS => 50;
-# default SpamAssassin user (can be overrided by module configuration)
-use constant DEFAULT_CLAMAV_SPAM_USER => 'amavis';
-# default clamav system user (can be overrided by module configuration)
-use constant DEFAULT_CLAMAV_SYS_USER => 'clamav';
-# default clamav system user (can be overrided by module configuration)
-use constant DEFAULT_CLAMAV_SYS_GROUP => 'clamav';
+# Global array for bad perl modules dependencies
+my %deps = ();
 
-# System crontab file
-use constant CRONTAB_PATH => '/etc/crontab';
-# module specific crontab file (in case CRONTAB_PATH was not available)
-use constant CRONTAB_MODULE_PATH => '/etc/cron.d/webmin_clamav';
+eval'use POSIX';$deps{'POSIX'} if ($@);
+eval'use File::Basename';$deps{'File::Basename'} = 1 if ($@);
+eval'use File::Path qw(make_path)';$deps{'File::Path'} = 1 if ($@);
+eval'use File::Find';$deps{'File::Find'} = 1 if ($@);
+eval'use File::Copy';$deps{'File::Copy'} = 1 if ($@);
+eval'use Date::Manip';$deps{'Date::Manip'} if ($@);
+eval'use Compress::Zlib';$deps{'Compress::Zlib'} = 1 if ($@);
+eval'use HTML::Entities';$deps{'HTML::Entities'} = 1 if ($@);
+eval'use Getopt::Long';$deps{'use Getopt::Long'} = 1 if ($@);
+eval'use IO::File';$deps{'use IO::File'} = 1 if ($@);
+eval'use Net::SMTP';$deps{'use Net::SMTP'} = 1 if ($@);
+eval'use IO::Socket';$deps{'use IO::Socket'} = 1 if ($@);
+eval'use Mail::Internet';$deps{'Mail::Internet'} = 1 if ($@);
+eval'use Mail::SpamAssassin';$deps{'Mail::SpamAssassin'} = 1 if ($@);
+eval'use GD';$deps{'GD'} = 1 if ($@);
+eval'use GD::Graph::lines';$deps{'GD::Graph::lines'} = 1 if ($@);
+eval'use Mail::Mbox::MessageParser';$deps{'Mail::Mbox::MessageParser'}=1 if($@);
 
-# Content scanner constants
-use constant CS_NONE => 0;
-use constant CS_AMAVIS => 1;
-use constant CS_AMAVIS_NG => 2;
-use constant CS_CLAMAV_MILTER => 3;
-use constant CS_MAILSCANNER => 4;
-use constant CS_QMAILSCANNER => 5;
-
-# Quarantine graph constants
-use constant QG_WIDTH => 900;
-use constant QG_HEIGHT => 500;
-
-# Update method constants
-use constant UP_DAEMON => 0;
-use constant UP_CRON => 1;
-use constant UP_MANUAL => 2;
-
-use constant KO => 0;
-use constant OK => 1;
-
-use constant ER_DAEMON_NOEXIST => 2;
-use constant ER_DAEMON_CRONEXIST => 3;
-use constant ER_CRON_DAEMONEXIST => 4;
-use constant ER_MANUAL_CRONEXIST => 5;
-use constant ER_MANUAL_DAEMONEXIST => 6;
-use constant ER_CRON_PACKAGE => 7;
-
-use constant NET_PING_KO => 8;
-
-# global array for bad perl modules dependencies
-my %perl_deps = ();
-
-my $envpath_backup = $ENV{'PATH'};
-eval "use POSIX";
-$perl_deps{'POSIX'} if ($@);
-eval "use File::Basename";
-$perl_deps{'File::Basename'} = 1 if ($@);
-eval "use File::Path qw(make_path)";
-$perl_deps{'File::Path'} = 1 if ($@);
-eval "use File::Find";
-$perl_deps{'File::Find'} = 1 if ($@);
-eval "use File::Copy";
-$perl_deps{'File::Copy'} = 1 if ($@);
-eval "use Date::Manip";
-$perl_deps{'Date::Manip'} if ($@);
-eval "use Compress::Zlib";
-$perl_deps{'Compress::Zlib'} = 1 if ($@);
-eval "use HTML::Entities";
-$perl_deps{'HTML::Entities'} = 1 if ($@);
-eval "use Getopt::Long";
-$perl_deps{'use Getopt::Long'} = 1 if ($@);
-eval "use IO::File";
-$perl_deps{'use IO::File'} = 1 if ($@);
-eval "use Net::SMTP";
-$perl_deps{'use Net::SMTP'} = 1 if ($@);
-eval "use IO::Socket";
-$perl_deps{'use IO::Socket'} = 1 if ($@);
-eval "use Mail::Internet";
-$perl_deps{'Mail::Internet'} = 1 if ($@);
-eval "use Mail::SpamAssassin";
-$perl_deps{'Mail::SpamAssassin'} = 1 if ($@);
-eval "use GD";
-$perl_deps{'GD'} = 1 if ($@);
-eval "use GD::Graph::lines";
-$perl_deps{'GD::Graph::lines'} = 1 if ($@);
-eval "use Mail::Mbox::MessageParser";
-$perl_deps{'Mail::Mbox::MessageParser'} = 1 if ($@);
-
-$ENV{'PATH'} = $envpath_backup;
-
-# freshclam configuration
+# Freshclam configuration
 my %freshclam_config = ();
 
-# clamav configuration
+# Clamav configuration
 my %clamav_config = ();
 
-# clean config inputs
+# Clean config inputs
 &clamav_trim_config ();
 
 # If the system has not yet been prepared for this module.
-&redirect ("/$module_name/backup_restore.cgi") 
-  if (&clamav_system_ok ("backup") && 
-      $scriptname ne "backup_restore.cgi" &&
-      # Do nothing if webmin is uninstalling us
-      $scriptname ne "delete_mod.cgi");
+if (&clamav_system_ok ('backup') &&
+    $scriptname ne 'backup_restore.cgi' &&
+    # Do nothing if webmin is uninstalling us
+    $scriptname ne 'delete_mod.cgi')
+{
+  &redirect ("/$module_name/backup_restore.cgi");
+}
 
 # clamav_get_acl ( $ )
 # IN: ACL
@@ -154,7 +139,7 @@ sub clamav_check_acl ( $ )
 
   if (($ACLs{$acl} != 1))
   {
-    &header($text{'FORM_TITLE'}, "", undef, 1, 0);
+    &header($text{'FORM_TITLE'}, '', undef, 1, 0);
     print qq(<hr>);
     &clamav_check_config_exit ($text{'MSG_ACL_DENIED'})
   }
@@ -168,7 +153,7 @@ sub clamav_check_acl ( $ )
 # 
 sub clamav_is_qmailscanner ()
 {
-  return ($config{"clamav_quarantine_soft"} == CS_QMAILSCANNER);
+  return ($config{'clamav_quarantine_soft'} == CS_QMAILSCANNER);
 }
 
 # clamav_is_mailscanner ()
@@ -179,8 +164,8 @@ sub clamav_is_qmailscanner ()
 # 
 sub clamav_is_mailscanner ()
 {
-  return ($config{"clamav_quarantine_soft"} == CS_MAILSCANNER &&
-    &has_command ("MailScanner"));
+  return ($config{'clamav_quarantine_soft'} == CS_MAILSCANNER &&
+          &has_command ('MailScanner'));
 }
 
 # clamav_is_milter ()
@@ -192,7 +177,7 @@ sub clamav_is_mailscanner ()
 sub clamav_is_milter ()
 {
   return ($config{'clamav_quarantine_soft'} == CS_CLAMAV_MILTER && 
-    &has_command ("clamav-milter"));
+          &has_command ('clamav-milter'));
 }
 
 # clamav_is_amavis_ng ()
@@ -205,8 +190,8 @@ sub clamav_is_amavis_ng ()
 {
   return ($config{'clamav_quarantine_soft'} == CS_AMAVIS_NG &&
     (
-      &has_command ("amavis-ng") ||
-      &has_command ("amavis")
+      &has_command ('amavis-ng') ||
+      &has_command ('amavis')
     )
   );
 }
@@ -221,9 +206,9 @@ sub clamav_is_amavisd_new ()
 {
   return ($config{'clamav_quarantine_soft'} == CS_AMAVIS && 
     (
-      &has_command ("amavisd-new") || 
-      &has_command ("amavisd") ||
-      &has_command ("amavis")
+      &has_command ('amavisd-new') || 
+      &has_command ('amavisd') ||
+      &has_command ('amavis')
     )
   );
 }
@@ -258,7 +243,7 @@ sub clamav_is_mbox_format ($)
 #
 sub clamav_has_clamscan ()
 {
-  return &has_command ("clamscan") || &has_command ("clamdscan");
+  return (&has_command ('clamscan') || &has_command ('clamdscan'));
 }
 
 # clamav_check_systemd ()
@@ -285,12 +270,12 @@ sub clamav_main_check_config
   my $msg = '';
   my $have_systemd = &clamav_check_systemd ();
 
-  # do tests
+  # Begin tests
   if (!&clamav_has_clamscan ())
   {
     $msg = $text{'MSG_CONFIG_ALERT_CLAMSCAN'};
   }
-  elsif (!&has_command ("freshclam"))
+  elsif (!&has_command ('freshclam'))
   {
     $msg = $text{'MSG_CONFIG_ALERT_REFRESH'};
   }
@@ -378,8 +363,7 @@ sub clamav_main_check_config
     $ok = 1;
   }
 
-  # if there was a problem, exit displaying
-  # a message
+  # If there was a problem, exit displaying a message
   &clamav_check_config_exit ($msg) if (!$ok);
 
   &clamav_setup ();
@@ -423,17 +407,17 @@ sub clamav_setup ()
     if ($config{'clamav_sys_group'} eq '' ||
         !&is_secure ($config{'clamav_sys_group'}));
 
-  # create module's temporary directory
+  # Create module's temporary directory
   make_path (
     "$config{'clamav_working_path'}/.clamav/$remote_user",
     "$root_directory/$module_name/tmp",
     {'chmod' => 0700}
   );
 
-  # modify permissions
+  # Modify permissions
   system (&has_command('chmod')." 755 $root_directory/$module_name/bin/*");
 
-  # touch log files
+  # Touch log files
   foreach my $l (($config{'clamav_clamav_log'}, 
                   $config{'clamav_freshclam_log'}))
   {
@@ -459,8 +443,9 @@ sub clamav_get_proxy_settings
   return 
     ($freshclam_config{'HTTPProxyServer'} &&
      $freshclam_config{'HTTPProxyPort'}) ?
-    ($freshclam_config{'HTTPProxyServer'},
-     $freshclam_config{'HTTPProxyPort'}) : ();
+      ($freshclam_config{'HTTPProxyServer'},$freshclam_config{'HTTPProxyPort'})
+      :
+      ();
 }
 
 # clamav_remote_actions_take_arg ( $ )
@@ -471,8 +456,9 @@ sub clamav_get_proxy_settings
 #
 sub clamav_remote_actions_take_arg ( $ )
 {
-  require "$root_directory/$module_name/data/clamav_remote_actions.pm";
   my $ra = shift;
+
+  require "$root_directory/$module_name/data/clamav_remote_actions.pm";
 
   return $clamav_remote_actions{$ra};
 }
@@ -488,9 +474,9 @@ sub clamav_display_combo_quarantine_items_types ()
   my $selected = shift;
   my $buf = '';
   my %types = (
-    $text{'VIRUSES'} => 'virus',
-    $text{'SPAMS'} => 'spam'
-  );
+       $text{'VIRUSES'} => 'virus',
+      $text{'SPAMS'} => 'spam'
+     );
 
   if (&clamav_is_amavisd_new ())
   {
@@ -501,10 +487,10 @@ sub clamav_display_combo_quarantine_items_types ()
   $buf = qq(<select name="search_type">\n);
   foreach my $value (sort keys %types)
   {
-    $buf .= sprintf qq(<option value="%s"%s>%s</option>),
-      $types{$value},
-      ($types{$value} eq $selected) ? ' selected' : '',
-      $value;
+    $buf .= sprintf (qq(<option value="%s"%s>%s</option>),
+              $types{$value},
+              ($types{$value} eq $selected) ? ' selected' : '',
+              $value);
   }
   $buf .= qq(</select>\n);
 
@@ -520,10 +506,11 @@ sub clamav_display_combo_quarantine_items_types ()
 # 
 sub clamav_display_combo_freshclam_predefined ( $ )
 {
-  require "$root_directory/$module_name/data/freshclam_predefined.pm";
   my $uniq = shift;
   my $buf = '';
   my $ok = 0;
+
+  require "$root_directory/$module_name/data/freshclam_predefined.pm";
   
   $buf = qq(<select name="nsfreshclam_add_key">\n);
   foreach my $key (sort keys %freshclam_predefined)
@@ -536,7 +523,7 @@ sub clamav_display_combo_freshclam_predefined ( $ )
   }
   $buf .= qq(</select>\n);
 
-  # only print if there is result
+  # Only print if there is result
   print $buf if ($ok == 1);
 
   return $ok;
@@ -551,10 +538,11 @@ sub clamav_display_combo_freshclam_predefined ( $ )
 #
 sub clamav_display_combo_clamav_predefined ($)
 {
-  require "$root_directory/$module_name/data/clamav_predefined.pm";
   my $uniq = shift;
   my $buf = '';
   my $ok = 0;
+
+  require "$root_directory/$module_name/data/clamav_predefined.pm";
   
   $buf = qq(<select name="nsclamav_add_key">\n);
   foreach my $key (sort keys %clamav_predefined)
@@ -567,7 +555,7 @@ sub clamav_display_combo_clamav_predefined ($)
   }
   $buf .= qq(</select>\n);
 
-  # only print if there is result
+  # Only print if there is result
   print $buf if ($ok == 1);
 
   return $ok;
@@ -577,24 +565,15 @@ sub clamav_display_combo_clamav_predefined ($)
 # IN: -
 # OUT: -
 #
-# check if the config is ok for resending quarantined emails. 
+# Check if the config is ok for resending quarantined emails. 
 # if not, display a warning and exit
 # 
 sub clamav_quarantine_resend_check_config
 {
-  my $ok = 0;
-  my $msg = '';
-
-  if (!&has_command ("rsmtp") && !&has_command ("sendmail"))
+  if (!&has_command ('rsmtp') && !&has_command ('sendmail'))
   {
-    $msg = $text{'MSG_CONFIG_ALERT_MTA'};
+    &clamav_check_config_exit ($text{'MSG_CONFIG_ALERT_MTA'});
   }
-  else
-  {
-    $ok = 1;
-  }
-
-  &clamav_check_config_exit ($msg) if (!$ok);
 }
 
 # clamav_quarantine_main_check_config ()
@@ -629,8 +608,8 @@ sub clamav_quarantine_main_check_config
   }
   elsif (length ($config{'clamav_quarantine'}) < 8)
   {
-    $msg = sprintf qq(<p>$text{'MSG_CONFIG_WARNING_QUARANTINE_TO_SHORT'}</p>),
-      $config{'clamav_quarantine'};
+    $msg = sprintf (qq(<p>$text{'MSG_CONFIG_WARNING_QUARANTINE_TO_SHORT'}</p>),
+             $config{'clamav_quarantine'});
   }
   else
   {
@@ -644,7 +623,7 @@ sub clamav_quarantine_main_check_config
 # IN: -
 # OUT: -
 #
-# check if the server config is ok for the signatures creation section. 
+# Check if the server config is ok for the signatures creation section. 
 # if not, display a warning and exit
 #
 sub clamav_signatures_check_config
@@ -660,7 +639,7 @@ sub clamav_signatures_check_config
 # IN: Message to display
 # OUT: -
 #
-# print a message and exit
+# Print a message and exit
 # 
 sub clamav_check_config_exit ( $ $ )
 {
@@ -685,7 +664,7 @@ sub clamav_check_config_exit ( $ $ )
 # IN: -
 # OUT: -
 #
-# remove trailing and pending spaces from every module's
+# Remove trailing and pending spaces from every module's
 # config variable
 # 
 sub clamav_trim_config
@@ -710,7 +689,7 @@ sub clamav_get_uniq_id ()
 # IN: new virus signature
 # OUT: A error message if the signature is not valid
 #
-# check the ClamAV compatibility for a given virus signature
+# Check the ClamAV compatibility for a given virus signature
 #      
 sub clamav_check_signature ( $ )
 {
@@ -741,7 +720,7 @@ sub clamav_check_signature ( $ )
 # IN: hashref \%in
 # OUT: SHA1 sum, filesize, name
 #
-# build a SHA1 signature
+# Build a SHA1 signature
 #
 sub clamav_build_signature ( $ )
 {
@@ -767,7 +746,7 @@ sub clamav_build_signature ( $ )
 # IN: -
 # OUT: clamav release
 #
-# return the current installed clamav release
+# Return the current installed clamav release
 # 
 sub clamav_get_version
 {
@@ -783,7 +762,7 @@ sub clamav_get_version
 # IN: -
 # OUT: boolean value
 #
-# return true if the installed version of clamav
+# Return true if the installed version of clamav
 # is supported by this module. if this is a "stable" release, we look
 # at its version number, otherwise if it is a development release we look at
 # its date
@@ -794,12 +773,12 @@ sub clamav_check_version
   my $clamscan = &clamav_has_clamscan ();
   my $out = `$clamscan --version 2>&1`;
 
-  # clamav devel
+  # Clamav devel
   if ($out =~ /devel-([\d+]{8})/)
   {
     $ret = (&Date_Cmp (SUPPORTED_DEVEL_DATE, $1) <= 0);
   }
-  # clamav package
+  # Clamav package
   elsif ($out =~ /([\d\.]+)/ || $out =~ /ClamAV\s+([\d\.]+)/)
   {
     @local = split (/\./, $1);
@@ -830,7 +809,7 @@ sub clamav_check_version
 # IN: -
 # OUT: the current runlevel
 #
-# return the current runlevel of the server system
+# Return the current runlevel of the server system
 # 
 sub clamav_get_runlevel
 {
@@ -889,13 +868,13 @@ sub clamav_vdb_preprocess_inputs ( $ )
     }
   }
 
-  if ($in->{"prefix0"} && $in->{"prefix1"})
+  if ($in->{'prefix0'} && $in->{'prefix1'})
   {
     $in->{'virus'} = $virus;
   }
   else
   {
-    $in->{"prefix0"} = $in->{"prefix1"} = '';
+    $in->{'prefix0'} = $in->{'prefix1'} = '';
   }
 }
 
@@ -926,20 +905,17 @@ sub clamav_vdb_search ( $ )
 
   if ($p1)
   {
-    my $tmp = $p1;
-
-    $tmp .= ".$p2" if ($p2);
-
-    $virus = ($virus) ? "$tmp.$virus" : $tmp;
+    $p1 .= ".$p2" if ($p2);
+    $virus = ($virus) ? "$p1.$virus" : $p1;
   }
 
-  # case sensitive search?
+  # Case sensitive search?
   $case = ($case) ? ' ' : ' -i ';
 
-  # sort results
-  $sortr = ($sortr) ? ' '.&has_command('sort'). ' |' : '';
+  # Sort results
+  $sortr = ($sortr) ? ' '.&has_command('sort').' |' : '';
   
-  # strict check (exact match)?
+  # Strict check (exact match)?
   $string = ($virus ne '') ? 
     (($strict) ? 
       &has_command('sigtool').
@@ -948,7 +924,7 @@ sub clamav_vdb_search ( $ )
         " --list-sigs | $grep $case $virus | $sortr") :
         &has_command('sigtool')." --list-sigs | $sortr";
 
-  # display results
+  # Display results
   open (H, $string);
   while (<H>)
   {
@@ -978,8 +954,7 @@ sub clamav_vdb_search ( $ )
 # IN: -
 # OUT: Number of viruses in ClamAV database
 #
-# Count the number of viruses in ClamAV databases and return
-# it
+# Count the number of viruses in ClamAV databases and return it
 # 
 sub clamav_get_db_viruses_count
 {
@@ -1001,22 +976,26 @@ sub clamav_get_db_viruses_count
 #
 sub clamav_display_combos_viruses_prefixes ()
 {
-  require "$root_directory/$module_name/data/viruses_prefixes.pm";
   my @defaults = @_;
   my $display1 = ($defaults[0]) ? 'inline-block':'none';
   my $ret = '';
+
+  require "$root_directory/$module_name/data/viruses_prefixes.pm";
 
   for (my $i = 0; $i < 2; $i++)
   {
     my $default = $defaults[$i]||'';
 
     $ret .= ($i == 0) ?
-              qq(<select name="prefix$i" onchange="(this.selectedIndex) ? getElementById('prefix1').style.display='inline-block':getElementById('prefix1').style.display='none'">\n) :
-              qq(<select id="prefix$i" name="prefix$i" style="display:$display1">\n);
-    $ret .= '<option value="">Choose prefix '.($i+1).'</option>'."/n";
+      qq(<select name="prefix$i" onchange="(this.selectedIndex) ? getElementById('prefix1').style.display='inline-block':getElementById('prefix1').style.display='none'">\n)
+      :
+      qq(<select id="prefix$i" name="prefix$i" style="display:$display1">\n);
+    $ret .= '<option value="">Choose prefix '.($i + 1).'</option>'."\n";
     foreach my $p (@{$viruses_prefixes[$i]})
     {
-      $ret .= '<option value="'.$p.'"'.(($default eq $p)?' selected="selected"':'').'>'.$p.'</option>'."\n";
+      $ret .=
+        '<option value="'.$p.'"'.
+        (($default eq $p)?' selected="selected"':'').'>'.$p.'</option>'."\n";
     }
     $ret .= qq(</select>\n);
   }
@@ -1041,7 +1020,7 @@ sub clamav_get_freshclam_daemon_state
   else
   {
     $ret = ($gconfig{'os_type'} =~ /bsd/) ?
-      (&clamav_bsd_get_state ("freshclam") eq 'YES') : 
+      (&clamav_bsd_get_state ('freshclam') eq 'YES') : 
       (&find_byname ('freshclam'));
   }
 
@@ -1096,7 +1075,7 @@ sub clamav_verif_refresh_method_ok
   my $link = '';
   my $use_cron = 0;
   my $bsd_clam_state = 'NO';
-  my $grep = &has_command ("grep");
+  my $grep = &has_command ('grep');
   my $method = $config{'clamav_refresh_use_cron'};
   my $test = 0;
   my $have_systemd = &clamav_check_systemd ();
@@ -1169,8 +1148,7 @@ sub clamav_verif_refresh_method_ok
 #     directory where to put infected files
 # OUT: -
 #
-# Check a given directory and display freshclam output on the current web
-# page
+# Check a given directory and display freshclam output on the current web page
 # 
 sub clamav_scandir ( $ $ $ $ )
 {
@@ -1223,7 +1201,7 @@ sub clamav_scandir ( $ $ $ $ )
       $state = qq(<b>$state</b>);
       if ($move_path)
       {
-        $tmp_file = $move_path . basename ($file);
+        $tmp_file = $move_path.basename($file);
         $right = 
           qq(<input type="checkbox" 
 	            name="infected_file$infected" value="$tmp_file">);
@@ -1337,7 +1315,7 @@ sub clamav_get_last_db_update
   if (-f $maindb)
   {
     $main = &make_date ((stat($maindb))[9]);
-    open (H, &has_command ("sigtool") . " --info $maindb 2>&1 |");
+    open (H, &has_command ('sigtool')." --info $maindb 2>&1 |");
     while (<H>)
     {
       chomp ();
@@ -1352,7 +1330,7 @@ sub clamav_get_last_db_update
   if (-f $dailydb)
   {
     $daily = &make_date ((stat($dailydb))[9]);
-    open (H, &has_command ("sigtool") . " --info $dailydb 2>&1 |");
+    open (H, &has_command ('sigtool')." --info $dailydb 2>&1 |");
     while (<H>)
     {
       chomp ();
@@ -1376,7 +1354,7 @@ sub clamav_get_last_db_update
 sub clamav_is_a_script
 {
   my $file = shift;
-  my $filec = &has_command ("file");
+  my $filec = &has_command ('file');
   my $res = `$filec $file`;
 
   return ($res =~ /script/);
@@ -1394,7 +1372,7 @@ sub clamav_is_a_script
 sub clamav_deactivate_system_file
 {
   my $file = shift;
-  my $perl = &has_command ("perl");
+  my $perl = &has_command ('perl');
 
   return if (!(-f $file) || !&clamav_is_a_script ($file));
 
@@ -1414,7 +1392,7 @@ sub clamav_deactivate_system_file
 sub clamav_reactivate_system_file
 {
   my $file = shift;
-  my $perl = &has_command ("perl");
+  my $perl = &has_command ('perl');
 
   return if (! -f $file);
 
@@ -1425,7 +1403,7 @@ sub clamav_reactivate_system_file
 # IN: -
 # OUT: -
 #
-# if user choose to not automatically update db, we stop clamd and
+# If user choose to not automatically update db, we stop clamd and
 # deactivate cron and services
 # 
 sub clamav_set_db_no_autoupdate
@@ -1489,8 +1467,7 @@ sub clamav_bsd_update_state ( $ $ )
     print DST $line;
   }
 
-  print DST "clamav_${daemon}_enable=\"$state\"\n"
-    if (!$found);
+  print DST "clamav_${daemon}_enable=\"$state\"\n" if (!$found);
 
   close (DST);
   close (SRC);
@@ -1617,7 +1594,7 @@ sub daemon_control
 {
   my ($bin, $op) = @_;
 
-  if ($op eq "restart")
+  if ($op eq 'restart')
   {
     #&daemon_control ($bin, "stop");
     #&daemon_control ($bin, "start");
@@ -1627,6 +1604,7 @@ sub daemon_control
   {
     system ($bin, $op);
   }
+
   sleep (1);
 }
 
@@ -1639,9 +1617,9 @@ sub daemon_control
 sub clamav_save_freshclam_config
 {
   require "$root_directory/$module_name/data/freshclam_predefined.pm";
-  my @tmp = ();
   
   &lock_file ($config{'clamav_freshclam_conf'});
+
   open (H, '>', $config{'clamav_freshclam_conf'});
   foreach my $key (keys %freshclam_config)
   {
@@ -1658,11 +1636,19 @@ sub clamav_save_freshclam_config
 
     my @tmp = split (' ', $freshclam_config{$key});
     if ($#tmp > 0)
-      {foreach (@tmp) {print H "$key $_\n"}}
+    {
+      foreach (@tmp)
+      {
+        print H "$key $_\n";
+      }
+    }
     else
-      {print H "$key $freshclam_config{$key}\n"};
+    {
+      print H $key.' '.$freshclam_config{$key}."\n";
+    }
   }
   close (H);
+
   &unlock_file ($config{'clamav_freshclam_conf'});
 }
 
@@ -1674,12 +1660,13 @@ sub clamav_save_freshclam_config
 # 
 sub clamav_save_global_settings
 {
-  require "$root_directory/$module_name/data/freshclam_predefined.pm";
-  require "$root_directory/$module_name/data/clamav_predefined.pm";
   my $restart = shift;
   my $cc = '';
   my $fc = '';
   my $buf = '';
+
+  require "$root_directory/$module_name/data/freshclam_predefined.pm";
+  require "$root_directory/$module_name/data/clamav_predefined.pm";
   
   $cc = $config{'clamav_clamav_conf'};
   $fc = $config{'clamav_freshclam_conf'};
@@ -1713,8 +1700,7 @@ sub clamav_save_global_settings
   
         if ($clamav_predefined{$value} == 0)
         {
-          $val = ($val =~ /^(true|1|on|yes|t|y)$/i) ? 
-            'true' : 'false';
+          $val = ($val =~ /^(true|1|on|yes|t|y)$/i) ? 'true' : 'false';
         }
   
         print CLAMAV "$value $val\n";
@@ -1722,20 +1708,18 @@ sub clamav_save_global_settings
       elsif ($key =~ /^freshclam.*$/)
       {
         $value =~ s/^freshclam_//;
-        next if ($restart && ($val eq '' && 
-          $freshclam_predefined{$value} == 1));
+        next if ($restart && $val eq '' && $freshclam_predefined{$value} == 1);
   	
         if ($freshclam_predefined{$value} == 0)
         {
-          $val = ($val =~ /^(true|1|on|yes|t|y)$/i) ? 
-            'true' : 'false';
+          $val = ($val =~ /^(true|1|on|yes|t|y)$/i) ? 'true' : 'false';
         }
   
         my @tmp = split (' ', $val);
-        if ($#tmp > 0)
-          {foreach (@tmp) {print FRESHCLAM "$value $_\n"}}
-        else
-          {print FRESHCLAM "$value $val\n"};
+        foreach (@tmp)
+        {
+          print FRESHCLAM "$value $_\n";
+        }
       }
     }
   }
@@ -1813,7 +1797,7 @@ sub clamav_global_settings_get_delete_item
   my $exp = '';
   my $key = '';
 
-  $exp = 'ns' . $type . '_delete_';
+  $exp = 'ns'.$type.'_delete_';
 
   foreach $key (keys %in)
   {
@@ -1850,20 +1834,21 @@ sub clamav_clean_global_settings_tempfiles
 # 
 sub clamav_display_clamav_settings
 {
-  require "$root_directory/$module_name/data/clamav_predefined.pm";
   my ($newkey, $deletekey) = @_;
   my $key = '';
+
+  require "$root_directory/$module_name/data/clamav_predefined.pm";
   
   &clamav_load_clamav_config ();
   
   if ($deletekey || $newkey)
   {
-    # delete a simple value key
+    # Delete a simple value key
     if (exists ($clamav_predefined{$deletekey}))
     {
       delete $in{"clamav_$deletekey\[\]"} if ($deletekey);
     }
-    # delete multiple values key
+    # Delete multiple values key
     else
     {
       $deletekey =~ /^(.*)_(\d+)$/;
@@ -1873,17 +1858,17 @@ sub clamav_display_clamav_settings
       $in{"clamav_$name\[\]"} = join (chr (0), @a);
     }
 
-    # add a new key in the config file
+    # Add a new key in the config file
     if ($newkey)
     {
-      # add multiple values key
+      # Add multiple values key
       if ($clamav_predefined {$newkey} == 2)
       {
         my @a = split (chr (0), $in{"clamav_$newkey\[\]"});
         push (@a, $text{'UNDEFINED'});
         $in{"clamav_$newkey\[\]"} = join (chr (0), @a);
       }
-      # add a simple value key
+      # Add a simple value key
       else
       {
         $in{"clamav_$newkey\[\]"} = 
@@ -1891,7 +1876,7 @@ sub clamav_display_clamav_settings
       }
     }
     
-    # save and reload config
+    # Save and reload config
     &clamav_save_global_settings (0);
     &clamav_load_clamav_config ();
   }
@@ -1964,26 +1949,27 @@ sub clamav_display_clamav_settings
 # 
 sub clamav_display_freshclam_settings
 {
-  require "$root_directory/$module_name/data/freshclam_predefined.pm";
   my ($newkey, $deletekey) = @_;
   my $key = '';
   my %tmp_config = ();
+
+  require "$root_directory/$module_name/data/freshclam_predefined.pm";
   
   &clamav_load_freshclam_config ();
   
   if ($deletekey || $newkey)
   {
-    # delete the specified key if it has been specified
+    # Delete the specified key if it has been specified
     delete $in{"freshclam_$deletekey"} if ($deletekey);
 
-    # add a new key in the config file
+    # Add a new key in the config file
     if ($newkey)
     {
       $in{"freshclam_$newkey"} = 
         ($freshclam_predefined{$newkey} == 1) ? "$text{'UNDEFINED'}" : ' ';
     }
     
-    # save and reload config
+    # Save and reload config
     &clamav_save_global_settings (0);
     &clamav_load_freshclam_config ();
   }
@@ -2095,7 +2081,7 @@ sub clamav_load_freshclam_config
     if (!defined $freshclam_config{$key})
       {$freshclam_config{$key} = join (' ', @value)}
     else
-      {$freshclam_config{$key} .= ' ' . join (' ', @value)}
+      {$freshclam_config{$key} .= ' '.join(' ', @value)}
   }
   close (H);
 }
@@ -2112,7 +2098,7 @@ sub clamav_set_cron_update ( $ $ )
   my $new_line = '';
   my $datadir = '';
   my $path = '';
-  my $freshclam = &has_command ("freshclam");
+  my $freshclam = &has_command ('freshclam');
 
   $path = &clamav_get_cron_path ();
 
@@ -2183,13 +2169,12 @@ sub clamav_set_cron_purge ( $ $ )
 # IN: -
 # OUT: -
 #
-# Update virus signatures databases displaying output on the current web
-# page
+# Update virus signatures databases displaying output on the current web page
 # 
 sub clamav_update_db
 {
   print qq(<div><pre style="background: #cccccc">);;
-  open (H, &has_command ("freshclam") . " 2>&1 |");
+  open (H, &has_command ('freshclam').' 2>&1 |');
   while (<H>)
   {
     s/^*\n$/<br>/g;
@@ -2239,8 +2224,7 @@ sub clamav_get_cron_settings ( $ )
 # IN: frequency
 # OUT: a buffer to display
 #
-# Build a HTML table with all possible frequencies for freshclam
-# daemon
+# Build a HTML table with all possible frequencies for freshclam daemon
 # 
 sub clamav_freshclam_daemon_settings_table ( $ )
 {
@@ -2269,16 +2253,16 @@ sub clamav_freshclam_daemon_settings_table ( $ )
 # IN: default cron hour, default cron day
 # OUT: a buffer to display
 #
-# Build a HTML table for choose hour a day for execution of refresh
-# db cron
+# Build a HTML table for choose hour a day for execution of refresh db cron
 #
 sub clamav_cron_settings_table
 {
-  require "$root_directory/$module_name/data/days.pm";
   my ($hour, $day) = @_;
   my $buffer = '';
   my $default = '';
   my $every_hour = '';
+
+  require "$root_directory/$module_name/data/days.pm";
 
   ($every_hour, $hour) = split (/\//, $hour);
   ($every_hour, $hour) = ($hour, $every_hour) if (!$hour);
@@ -2342,14 +2326,13 @@ sub clamav_is_quarantine_repository_empty
 # IN: string, max length
 # OUT: a cutted string
 #
-# Cut a string to fit in the given length, adding "[..]" at
-# the end
+# Cut a string to fit in the given length, adding "[..]" atthe end.
 # 
 sub clamav_cut_string ( $ $ )
 {   
   my ($string, $max_len) = @_;
 
-  $string = (substr ($string, 0, $max_len - 5)) . ' [..]'
+  $string = (substr($string, 0, $max_len - 5)).' [..]'
     if (($max_len > 5) && (length ($string) >= $max_len));
                                                                                 
   return $string;
@@ -2370,8 +2353,7 @@ sub clamav_is_clamd_installed
 # IN: -
 # OUT: -
 #
-# Restart the clamav daemon, waiting on second for process
-# to be up
+# Restart the clamav daemon, waiting on second for process to be up.
 # 
 sub clamav_activate_clamd
 {
@@ -2390,8 +2372,7 @@ sub clamav_activate_clamd
 # IN: -
 # OUT: -
 #
-# Stop the clamav daemon, waiting one second for process
-# to be down
+# Stop the clamav daemon, waiting one second for process to be down.
 # 
 sub clamav_deactivate_clamd
 {
@@ -2436,7 +2417,7 @@ sub clamav_get_filtered_email_content ( $ @)
   my ($file, @names) = @_;
   my $tmp_dir = "$config{'clamav_working_path'}/.clamav/$remote_user";
   my $new_file =  basename ($file);
-  my $cmd = &has_command ("cat");
+  my $cmd = &has_command ('cat');
 
   if ($file =~ /\.gz$/)
   {
@@ -2502,7 +2483,7 @@ sub clamav_get_email_header_values ( $ @ )
   my $item = '';
   my $i = 0;
 
-  # if mbox format
+  # If mbox format
   if (! -f $file)
   {
     my @f = split (/\n/, $file);
@@ -2528,7 +2509,7 @@ sub clamav_get_email_header_values ( $ @ )
     return %header;
   }
 
-  # compressed file
+  # Compressed file
   if ($file =~ /\.gz$/)
   {
     my $gzip = undef;
@@ -2554,7 +2535,7 @@ sub clamav_get_email_header_values ( $ @ )
 
     $gzip->gzclose ();
   }
-  # uncompressed file
+  # Uncompressed file
   elsif (open (H, '<', $file))
   {
     LOOP3: while (defined ($item = <H>) && ($i <= $#names))
@@ -2631,7 +2612,7 @@ sub clamav_print_email ( $ )
 
   return if (!&is_secure ($file));
     
-  # if mbox format
+  # If mbox format
   if ($file =~ /^\d/)
   {
     my $filename = $config{'clamav_quarantine'};
@@ -2653,7 +2634,7 @@ sub clamav_print_email ( $ )
   }
   else
   {
-    # is amavisd-new installed or amavis-ng
+    # Is amavisd-new installed or amavis-ng
     $file = (&clamav_is_amavis_ng ()) ? "$file.msg" : "$file";
   
     $content = &clamav_get_file_content ("$config{'clamav_quarantine'}/$file");
@@ -2664,7 +2645,7 @@ sub clamav_print_email ( $ )
     }
   }
 
-  # header and body are in separate files for MailScanner
+  # Header and body are in separate files for MailScanner
   if (&clamav_is_mailscanner ())
   {
     my $dir = dirname ($file);
@@ -2693,7 +2674,7 @@ sub clamav_print_email_infos ( $ )
   my $from = '';
   my $to = '';
 
-  # if amavis-ng is installed
+  # If amavis-ng is installed
   if (&clamav_is_amavis_ng ())
   {
     %header = &clamav_get_email_header_values (
@@ -2704,7 +2685,7 @@ sub clamav_print_email_infos ( $ )
     $from = $header{'X-Quarantined-From'};
     $to = $header{'X-Quarantined-To'};
    }
-  # if amavisd-new or clamav-milter are installed
+  # If amavisd-new or clamav-milter are installed
   else
   {
     %header = &clamav_get_email_header_values (
@@ -2763,7 +2744,7 @@ sub clamav_purge_quarantine ()
 # existing amavis-inject script on the server. if not, it use
 # it is proper copy of this perl script (./bin/amavis-inject).
 #
-# supported MTA are:
+# Supported MTA are:
 #
 #   - rsmtp
 #   - sendmail
@@ -2773,7 +2754,7 @@ sub clamav_resend_email
   my ($base, $smtp, $from, $to) = @_;
   my $path = $config{'clamav_quarantine'};
   my $amavis = "$root_directory/$module_name/bin/amavis-inject ";
-  my $mta = ' | ' . &has_command ('sendmail') . ' -bs '; # use it by default
+  my $mta = ' | '.&has_command('sendmail').' -bs '; # Use it by default
   my %header = ();
   my $out = '';
   my $args = '';
@@ -2806,7 +2787,7 @@ sub clamav_resend_email
   else
   {
     $content = &clamav_get_filtered_email_content (
-      "$path/$base" . ((&clamav_is_amavis_ng ()) ? '.msg' : ''), 
+      "$path/$base".((&clamav_is_amavis_ng()) ? '.msg' : ''), 
       qw(Delivered-To 
          X-Quarantine-id X-Spam-Status X-Spam-Level 
          X-Amavis-Alert
@@ -2826,7 +2807,7 @@ sub clamav_resend_email
   if ($from || $header{'From'})
   {
     $from = $header{'From'} if (!$from);
-    $args .= ' -s ' . $from;
+    $args .= " -s $from";
   }
 
   # To field
@@ -2839,7 +2820,7 @@ sub clamav_resend_email
   # Only get Cc content if recipient was not forced by user
   if (!$force && $header{'Cc'})
   {
-    $to .= ',' . $header{'Cc'};
+    $to .= ','.$header{'Cc'};
   }
 
   if ($to)
@@ -2863,8 +2844,11 @@ sub clamav_resend_email
     $mta = ''; # amavis-inject will send it itself
   }
   
-  # if rsmtp is found, use it instead of sendmail
-  $mta = ' | ' . &has_command ("rsmtp") . ' ' if (&has_command ("rsmtp"));
+  # If rsmtp is found, use it instead of sendmail
+  if (defined (my $tmp = &has_command ('rsmtp')))
+  {
+    $mta = " | $tmp ";
+  }
 
   $cmd = "$amavis $args $tmp_dir/email.txt $mta";
 
@@ -2930,12 +2914,11 @@ sub is_secure
 sub clamav_learn_notaspam
 {
   my $base = shift;
-  my $res = -1;
-  my $file = $config{'clamav_quarantine'} . '/' . $base;
+  my $file = $config{'clamav_quarantine'}."/$base";
 
   return KO if (!&is_secure ($base));
   
-  # if amavis-ng is installed
+  # If amavis-ng is installed
   $file .= '.msg ' if (&clamav_is_amavis_ng ());
 
   $content = &clamav_get_file_content ($file);
@@ -2955,14 +2938,12 @@ sub clamav_learn_notaspam
 # IN: base name of the email file on the disk
 # OUT: OK if all is ok. If not: KO.
 #
-# Delete a email and its associated log file on the quarantine
-# repository
+# Delete a email and its associated log file on the quarantine repository.
 # 
 sub clamav_remove_email
 {
   my $base = shift;
   my $res = -1;
-  my $i = 0;
 
   return KO if (!&is_secure ($base));
   
@@ -2978,8 +2959,9 @@ sub clamav_remove_email
         'file_handle' => $filehandle,
       } );
 
-    $tmppath = "$config{'clamav_working_path'}/.clamav/$remote_user/" . time ();
+    $tmppath = "$config{'clamav_working_path'}/.clamav/$remote_user/".time();
     open (H, '>', $tmppath);
+    my $i = 0;
     while (!$folder_reader->end_of_file ())
     {
       my $email = $folder_reader->read_next_email ();
@@ -2992,22 +2974,22 @@ sub clamav_remove_email
     return OK;
   }
 
-  # if amavis-ng is installed
+  # If amavis-ng is installed
   if (&clamav_is_amavis_ng ())
   {
     $res = 
-      system (&has_command('rm') . ' -f ' .
-              quotemeta ($config{'clamav_quarantine'}) . '/' .
-              quotemeta ($base) . '.*');
+      system (&has_command('rm').' -f '.
+              quotemeta($config{'clamav_quarantine'}).'/'.
+              quotemeta($base).'.*');
   }
-  # if mailscanner 
+  # If mailscanner 
   elsif (&clamav_is_mailscanner ())
   {
     $res = 
       system (&has_command('rm'), '-rf',
               $config{'clamav_quarantine'}.'/'.dirname($base));
   }
-  # if amavisd-new, qmailscanner or clamav-milter is installed
+  # If amavisd-new, qmailscanner or clamav-milter is installed
   else
   {
     $res = 
@@ -3028,7 +3010,7 @@ sub clamav_print_log
 {
   my ($file, $lines) = @_;
   my @content = ();
-  my $tail = &has_command ("tail");
+  my $tail = &has_command ('tail');
 
   return if (!&is_secure ($file) || !&is_secure ($lines));
   
@@ -3133,15 +3115,14 @@ sub clamav_print_quarantine_table_mailscanner ( $ $ $ $ $ $ $ $ $ $ $)
     closedir (DIR1);
   }
 
-  # browse result and push it in a array to manage
-  # pagination
+  # Browse result and push it in a array to manage pagination
   $count = 0;
   for ($i = 0; $i < $#files + 1; $i++)
   {
     my $msg = $files[$i];
     my $quarantine_path = $config{'clamav_quarantine'};
 
-    # virus type
+    # Virus type
     if ($search_type eq 'virus' && $msg !~ /-spam$/)
     {
       my %header = &clamav_get_email_header_values (
@@ -3155,7 +3136,7 @@ sub clamav_print_quarantine_table_mailscanner ( $ $ $ $ $ $ $ $ $ $ $)
 
         $count++;
     }
-    # spam type
+    # Spam type
     elsif ($search_type eq 'spam' && $msg =~ /-spam$/)
     {
       $msg =~ s/-spam$//;
@@ -3171,7 +3152,7 @@ sub clamav_print_quarantine_table_mailscanner ( $ $ $ $ $ $ $ $ $ $ $)
     }
   }
   
-  # return if no result
+  # Return if no result
   if ($count <= 0)
   { 
     print qq(<p><b>$text{'NO_RESULT_QUARANTINE'}</b></p>);
@@ -3190,7 +3171,7 @@ sub clamav_print_quarantine_table_mailscanner ( $ $ $ $ $ $ $ $ $ $ $)
 # IN: -
 # OUT: -
 #
-# return the current year
+# Return the current yeaR
 # 
 sub clamav_get_current_year ()
 {
@@ -3253,8 +3234,7 @@ sub clamav_print_quarantine_table_milter ( $ $ $ $ $ $ $ $ $ $ $ )
     closedir (DIR1);
   }
 
-  # browse result and push it in a array to manage
-  # pagination
+  # Browse result and push it in a array to manage pagination
   $count = 0;
   for ($i = 0; $i < $#files + 1; $i++)
   {
@@ -3280,7 +3260,7 @@ sub clamav_print_quarantine_table_milter ( $ $ $ $ $ $ $ $ $ $ $ )
       $count++;
   }
   
-  # return if no result
+  # Return if no result
   if ($count <= 0)
   { 
     print qq(<p><b>$text{'NO_RESULT_QUARANTINE'}</b></p>);
@@ -3342,8 +3322,7 @@ sub clamav_print_quarantine_table_amavis_ng ( $ $ $ $ $ $ $ $ $ $ $ )
   @files = readdir (DIR);
   closedir (DIR);
 
-  # browse result and push it in a array to manage
-  # pagination
+  # Browse result and push it in a array to manage pagination
   $count = 0;
   for ($i = 0; $i < $#files + 1; $i += 2)
   {
@@ -3375,7 +3354,7 @@ sub clamav_print_quarantine_table_amavis_ng ( $ $ $ $ $ $ $ $ $ $ $ )
       $count++;
   }
   
-  # return if no result
+  # Return if no result
   if ($count <= 0)
   { 
     print qq(<p><b>$text{'NO_RESULT_QUARANTINE'}</b></p>);
@@ -3396,10 +3375,10 @@ sub clamav_print_quarantine_table_amavis_ng ( $ $ $ $ $ $ $ $ $ $ $ )
     
   print qq(</tr>);
 
-  # write javascript function to select/unselect all items
+  # Write javascript function to select/unselect all items
   &clamav_print_javascript_check_uncheck_all (0, 'quarantine_file');
 
-  # display search result
+  # Display search result
   for ($i = ceil ($current * MAX_PAGE_ITEMS); 
     $i < $#arows + 1 && $page_count++ < MAX_PAGE_ITEMS; $i++)
   {
@@ -3464,7 +3443,7 @@ sub clamav_print_quarantine_table_amavis_ng ( $ $ $ $ $ $ $ $ $ $ $ )
 }
 
 # get_match_files_in_dirs ( $ $ $ )
-# IN: directory to search in
+# IN: Directory to search in
 #     ref on a array for push files into
 #     condition to match
 # OUT: -
@@ -3487,7 +3466,7 @@ sub get_match_files_in_dirs ()
 }
 
 # get_all_files_in_dirs ( $ $ )
-# IN: directory to search in
+# IN: Directory to search in
 #     ref on a array for push files into
 # OUT: -
 #
@@ -3552,7 +3531,7 @@ sub clamav_print_quarantine_table_amavisd_new ( $ $ $ $ $ $ $ $ $ $ $ )
   $mail_from =~ s/ //g;
   $mail_to =~ s/ //g;
 
-  # if mbox format
+  # If mbox format
   if (&clamav_is_mbox_format ($config{'clamav_quarantine'}))
   {
     my $filename = $config{'clamav_quarantine'};
@@ -3578,8 +3557,7 @@ sub clamav_print_quarantine_table_amavisd_new ( $ $ $ $ $ $ $ $ $ $ $ )
     &get_all_files_in_dirs ($config{'clamav_quarantine'}, \@files);
   }
 
-  # browse result and push it in a array to manage
-  # pagination
+  # Browse result and push it in a array to manage pagination
   my $quarantine_path = $config{'clamav_quarantine'};
   my $p = quotemeta ($quarantine_path);
   $count = 0;
@@ -3606,7 +3584,7 @@ sub clamav_print_quarantine_table_amavisd_new ( $ $ $ $ $ $ $ $ $ $ $ )
       $file = $header{'Delivered-To'};
     }
 
-    # virus type
+    # Virus type
     if ($search_type eq 'virus' && $file =~ /^virus/)
     {
       my %header = &clamav_get_email_header_values (
@@ -3624,7 +3602,7 @@ sub clamav_print_quarantine_table_amavisd_new ( $ $ $ $ $ $ $ $ $ $ $ )
 
       $count++;
     }
-    # spam type
+    # Spam type
     elsif ($search_type eq 'spam' && $file =~ /^spam/)
     {
       my %header = &clamav_get_email_header_values (
@@ -3642,7 +3620,7 @@ sub clamav_print_quarantine_table_amavisd_new ( $ $ $ $ $ $ $ $ $ $ $ )
 
       $count++;
     }
-    # bad header type
+    # Bad header type
     elsif ($search_type eq 'badh' && $file =~ /^badh/)
     {
       my %header = &clamav_get_email_header_values (
@@ -3658,7 +3636,7 @@ sub clamav_print_quarantine_table_amavisd_new ( $ $ $ $ $ $ $ $ $ $ $ )
 
       $count++;
     }
-    # banned type
+    # Banned type
     elsif ($search_type eq 'banned' && $file =~ /^banned/)
     {
       my %header = &clamav_get_email_header_values (
@@ -3676,7 +3654,7 @@ sub clamav_print_quarantine_table_amavisd_new ( $ $ $ $ $ $ $ $ $ $ $ )
     }
   }
 
-  # return if no result
+  # Return if no result
   if ($count <= 0)
   { 
     print qq(<p><b>$text{'NO_RESULT_QUARANTINE'}</b></p>);
@@ -3735,8 +3713,7 @@ sub clamav_print_quarantine_table_qmailscanner ( $ $ $ $ $ $ $ $ $ $ $ )
 
   &get_match_files_in_dirs ($config{'clamav_quarantine'}, \@files, "\/new\/");
 
-  # browse result and push it in a array to manage
-  # pagination
+  # Browse result and push it in a array to manage pagination
   $count = 0;
   for ($i = 0; $i < $#files + 1; $i++)
   {
@@ -3746,7 +3723,7 @@ sub clamav_print_quarantine_table_qmailscanner ( $ $ $ $ $ $ $ $ $ $ $ )
         "$msg", qw(Subject From To Quarantine-Description X-Spam-Level)
     );
 
-    # virus type
+    # Virus type
     if ($search_type eq 'virus' && $header{'X-Spam-Level'} eq '')
     {
       my $virus = $header{'Quarantine-Description'};
@@ -3759,7 +3736,7 @@ sub clamav_print_quarantine_table_qmailscanner ( $ $ $ $ $ $ $ $ $ $ $ )
 
       $count++;
     }
-    # spam type
+    # Spam type
     elsif ($search_type eq 'spam' && $header{'X-Spam-Level'} ne '')
     {
       my $level = ": $header{'X-Spam-Level'}";
@@ -3774,7 +3751,7 @@ sub clamav_print_quarantine_table_qmailscanner ( $ $ $ $ $ $ $ $ $ $ $ )
     }
   }
 
-  # return if no result
+  # Return if no result
   if ($count <= 0)
   { 
     print qq(<p><b>$text{'NO_RESULT_QUARANTINE'}</b></p>);
@@ -3815,7 +3792,7 @@ sub clamav_quarantine_add_row ( $ $ $ $ $ $ $ $ $ $ $ $ \@ )
     $mail_to, $to, $file, $date1, $date2, $a) = @_;
   my $mbox = (! -f $file);
   
-  # applying filters
+  # Applying filters
   return 0 if (
     ($virus_name && $virus !~ /$virus_name/i) ||
     ($mail_from && $from !~ /$mail_from/i) ||
@@ -3828,7 +3805,7 @@ sub clamav_quarantine_add_row ( $ $ $ $ $ $ $ $ $ $ $ $ \@ )
   }
   else
   {
-    $fdate = strftime ("%Y-%m-%d %H:%M", localtime ((stat ($file))[9]));
+    $fdate = strftime ('%Y-%m-%d %H:%M', localtime ((stat ($file))[9]));
   }
 
   $fdate_comp = substr ($fdate, 0, 10);
@@ -3857,7 +3834,7 @@ sub clamav_quarantine_add_row ( $ $ $ $ $ $ $ $ $ $ $ $ \@ )
 #     Second item
 # OUT: Comparison result (cmp)
 #
-# this function sort the result by date
+# This function sort the result by date
 # 
 sub clamav_sort_by_date_quarantine_table ( $ $ )
 {
@@ -3907,7 +3884,7 @@ sub clamav_download ()
 #     array ref of rows
 # OUT: -
 #
-# this function is shared by all functions that display quarantine
+# This function is shared by all functions that display quarantine
 # search results
 # 
 sub clamav_print_quarantine_table_display ( $ $ \% \@ )
@@ -3922,7 +3899,7 @@ sub clamav_print_quarantine_table_display ( $ $ \% \@ )
   if (&clamav_get_acl ('quarantine_delete') == 1 ||
     &clamav_get_acl ('quarantine_resend') == 1)
   {
-    # write javascript function to select/unselect all items
+    # Write javascript function to select/unselect all items
     &clamav_print_javascript_check_uncheck_all (0, 'quarantine_file');
 
     if (&clamav_get_acl ('quarantine_export') == 1)
@@ -3959,18 +3936,18 @@ sub clamav_print_quarantine_table_display ( $ $ \% \@ )
     <table border=1>
     <tr $tb>
     <td><b>$text{'DATE'}</b></td><td><b>$text{'SUBJECT'}</b></td>);
-  # spam
+  # Spam
   if ($search_type eq 'spam') 
   {
     print "<td><b>$text{'SPAM_LEVEL'}</b></td>" 
       if (!&clamav_is_mailscanner ());
   }
-  # bad header
+  # Bad header
   elsif ($search_type eq 'badh' || $search_type eq 'banned')
   {
     print "<td><b>$text{'DESCRIPTION'}</b></td>";
   }
-  # virus
+  # Virus
   else 
   {
     print "<td><b>$text{'VIRUS'}</b></td>";
@@ -3990,11 +3967,11 @@ sub clamav_print_quarantine_table_display ( $ $ \% \@ )
   my $export_line = "type;date;hour;subject;description;level;virus;from;to\n";
   print F $export_line;
 
-  # display search result
+  # Display search result
   for ($i = ceil ($current * MAX_PAGE_ITEMS); 
     $i < $#arows + 1 && $page_count++ < MAX_PAGE_ITEMS; $i++)
   {
-    $export_line = '"' . $search_type . '"';
+    $export_line = '"'.$search_type.'"';
     my %hrow = %{$arows[$i]};
 
     my $subject = &clamav_html_encode_quotes ($hrow{'subject'}); 
@@ -4022,44 +3999,44 @@ sub clamav_print_quarantine_table_display ( $ $ \% \@ )
     print qq(
         <tr>
 	<td $cb title="$text{'DATE'}: $hrow{'date'} | $text{'FROM'}: $from | $text{'TO'}: $to | );
-	# spam
+	# Spam
 	if ($search_type eq 'spam')
 	{
           print $text{'SPAM_LEVEL'} if (!&clamav_is_mailscanner ());
 	}
-	# bad header
+	# Bad header
 	elsif ($search_type eq 'badh' || $search_type eq 'banned')
 	{
           print $text{'DESCRIPTION'};
 	}
-	# virus
+	# Virus
 	else
 	{
           print $text{'VIRUS'};
 	}
 	my ($d, $h) = split (' ', $hrow{'date'});
-	$export_line .= ';"' . $d . '";"' . $h . '"';
+	$export_line .= ';"'.$d.'";"'.$h.'"';
 	print qq(: $virus | $text{'SUBJECT'}: ${subject}"><i><small><a href="quarantine_viewmail.cgi?base=);
 	print &urlize ($hrow{'base'});
 	print qq(" target="_BLANK">$hrow{'date'}</small></i></td><td $cb>$subjectc</a></td>);
-	$export_line .= ';"' . $subjectcsv . '"';
-      # spam
+	$export_line .= ';"'.$subjectcsv.'"';
+      # Spam
       if ($search_type eq 'spam')
       {
         print qq(<td $cb title="$text{'SPAM_LEVEL'}: $virus"><b>$virusc</b></td>) if (!&clamav_is_mailscanner ());
-	$export_line .= ';"";"' . $viruscsv . '";""';
+	$export_line .= ';"";"'.$viruscsv.'";""';
       }
-      # bad header
+      # Bad header
       elsif ($search_type eq 'badh' || $search_type eq 'banned')
       {
         print qq(<td $cb>$virusc</td>);
-	$export_line .= ';"' . $viruscsv . '";"";""';
+	$export_line .= ';"'.$viruscsv.'";"";""';
       }
       #virus
       else
       {
         print qq(<td $cb><b><a href="/$module_name/vdb_search_main.cgi?search=on&virus=$hrow{'url_virus'}" title="$text{'VIRUS'}: $virus" target="_BLANK">$virusc</a></b></td>);
-	$export_line .= ';"";"";"' . $viruscsv . '"';
+	$export_line .= ';"";"";"'.$viruscsv.'"';
       }
       print qq(  <td $cb title="$text{'FROM'}: $from">$fromc</td>
         <td $cb title="$text{'TO'}: $to">$toc</td>);
@@ -4089,7 +4066,7 @@ sub clamav_print_quarantine_table_display ( $ $ \% \@ )
 # IN: the string to escape.
 # OUT: a escaped string.
 #
-# escape quotes in a string.
+# Escape quotes in a string.
 # 
 sub clamav_escape_quotes ( $ )
 {
@@ -4104,7 +4081,7 @@ sub clamav_escape_quotes ( $ )
 # IN: the string to encode.
 # OUT: a encoded string.
 #
-# encode quotes in a string.
+# Encode quotes in a string.
 # 
 sub clamav_html_encode_quotes ( $ )
 {
@@ -4119,7 +4096,7 @@ sub clamav_html_encode_quotes ( $ )
 # IN: the string to encode.
 # OUT: a encoded string.
 #
-# encode a string.
+# Encode a string.
 # 
 sub clamav_html_encode ( $ )
 {
@@ -4136,8 +4113,7 @@ sub clamav_html_encode ( $ )
 #     field name.
 # OUT: -
 #
-# print the necessary javascript to manage check/unckeck all
-# feature.
+# Print the necessary javascript to manage check/unckeck all feature.
 # 
 sub clamav_print_javascript_check_uncheck_all ( $ $ )
 {
@@ -4175,8 +4151,7 @@ sub clamav_format_date ( $ $ $ )
   $month++;
   $year += 2000 if ($year < 1000);
 
-  $date = 
-    sprintf ("%u-%02u-%02u", $year, $month, $day);
+  $date = sprintf ('%u-%02u-%02u', $year, $month, $day);
 
   return $date;
 }
@@ -4190,13 +4165,13 @@ sub clamav_format_date ( $ $ $ )
 sub clamav_get_months_combo_options ( $ )
 {
   my $default = shift;
-  my $i = 0;
   my $buf = '';
   
+  my $i = 0;
   foreach (split (' ', $text{'MONTHS_LIST'}))
   {
-    $buf .= "<option value=\"$i\"" . (($i == $default) ? ' SELECTED' : '') . 
-      ">$_</option>\n";
+    $buf .= "<option value=\"$i\"".(($i == $default) ? ' SELECTED' : '').
+            ">$_</option>\n";
     $i++;
   }
 
@@ -4213,14 +4188,14 @@ sub clamav_get_period_chooser ( $ $ $ $ $ $ )
 {
   my ($day1, $month1, $year1, $day2, $month2, $year2) = @_;
   
-  # first period
+  # First period
   print "<table border=0><tr>";
   print qq(<td>$text{'FROM_PERIOD'}</td><td><input type="text" name="day1" size="2" maxlength="2" value="$day1"></td><td><select name="month1">);
   print &clamav_get_months_combo_options ($month1);
   print qq(</select></td><td><input type="text" name="year1" size="4" maxlength="4" value="$year1"></td><td>);
   print &date_chooser_button ('day1', 'month1', 'year1', 1);
   print "</td></tr><tr>";
-  # second period
+  # Second period
   print qq(<td>$text{'TO_PERIOD'}</td><td><input type="text" name="day2" size="2" maxlength="2" value="$day2"></td><td><select name="month2">);
   print &clamav_get_months_combo_options ($month2);
   print qq(</select></td><td><input type="text" name="year2" size="4" maxlength="4" value="$year2"></td><td>);
@@ -4233,20 +4208,17 @@ sub clamav_get_period_chooser ( $ $ $ $ $ $ )
 #     Number of pages.
 # OUT: -
 #
-# display the navigation panel for quarantine list.
+# Display the navigation panel for quarantine list.
 #
 sub clamav_display_page_panel ( $ $ % )
 {
   my ($current, $max, %infos) = @_;
   my $previous = 0;
   my $next = 0;
-  my $i = 0;
   my $limit = 0;
   my $url = '';
-  my $mask = 0;
-  my $url_infos = '';
 
-  # do we need to paginate?
+  # Do we need to paginate?
   return if ($max <= MAX_PAGE_ITEMS);
 
   $current = int ($current);
@@ -4257,20 +4229,20 @@ sub clamav_display_page_panel ( $ $ % )
 
   $url = 
     "search=1&" .
-    "search_type=" . &urlize ($in{'search_type'}) . "&" .
-    "virus_name=" . &urlize ($in{'virus_name'}) . "&" .
-    "mail_from=" . &urlize ($in{'mail_from'}) . "&" .
-    "mail_to=" . &urlize ($in{'mail_to'}) . "&" .
-    "day1=$in{'day1'}&" .
-    "day2=$in{'day2'}&" .
-    "month1=$in{'month1'}&" .
-    "month2=$in{'month2'}&" .
-    "year1=$in{'year1'}&" .
+    "search_type=".&urlize($in{'search_type'})."&".
+    "virus_name=".&urlize($in{'virus_name'})."&".
+    "mail_from=".&urlize($in{'mail_from'})."&".
+    "mail_to=".&urlize($in{'mail_to'})."&".
+    "day1=$in{'day1'}&".
+    "day2=$in{'day2'}&".
+    "month1=$in{'month1'}&".
+    "month2=$in{'month2'}&".
+    "year1=$in{'year1'}&".
     "year2=$in{'year2'}";
 
   while (my ($k, $v) = each (%infos))
   {
-    $url .= "&$k=" . &urlize ($v);
+    $url .= "&$k=".&urlize($v);
   }
 
   print qq(<p><table border="0" cellspacing="2" cellpadding="2" width="40%">);
@@ -4286,8 +4258,8 @@ sub clamav_display_page_panel ( $ $ % )
   };
   print qq(</td><td valign="top" align="center" nowrap>&nbsp;);
 
-  $i = 0;
-  $mask = 0;
+  my $i = 0;
+  my $mask = 0;
   while ($i < $limit)
   {
     if (
@@ -4297,7 +4269,7 @@ sub clamav_display_page_panel ( $ $ % )
     {
       if ($current == $i)
       {
-        print '<b>' . ($i + 1) . '</b> ';
+        print '<b>'.($i + 1).'</b> ';
       }
       else
       {
@@ -4334,7 +4306,7 @@ sub clamav_display_page_panel ( $ $ % )
 # IN: -
 # OUT: -
 #
-# display versions for both this module and clamav
+# Display versions for both this module and clamav
 # 
 sub clamav_footer ()
 {
@@ -4347,29 +4319,28 @@ sub clamav_footer ()
   );
 }
 
-# clamav_check_perl_deps ()
+# clamav_check_deps ()
 # IN: -
 # OUT: -
 #
-# check if all dependencies are ok for perl
+# Check if all dependencies are ok for perl
 # -> test them before with the "eval" function and add all bad
-#    dependencies in the global %perl_deps hash
+#    dependencies in the global %deps hash
 #
-sub clamav_check_perl_deps ()
+sub clamav_check_deps ()
 {
-  # If no quarantine management, we do not need
-  # the following modules, so remove them from
-  # the error list
+  # If no quarantine management, we do not need the following modules, so
+  # remove them from the error list
   if ($config{'clamav_quarantine_soft'} == CS_NONE)
   {
-    delete $perl_deps{'Mail::SpamAssassin'};
-    delete $perl_deps{'Compress::Zlib'};
-    delete $perl_deps{'Getopt::Long'};
-    delete $perl_deps{'IO::File'};
-    delete $perl_deps{'Net::SMTP'};
-    delete $perl_deps{'Mail::Internet'};
-    delete $perl_deps{'GD'};
-    delete $perl_deps{'GD::Graph::lines'};
+    delete $deps{'Mail::SpamAssassin'};
+    delete $deps{'Compress::Zlib'};
+    delete $deps{'Getopt::Long'};
+    delete $deps{'IO::File'};
+    delete $deps{'Net::SMTP'};
+    delete $deps{'Mail::Internet'};
+    delete $deps{'GD'};
+    delete $deps{'GD::Graph::lines'};
   }
   # For the moment, quarantine evolution graphes are ony available
   # for amavisd-new, mailscanner and qmailscanner quarantines
@@ -4377,20 +4348,20 @@ sub clamav_check_perl_deps ()
          $config{'clamav_quarantine_soft'} != CS_MAILSCANNER &&
          $config{'clamav_quarantine_soft'} != CS_QMAILSCANNER)
   {
-    delete $perl_deps{'GD'};
-    delete $perl_deps{'GD::Graph::lines'};
+    delete $deps{'GD'};
+    delete $deps{'GD::Graph::lines'};
   }
   # Only amavisd-new mbox quarantine is supported
   elsif ($config{'clamav_quarantine_soft'} != CS_AMAVIS)
   {
-    delete $perl_deps{'Mail::Mbox::MessageParser'};
+    delete $deps{'Mail::Mbox::MessageParser'};
   }
 
-  return if (!%perl_deps);
+  return if (!%deps);
                                                                                 
   print qq($text{'PERL_DEPS_ERROR'});
   print qq(<ul>);
-  foreach my $mod (keys %perl_deps) {print qq(<li><b>$mod</b></li>\n);}
+  foreach my $mod (keys %deps) {print qq(<li><b>$mod</b></li>\n);}
   print qq(</ul>);
   
   &clamav_check_config_exit ('', 1);
@@ -4400,7 +4371,7 @@ sub clamav_check_perl_deps ()
 # IN: -
 # OUT: a hash with quarantine informations (size, viruses count, spams count).
 #
-# return informations about the quarantine repository.
+# Return informations about the quarantine repository.
 # 
 sub clamav_get_quarantine_infos ()
 {
@@ -4409,51 +4380,51 @@ sub clamav_get_quarantine_infos ()
   my $size = 0;
   my $viruses = 0;
   my $spams = 0;
-  my $du = &has_command ("du");
+  my $du = &has_command ('du');
   my %graph_data = ();
 
-  $infos{"directory"} = $config{"clamav_quarantine"};
-  $infos{"size"} = $text{"EMPTY"};
-  $infos{"viruses"} = $text{"NONE"};
-  $infos{"spams"} = $text{"NONE"};
-  $infos{"badh"} = $text{"NONE"};
-  $infos{"banned"} = $text{"NONE"};
+  $infos{'directory'} = $config{'clamav_quarantine'};
+  $infos{'size'} = $text{'EMPTY'};
+  $infos{'viruses'} = $text{'NONE'};
+  $infos{'spams'} = $text{'NONE'};
+  $infos{'badh'} = $text{'NONE'};
+  $infos{'banned'} = $text{'NONE'};
   $infos{'graph_name'} = '';
     
   if (!&clamav_is_quarantine_repository_empty ())
   {
     $infos{'graph_name'} = 
-      "$remote_user-quarantine_graph-" . (time ()) . ".png";
-    $infos{"size"} = 
-      (split (' ', `$du -sh $config{"clamav_quarantine"}`))[0];
+      "$remote_user-quarantine_graph-".(time()).".png";
+    $infos{'size'} = 
+      (split (' ', `$du -sh $config{'clamav_quarantine'}`))[0];
 
     # amavisd-new
     if (&clamav_is_amavisd_new ())
     {
-      ($infos{"viruses"}, $infos{"spams"}, $infos{'badh'}, $infos{'banned'},
+      ($infos{'viruses'}, $infos{'spams'}, $infos{'badh'}, $infos{'banned'},
        %graph_data) = &quarantine_get_infos_amavisd_new ();
     }
     # mailscanner
     elsif (&clamav_is_mailscanner ())
     {
-      ($infos{"viruses"}, $infos{"spams"}, %graph_data) = 
+      ($infos{'viruses'}, $infos{'spams'}, %graph_data) = 
         &quarantine_get_infos_mailscanner ();
     }
     # qmailscanner
     elsif (&clamav_is_qmailscanner ())
     {
-      ($infos{"viruses"}, $infos{"spams"}, %graph_data) = 
+      ($infos{'viruses'}, $infos{'spams'}, %graph_data) = 
         &quarantine_get_infos_qmailscanner ();
     }
     # amavis-ng
     elsif (&clamav_is_amavis_ng ())
     {
-      ($infos{"viruses"}, $infos{"spams"}) = &quarantine_get_infos_amavis_ng ();
+      ($infos{'viruses'}, $infos{'spams'}) = &quarantine_get_infos_amavis_ng ();
     }
     # milter
     elsif (&clamav_is_milter ())
     {
-      ($infos{"viruses"}, $infos{"spams"}) = &quarantine_get_infos_milter ();
+      ($infos{'viruses'}, $infos{'spams'}) = &quarantine_get_infos_milter ();
     }
 
     # For the moment, quarantine evolution graph is only available
@@ -4538,10 +4509,10 @@ sub clamav_get_quarantine_infos ()
       if ($gd)
       {
         system (
-          &has_command('rm') . ' -f ' .
-          "$root_directory/$module_name/tmp/" .
+          &has_command('rm').' -f '.
+          "$root_directory/$module_name/tmp/".
           "$remote_user-quarantine_graph-*.png");
-        open OUT, ">$root_directory/$module_name/tmp/" . $infos{'graph_name'}
+        open OUT, ">$root_directory/$module_name/tmp/".$infos{'graph_name'}
           or die "Couldn't open for output: $!";
         binmode (OUT);
         print OUT $gd->png ();
@@ -4626,7 +4597,7 @@ sub quarantine_get_infos_amavisd_new ()
   my %data = ();
   my $mbox = 0;
   
-  # if mbox format
+  # If mbox format
   if (&clamav_is_mbox_format ($config{'clamav_quarantine'}))
   {
     my $filename = $config{'clamav_quarantine'};
@@ -4666,7 +4637,7 @@ sub quarantine_get_infos_amavisd_new ()
     }
     else
     {
-      $fdate = strftime ("%y/%m", localtime ((stat ($files[$i]))[9]));
+      $fdate = strftime ('%y/%m', localtime ((stat ($files[$i]))[9]));
       $file = basename ($files[$i]);
     }
 
@@ -4681,25 +4652,25 @@ sub quarantine_get_infos_amavisd_new ()
       };
     }
 
-    # virus
+    # Virus
     if ($file =~ /^virus/)
     {
       ++$data{$fdate}{'virus'};
       ++$viruses;
     }
-    # badh
+    # Badh
     if ($file =~ /^badh/)
     {
       ++$data{$fdate}{'badh'};
       ++$badh;
     }
-    # banned
+    # Banned
     if ($file =~ /^banned/)
     {
       ++$data{$fdate}{'banned'};
       ++$banned;
     }
-    # spam
+    # Spam
     elsif ($file =~ /^spam/)
     {
       ++$data{$fdate}{'spam'};
@@ -4741,7 +4712,7 @@ sub quarantine_get_infos_mailscanner ()
         next if ($file =~ /^\./);
         next if ($file !~ /^q/ && $file ne 'message');
 	
-        my $fdate = strftime ("%y/%m", localtime ((stat (
+        my $fdate = strftime ('%y/%m', localtime ((stat (
           "$config{'clamav_quarantine'}/$dir/$dir1/$file"))[9]));
 
         # Prepare hash for quarantine evolution graph
@@ -4798,7 +4769,7 @@ sub quarantine_get_infos_qmailscanner ()
 
     if ($header{'X-Spam-Level'} || $header{'Quarantine-Description'})
     {
-      my $fdate = strftime ("%y/%m", localtime ((stat ($files[$i]))[9]));
+      my $fdate = strftime ('%y/%m', localtime ((stat ($files[$i]))[9]));
 
       # Prepare hash for quarantine evolution graph
       if (!exists ($data{$fdate}))
@@ -4836,8 +4807,9 @@ sub quarantine_get_infos_qmailscanner ()
 # 
 sub clamav_display_remote_actions ($ $ $ $)
 {
-  require "$root_directory/$module_name/data/clamav_remote_actions.pm";
   my ($host, $port, $action, $arg) = @_;
+
+  require "$root_directory/$module_name/data/clamav_remote_actions.pm";
 
   print qq(
     <table border="1">
@@ -4851,7 +4823,7 @@ sub clamav_display_remote_actions ($ $ $ $)
   {
     my $selected = ($key eq $action);
     my $name = sprintf ("$key - %s", ($clamav_remote_actions{$key} == 1) ?
-      "Argument needed ->" : "No argument");
+                 "Argument needed ->" : "No argument");
     printf qq(<option value="$key"%s>$name</option>), ($selected) ?
       ' SELECTED' : '';
   }
@@ -4898,7 +4870,7 @@ sub clamav_update_manual
 sub clamav_join_from_url
 {
   my ($str, $e) = @_;
-  my $args = "";
+  my $args = '';
   my $esc = 1;
 
   $esc = $e if defined ($e);
@@ -4907,7 +4879,7 @@ sub clamav_join_from_url
   {
     next if $k !~ /^$str/;
     
-    $args .= "$k=" . (($esc) ? &urlize ($v) : $v) . "&";
+    $args .= "$k=" .(($esc) ? &urlize($v) : $v)."&";
   }
 
   $args =~ s/.$//;
@@ -4925,15 +4897,15 @@ sub clamav_system_ok
   my $type = shift;
   my $ret = 0;
 
-  if ($type eq "backup")
+  if ($type eq 'backup')
   {
-    $ret = (! -f $config{"clamav_init_restore_path"} . 
-      "/wbmclamav_system_backups/.backup_flag");
+    $ret = (! -f $config{'clamav_init_restore_path'}.
+                   '/wbmclamav_system_backups/.backup_flag');
   }
-  elsif ($type eq "restore")
+  elsif ($type eq 'restore')
   {
-    $ret = (-f $config{"clamav_init_restore_path"} . 
-      "/wbmclamav_system_backups/.backup_flag");
+    $ret = (-f $config{'clamav_init_restore_path'}.
+                 '/wbmclamav_system_backups/.backup_flag');
   }
 
   return $ret;
@@ -4961,9 +4933,10 @@ sub clamav_backup_item_exists ()
 # 
 sub clamav_system_backup
 {
-  require "$root_directory/$module_name/data/system_files.pm";
   my $cpath = 
-    $config{'clamav_init_restore_path'} . '/wbmclamav_system_backups/';
+    $config{'clamav_init_restore_path'}.'/wbmclamav_system_backups/';
+
+  require "$root_directory/$module_name/data/system_files.pm";
 
   if ($gconfig{'os_type'} !~ /bsd/)
   {
@@ -4986,8 +4959,8 @@ sub clamav_system_backup
   make_path ($cpath);
   if (! -d $cpath)
   {
-    &clamav_check_config_exit (sprintf $text{"MSG_FATAL_ERROR_BACKUP_PATH"},
-                                 $cpath);
+    &clamav_check_config_exit (sprintf ($text{'MSG_FATAL_ERROR_BACKUP_PATH'},
+                                 $cpath));
   }
 
   while (my ($path, $empty) = each (%system_files))
@@ -5000,24 +4973,26 @@ sub clamav_system_backup
     make_path ("$cpath/$dir");
     if (! -d "$cpath/$dir")
     {
-      &clamav_check_config_exit (sprintf $text{"MSG_FATAL_ERROR_BACKUP_PATH"},
-                                   "$cpath/$dir");
+      &clamav_check_config_exit (sprintf ($text{'MSG_FATAL_ERROR_BACKUP_PATH'},
+                                   "$cpath/$dir"));
     }
     if (!copy ($path, "$cpath/$dir/"))
     {
-      &clamav_check_config_exit (sprintf $text{"MSG_FATAL_ERROR_BACKUP_FILE"},
-                                   $path, "$cpath/$dir/$file");
+      &clamav_check_config_exit (sprintf ($text{'MSG_FATAL_ERROR_BACKUP_FILE'},
+                                   $path, "$cpath/$dir/$file"));
     }
 
-    next if (!$empty);
-    open (H, '>', $path) || 
-      &clamav_check_config_exit (
-        sprintf $text{"MSG_FATAL_ERROR_BACKUP_FILE_EMPTY"},
-                "$cpath/$dir/$file");
-    print H 
-      "# Deactivated by wbmclamav\n" .
-      "# Backup file is : $cpath/$dir/$file\n";
-    close (H);
+    if ($empty)
+    {
+      open (H, '>', $path) || 
+        &clamav_check_config_exit (
+          sprintf ($text{'MSG_FATAL_ERROR_BACKUP_FILE_EMPTY'},
+            "$cpath/$dir/$file"));
+      print H 
+        "# Deactivated by wbmclamav\n" .
+        "# Backup file is : $cpath/$dir/$file\n";
+      close (H);
+    }
   }
 
   open (H, '>', "$cpath/.backup_flag"); close (H);
@@ -5031,7 +5006,7 @@ sub clamav_system_backup
 #
 sub clamav_first_backup ()
 {
-  return !(-d $config{"clamav_init_restore_path"}.'/wbmclamav_system_backups');
+  return !(-d $config{'clamav_init_restore_path'}.'/wbmclamav_system_backups');
 }
 
 # clamav_get_system_files ()
@@ -5057,23 +5032,23 @@ sub clamav_get_system_files
 #
 sub clamav_system_restore
 {
-  require "$root_directory/$module_name/data/system_files.pm";
   my ($files, $uninstall) = @_;
   my $cpath = $config{'clamav_init_restore_path'}.'/wbmclamav_system_backups/';
-  my $res = 0;
+
+  require "$root_directory/$module_name/data/system_files.pm";
   
   if (!defined ($uninstall))
   {
     if (!&clamav_system_ok ('restore'))
     {
       &clamav_check_config_exit (
-        sprintf $text{"MSG_WARNING_RESTORE_BACKUP_FLAG"}, $cpath);
+        sprintf ($text{'MSG_WARNING_RESTORE_BACKUP_FLAG'}, $cpath));
     }
   
     if (! -d "$cpath")
     {
       &clamav_check_config_exit (
-        sprintf $text{"MSG_FATAL_ERROR_RESTORE_PATH_NOEXIST"}, $cpath);
+        sprintf ($text{'MSG_FATAL_ERROR_RESTORE_PATH_NOEXIST'}, $cpath));
     }
   }
 
@@ -5083,22 +5058,15 @@ sub clamav_system_restore
     $path =~ /^(.*)\/(.*)$/;
     my ($dir, $file) = ($1, $2);
     
-    # If source or destination do not exists anymore,
-    # do not bother.
+    # If source or destination do not exists anymore, do not bother
     next if (! -f "$cpath/$dir/$file" || ! -f $path);
  
-    # Backup existant system file before restoring version saved by our module,
+    # Backup current system file before restoring file backuped by this module,
     # just in case somthing wrong happened
     copy ("$path/$file", "$path.clamav-backup-".time());
 
     # Restore file
     copy ("$cpath/$dir/$file", $path);
-
-    if (!defined ($uninstall) && $res != 0)
-    {
-      &clamav_check_config_exit (sprintf $text{"MSG_FATAL_ERROR_RESTORE_FILE"},
-                                   "$cpath/$dir/$file", $path);
-    }
   }
 
   unlink ("$cpath/.backup_flag");
