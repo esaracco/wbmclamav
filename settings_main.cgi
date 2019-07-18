@@ -36,12 +36,13 @@ print qq(<p>$text{'SETTINGS_DESCRIPTION'}</p>);
 
 if ($in{'next'})
 {
-  $buf = &clamav_save_global_settings (1);
+  $error = &clamav_save_global_settings (1);
   print qq(<p>);
 
-  if ($buf)
+  if ($error)
   {
-    print "<p>$buf<p>";
+    print "<p>$error<p>";
+    print qq(<p/><b>$text{'MSG_CONFIGS_RESTORED'}</b>);
   }
   else
   {
@@ -52,7 +53,8 @@ if ($in{'next'})
     }
     else
     {
-      printf qq(<b>$text{'MSG_ERROR_APPLY_GLOBAL_SETTINGS'}</b>), $config{'clamav_clamav_log'};
+      printf (qq(<b>$text{'MSG_ERROR_APPLY_GLOBAL_SETTINGS'}</b>),
+        $config{'clamav_clamav_log'});
     }
   }
 }

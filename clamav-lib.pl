@@ -1667,83 +1667,93 @@ sub clamav_save_global_settings
 
   require "$root_directory/$module_name/data/freshclam_predefined.pm";
   require "$root_directory/$module_name/data/clamav_predefined.pm";
-  
-  $cc = $config{'clamav_clamav_conf'};
-  $fc = $config{'clamav_freshclam_conf'};
+
+  my %predefined = (
+       'clamav' => {
+         'keys' => \%clamav_predefined,
+         'fh' => undef
+       },
+       'freshclam' => {
+         'keys' => \%freshclam_predefined,
+         'fh' => undef
+       }
+     );
 
   if (!$restart)
   {
     $cc = "$config{'clamav_working_path'}/.clamav/$remote_user/clamav.conf";
     $fc = "$config{'clamav_working_path'}/.clamav/$remote_user/freshclam.conf";
   }
-  
-  &lock_file ($cc); open (CLAMAV, '>', $cc);
-  &lock_file ($fc); open (FRESHCLAM, '>', $fc);
+  else
+  {
+    $cc = $config{'clamav_clamav_conf'};
+    $fc = $config{'clamav_freshclam_conf'};
+
+    # Backup configs before
+    copy ($cc, "$cc.clamav-backup");
+    copy ($fc, "$fc.clamav-backup");
+  }
+
+  &lock_file ($cc); open ($predefined{'clamav'}->{'fh'}, '>', $cc);
+  &lock_file ($fc); open ($predefined{'freshclam'}->{'fh'}, '>', $fc);
   
   foreach my $key (sort keys %in)
   {
-    my $value = ($key =~ /\[\]$/) ? 
-      substr ($key, 0, length ($key) - 2) : $key;
+    next if ($key !~ /^(clamav|freshclam)_([a-z0-9]+)/i);
 
-    my @vals = split (chr (0), $in{$key});
+    my ($type, $k) = ($1, $2);
+    my %h = %{$predefined{$type}{'keys'}};
 
-    foreach $val (@vals)
+    foreach $val (split (chr (0), $in{$key}))
     {
-      next if ($restart && $val eq "$text{'UNDEFINED'}");
+      next if ($restart &&
+        (
+          $val eq "$text{'UNDEFINED'}" ||
+          $val eq '' && ($h{$k} == 1 || $h{$k} == 2)
+        ));
 
-      if ($key =~ /^clamav.*$/)
+      # If key does not accept argument -> boolean
+      if ($h{$k} == 0)
       {
-        $value =~ s/^clamav_//;
-        next if ($restart && ($val eq '' && 
-          ($clamav_predefined{$value} == 1 || 
-           $clamav_predefined{$value} == 2)));
-  
-        if ($clamav_predefined{$value} == 0)
-        {
-          $val = ($val =~ /^(true|1|on|yes|t|y)$/i) ? 'true' : 'false';
-        }
-  
-        print CLAMAV "$value $val\n";
+        $val = ($val =~ /^(true|1|on|yes|t|y)$/i) ? 'true' : 'false';
       }
-      elsif ($key =~ /^freshclam.*$/)
-      {
-        $value =~ s/^freshclam_//;
-        next if ($restart && $val eq '' && $freshclam_predefined{$value} == 1);
-  	
-        if ($freshclam_predefined{$value} == 0)
-        {
-          $val = ($val =~ /^(true|1|on|yes|t|y)$/i) ? 'true' : 'false';
-        }
   
-        my @tmp = split (' ', $val);
-        foreach (@tmp)
-        {
-          print FRESHCLAM "$value $_\n";
-        }
+      foreach (split (' ', $val))
+      {
+        print {$predefined{$type}->{'fh'}} "$k $_\n";
       }
     }
   }
   
-  close (CLAMAV); &unlock_file ($cc);
-  close (FRESHCLAM); &unlock_file ($fc);
+  close ($predefined{'freshclam'}->{'fh'}); &unlock_file ($fc);
+  close ($predefined{'clamav'}->{'fh'}); &unlock_file ($cc);
 
   # Check if settings are ok
-  $buf = &clamav_check_global_settings ();
+  $error = &clamav_check_global_settings ();
 
-  if (!$buf)
+  if (!$error)
   {
     if ($restart)
     {
       &clamav_activate_clamd ();
       
-      &daemon_control ($config{'clamav_freshclam_init_script'}, "restart")
-        if ($config{'clamav_refresh_use_cron'} == UP_DAEMON);
+      if ($config{'clamav_refresh_use_cron'} == UP_DAEMON)
+      {
+        &daemon_control ($config{'clamav_freshclam_init_script'}, 'restart');
+      }
 
       &clamav_clean_global_settings_tempfiles ();
     }
   }
+  # Something goes wrong with the conf
+  else
+  {
+    # Restore backups
+    copy ("$cc.clamav-backup", $cc);
+    copy ("$fc.clamav-backup", $fc);
+  }
 
-  return $buf;
+  return $error;
 }
 
 # clamav_check_global_settings ()
@@ -1820,10 +1830,8 @@ sub clamav_global_settings_get_delete_item
 # 
 sub clamav_clean_global_settings_tempfiles
 {
-  unlink ("$config{'clamav_working_path'}/.clamav/$remote_user/clamav.conf")
-    if (-f "$config{'clamav_working_path'}/.clamav/$remote_user/clamav.conf");
-  unlink ("$config{'clamav_working_path'}/.clamav/$remote_user/freshclam.conf")
-    if (-f "$config{'clamav_working_path'}/.clamav/$remote_user/freshclam.conf");
+  unlink ("$config{'clamav_working_path'}/.clamav/$remote_user/clamav.conf");
+  unlink ("$config{'clamav_working_path'}/.clamav/$remote_user/freshclam.conf");
 }
 
 # clamav_display_clamav_settings ()
@@ -5062,7 +5070,7 @@ sub clamav_system_restore
     next if (! -f "$cpath/$dir/$file" || ! -f $path);
  
     # Backup current system file before restoring file backuped by this module,
-    # just in case somthing wrong happened
+    # just in case something wrong happened
     copy ("$path/$file", "$path.clamav-backup-".time());
 
     # Restore file

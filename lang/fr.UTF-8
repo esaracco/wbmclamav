@@ -167,6 +167,7 @@ QUARANTINE_RESEARCH_DESCRIPTION=Il est conseillé de filtrer le contenu de la qu
 QUARANTINE_RESEND_NEWTO_PAGE_DESCRIPTION=Si vous voulez forcer l'expéditeur, le destinataire ou le serveur SMTP à utiliser pour tous les courriels à renvoyer, remplissez le formulaire ci-dessous. Sinon, laissez les champs vides:
 QUARANTINE_RESEND_PAGE_TITLE=Renvoyer un courriel
 QUARANTINE_SHOWHIDE_GRAPH=Voir/Cacher le graphique d'évolution
+MSG_CONFIGS_RESTORED=Les fichiers de configuration ont été restaurés
 QUARANTINE_SIZE=Taille courante de la quarantaine
 QUARANTINE_SPAMS=Nombre de spams
 QUARANTINE_VIEWLOG_PAGE_DESCRIPTION=Lorsqu'un courriel est mis en quarantaine il est accompagné d'un fichier de log. Ce fichier contient les différentes opérations effectuées sur le courriel analysé.

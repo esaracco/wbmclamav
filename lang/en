@@ -34,6 +34,7 @@ MSG_ERROR_FILE_READ=<b>An error occured while reading the following file:<p /><i
 SERVER_RESPONSE=Server response
 SEND=Send
 MSG_ERROR_APPLY_GLOBAL_SETTINGS=An error occured while restarting ClamAV daemon. See the <a href="logs_main.cgi?lines=20&logfile=%s" target="_BLANK">log file</a> for more details.
+MSG_CONFIGS_RESTORED=The configuration files have been restored
 QUARANTINE_SIZE=Current quarantine size
 START_STOP=Start/Stop daemon
 REMOTE_CONTROL=Remote control
