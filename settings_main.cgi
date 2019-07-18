@@ -1,6 +1,6 @@
 #!/usr/bin/perl
 
-# Copyright (C) 2003-2008
+# Copyright (C) 2003-2019
 # Emmanuel Saracco <emmanuel@esaracco.fr>
 #
 # This program is free software; you can redistribute it and/or modify
@@ -22,13 +22,17 @@ require './clamav-lib.pl';
 &clamav_check_acl ('global_settings_view');
 &ReadParse ();
 
-# clean temp if first access
-if ($ENV{REQUEST_METHOD} eq "GET")
-  {&clamav_clean_global_settings_tempfiles ()}
+# Clean temp if first access
+if ($ENV{'REQUEST_METHOD'} eq 'GET')
+{
+  &clamav_clean_global_settings_tempfiles ();
+}
 else
-  {&clamav_check_acl ('global_settings_write')}
+{
+  &clamav_check_acl ('global_settings_write');
+}
 
-&header($text{'FORM_TITLE'}, "", undef, 1, 0);
+&header($text{'FORM_TITLE'}, '', undef, 1, 0);
 print "<hr>\n";
 
 print qq(<h1>$text{'SETTINGS_TITLE'}</h1>);
@@ -58,26 +62,31 @@ if ($in{'next'})
     }
   }
 }
-else
+elsif ($ENV{REQUEST_METHOD} eq 'POST')
 {
-  # if there is a item to add
-  $add_item_c = $in{'nsclamav_add_key'} if ($in{'nsclamav_add'});
-  $add_item_f = $in{'nsfreshclam_add_key'} if ($in{'nsfreshclam_add'});
-  
-  # if there is a item to delete
-  $delete_item_c = &clamav_global_settings_get_delete_item ('clamav');
-  $delete_item_f = &clamav_global_settings_get_delete_item ('freshclam');
+  # If there is a item to add
+  if ($in{'nsclamav_add'} || $in{'nsfreshclam_add'})
+  {
+    $add_item_c = $in{'nsclamav_add_key'} if ($in{'nsclamav_add'});
+    $add_item_f = $in{'nsfreshclam_add_key'} if ($in{'nsfreshclam_add'});
+  }
+  # If there is a item to delete
+  else
+  {
+    $delete_item_c = &clamav_global_settings_get_delete_item ('clamav');
+    $delete_item_f = &clamav_global_settings_get_delete_item ('freshclam');
+  }
 }
 
 print qq(<form method="POST" action="$scriptname">);
 
 print qq(<h2>$text{'SETTINGS_CLAMAV_TITLE'}</h2>);
 
-&clamav_display_clamav_settings ($add_item_c, $delete_item_c);
+&clamav_display_settings ('clamav', $add_item_c, $delete_item_c);
 
 print qq(<h2>$text{'SETTINGS_FRESHCLAM_TITLE'}</h2>);
 
-&clamav_display_freshclam_settings ($add_item_f, $delete_item_f);
+&clamav_display_settings ('freshclam', $add_item_f, $delete_item_f);
 
 if (&clamav_get_acl ('global_settings_write') == 1)
 {

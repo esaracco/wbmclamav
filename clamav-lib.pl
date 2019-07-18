@@ -438,7 +438,7 @@ sub clamav_setup ()
 # 
 sub clamav_get_proxy_settings
 {
-  &clamav_load_freshclam_config ();
+  &clamav_load_config ('freshclam');
 
   return 
     ($freshclam_config{'HTTPProxyServer'} &&
@@ -497,57 +497,39 @@ sub clamav_display_combo_quarantine_items_types ()
   return $buf;
 }
 
-# clamav_display_combo_freshclam_predefined ( $ )
-# IN: 1 if combo must not display values that already exist
-#     in the config file
+# clamav_display_combo_predefined ( $ )
+# IN: - Type : C<clamav>, C<freshclam>
+#     - C<1> if combo must not display values that already exist in the config
+#       file
 # OUT: 1 if combo box has been displayed (if there is result)
 #
-# Display a combo box with freshclam predifined variables
-# 
-sub clamav_display_combo_freshclam_predefined ( $ )
+# Display a combo box with clamav or freshclam predefined variables
+#
+sub clamav_display_combo_predefined ( $ $ )
 {
-  my $uniq = shift;
+  my ($type, $uniq) = @_;
   my $buf = '';
+  my %p;
+  my %c;
   my $ok = 0;
 
-  require "$root_directory/$module_name/data/freshclam_predefined.pm";
-  
-  $buf = qq(<select name="nsfreshclam_add_key">\n);
-  foreach my $key (sort keys %freshclam_predefined)
+  require "$root_directory/$module_name/data/${type}_predefined.pm";
+
+  if ($type eq 'clamav')
   {
-    if (!defined $freshclam_config{$key})
-    {
-      $ok = 1;
-      $buf .= qq(<option value="$key">$key</option>\n)
-    }
+    %p = %clamav_predefined;
+    %c = %clamav_config;
   }
-  $buf .= qq(</select>\n);
-
-  # Only print if there is result
-  print $buf if ($ok == 1);
-
-  return $ok;
-}
-
-# clamav_display_combo_clamav_predefined ( $ )
-# IN: 1 if combo must not display values that already exist
-#     in the config file
-# OUT: 1 if combo box has been displayed (if there is result)
-#
-# Display a combo box with clamav predifined variables
-#
-sub clamav_display_combo_clamav_predefined ($)
-{
-  my $uniq = shift;
-  my $buf = '';
-  my $ok = 0;
-
-  require "$root_directory/$module_name/data/clamav_predefined.pm";
-  
-  $buf = qq(<select name="nsclamav_add_key">\n);
-  foreach my $key (sort keys %clamav_predefined)
+  else
   {
-    if (!defined $clamav_config{$key} || $clamav_predefined{$key} == 2)
+    %p = %freshclam_predefined;
+    %c = %freshclam_config;
+  }
+  
+  $buf = qq(<select name="ns${type}_add_key">\n);
+  foreach my $key (sort keys %p)
+  {
+    if (!defined ($c{$key}) || $p{$key} == 2)
     {
       $ok = 1;
       $buf .= qq(<option value="$key">$key</option>\n)
@@ -832,7 +814,7 @@ sub clamav_get_runlevel
 #
 sub clamav_get_freshclam_daemon_settings
 {
-  &clamav_load_freshclam_config ();
+  &clamav_load_config ('freshclam');
   
   my $ret = $freshclam_config{'Checks'};
 
@@ -1544,8 +1526,8 @@ sub clamav_set_freshclam_daemon_settings ( $ $ )
     &clamav_reactivate_system_file ($freshclam);
   }
  
-  &clamav_load_freshclam_config ();
-  $freshclam_config{'Checks'} = $freq;
+  &clamav_load_config ('freshclam');
+  $freshclam_config{'Checks'} = [$freq];
   &clamav_save_freshclam_config ();
 
   if ($have_systemd)
@@ -1621,30 +1603,27 @@ sub clamav_save_freshclam_config
   &lock_file ($config{'clamav_freshclam_conf'});
 
   open (H, '>', $config{'clamav_freshclam_conf'});
-  foreach my $key (keys %freshclam_config)
+  foreach my $key (sort keys %freshclam_config)
   {
-    next if $freshclam_config{$key} eq "$text{'UNDEFINED'}";
-    next if ($freshclam_config{$key} eq '' && 
-      $freshclam_predefined{$key} == 1);
-   
-    if ($freshclam_predefined{$key} == 0)
+    foreach my $v (@{$freshclam_config{$key}})
     {
-      $freshclam_config{$key} = 
-        ($freshclam_config{$key} =~ /^(true|1|on|yes|t|y)$/i) ? 
-          'true' : 'false';
-    }
+      next if ($v eq "$text{'UNDEFINED'}" ||
+               $v eq '' && ($freshclam_predefined{$key} == 1 ||
+                            $freshclam_predefined{$key} == 2));
 
-    my @tmp = split (' ', $freshclam_config{$key});
-    if ($#tmp > 0)
-    {
+      # If key does not accept argument -> boolean
+      if ($freshclam_predefined{$key} == 0)
+      {
+        $freshclam_config{$key} = [
+          ($freshclam_config{$key} =~ /^(true|1|on|yes|t|y)$/i) ?
+            'true' : 'false'];
+      }
+
+      my @tmp = split (' ', $freshclam_config{$key});
       foreach (@tmp)
       {
         print H "$key $_\n";
       }
-    }
-    else
-    {
-      print H $key.' '.$freshclam_config{$key}."\n";
     }
   }
   close (H);
@@ -1795,8 +1774,8 @@ sub clamav_check_global_settings ()
 }
 
 # clamav_global_settings_get_delete_item ()
-# IN: type of item to process ('clamav' or 'freshclam')
-# OUT: keys of the item to delete (clamav predefine variable name)
+# IN: Type of item to process ('clamav' or 'freshclam')
+# OUT: Keys of the item to delete (clamav predefine variable name)
 #
 # Return the name of the predefined variable to delete in clamav or
 # freshclam's config file
@@ -1804,22 +1783,12 @@ sub clamav_check_global_settings ()
 sub clamav_global_settings_get_delete_item
 {
   my $type = shift;
-  my $exp = '';
-  my $key = '';
+  my $exp = 'ns'.$type.'_delete_';
 
-  $exp = 'ns'.$type.'_delete_';
-
-  foreach $key (keys %in)
+  while (my ($k, $v) = each (%in))
   {
-    if ($key =~ /^$exp/)
-    {
-      $key =~ s/^$exp//g;
-      
-      return $key;
-    }
+    return $k if ($k =~ s/^$exp//);
   }
-
-  return $key;
 }
 
 # clamav_clean_global_settings_tempfiles ()
@@ -1834,83 +1803,98 @@ sub clamav_clean_global_settings_tempfiles
   unlink ("$config{'clamav_working_path'}/.clamav/$remote_user/freshclam.conf");
 }
 
-# clamav_display_clamav_settings ()
-# IN: -
+# clamav_display_settings ()
+# IN: - Type : C<clamav> or C<freshclam>
+#     - Key to add (optional)
+#     - Key to delete (optional)
 # OUT: -
 #
-# Load clamav configuration file and display it
+# Load clamav or freshclam configuration file and display it
 # 
-sub clamav_display_clamav_settings
+sub clamav_display_settings
 {
-  my ($newkey, $deletekey) = @_;
+  my ($type, $newkey, $deletekey) = @_;
   my $key = '';
+  my %p;
+  my $c;
 
-  require "$root_directory/$module_name/data/clamav_predefined.pm";
-  
-  &clamav_load_clamav_config ();
+  &clamav_load_config ($type);
+
+  require "$root_directory/$module_name/data/${type}_predefined.pm";
+
+  if ($type eq 'clamav')
+  {
+    %p = %clamav_predefined;
+    $c = \%clamav_config;
+  }
+  else
+  {
+    %p = %freshclam_predefined;
+    $c = \%freshclam_config;
+  }
   
   if ($deletekey || $newkey)
   {
     # Delete a simple value key
-    if (exists ($clamav_predefined{$deletekey}))
+    if (exists ($p{$deletekey}))
     {
-      delete $in{"clamav_$deletekey\[\]"} if ($deletekey);
+      delete $in{$type."_$deletekey\[\]"} if ($deletekey);
     }
     # Delete multiple values key
     else
     {
       $deletekey =~ /^(.*)_(\d+)$/;
       my ($name, $todelete) = ($1, $2);
-      my @a = split (chr (0), $in{"clamav_$name\[\]"});
+      my @a = split (chr (0), $in{$type."_$name\[\]"});
       splice (@a, $todelete, 1);
-      $in{"clamav_$name\[\]"} = join (chr (0), @a);
+      $in{$type."_$name\[\]"} = join (chr (0), @a);
     }
 
     # Add a new key in the config file
     if ($newkey)
     {
       # Add multiple values key
-      if ($clamav_predefined {$newkey} == 2)
+      if ($p{$newkey} == 2)
       {
-        my @a = split (chr (0), $in{"clamav_$newkey\[\]"});
+        my @a = split (chr (0), $in{$type."_$newkey\[\]"});
         push (@a, $text{'UNDEFINED'});
-        $in{"clamav_$newkey\[\]"} = join (chr (0), @a);
+        $in{$type."_$newkey\[\]"} = join (chr (0), @a);
       }
       # Add a simple value key
       else
       {
-        $in{"clamav_$newkey\[\]"} = 
-          ($clamav_predefined{$newkey} == 1) ? "$text{'UNDEFINED'}" : ' ';
+        $in{$type."_$newkey\[\]"} =
+          ($p{$newkey} == 1) ? "$text{'UNDEFINED'}" : ' ';
       }
     }
     
     # Save and reload config
     &clamav_save_global_settings (0);
-    &clamav_load_clamav_config ();
+    &clamav_load_config ($type);
   }
-  
+
   if (&clamav_get_acl ('global_settings_write') == 1 &&
-    &clamav_display_combo_clamav_predefined (1) == 1)
+    &clamav_display_combo_predefined ($type, 1) == 1)
   {
     print qq( 
-      <input type="submit" name="nsclamav_add" value="$text{'ADD_KEY'}">
+      <input type="submit" name="ns${type}_add" value="$text{'ADD_KEY'}">
     );
   }
-  
+
   print qq(<table border=1>);
-  foreach $key (sort keys %clamav_config)
+  foreach $key (sort keys %$c)
   {
     next if ($key eq '');
    
     $i = 0;
 
-    foreach $val (@{$clamav_config{$key}})
+    foreach $val (@{$c->{$key}})
     {
       if ($val eq '')
       {
         print qq(
           <tr><td $cb>$key</td>
-          <input type="hidden" name="clamav_$key\[\]">
+          <input type="hidden" name="${type}_$key\[\]">
   	<td><font color="silver"><i>$text{'NO_VALUE'}</i></font></td>
         );
       }
@@ -1918,28 +1902,28 @@ sub clamav_display_clamav_settings
       {
         printf (qq(
           <tr><td bgcolor="gray"><font color="white"><b>$key</b></font></td>
-          <td><input type="text" name="clamav_$key\[\]" size=40
+          <td><input type="text" name="${type}_$key\[\]" size=40
           value="%s"></td>), &clamav_html_encode ($val));
       }
       else
       {
         printf (qq(
           <tr><td $cb>$key</td>
-          <td><input type="text" name="clamav_$key\[\]" size=40
+          <td><input type="text" name="${type}_$key\[\]" size=40
           value="%s"></td>), &clamav_html_encode ($val));
       }
 
       if (&clamav_get_acl ('global_settings_write') == 1)
       {
         my $endkey = '';
-        if ($clamav_predefined{$key} == 2)
+        if ($p{$key} == 2)
         {
           $endkey = "_$i";
           ++$i;
         }
         print qq(
           <td><input title="$text{'DELETE_ITEM'}" type="submit"
-          name="nsclamav_delete_$key$endkey"
+          name="ns${type}_delete_$key$endkey"
           value="$text{'DELETE'}"></td>
           </tr>
         );
@@ -1949,148 +1933,46 @@ sub clamav_display_clamav_settings
   print qq(</table>);
 }
 
-# clamav_display_freshclam_settings ()
-# IN: -
+# clamav_load_config ()
+# IN: - Type : C<clamav> or C<freshclam>
 # OUT: -
 #
-# Load freshclam configuration file and display it
+# Load the clamav or freshclam config file in memory
 # 
-sub clamav_display_freshclam_settings
+sub clamav_load_config
 {
-  my ($newkey, $deletekey) = @_;
-  my $key = '';
-  my %tmp_config = ();
-
-  require "$root_directory/$module_name/data/freshclam_predefined.pm";
-  
-  &clamav_load_freshclam_config ();
-  
-  if ($deletekey || $newkey)
-  {
-    # Delete the specified key if it has been specified
-    delete $in{"freshclam_$deletekey"} if ($deletekey);
-
-    # Add a new key in the config file
-    if ($newkey)
-    {
-      $in{"freshclam_$newkey"} = 
-        ($freshclam_predefined{$newkey} == 1) ? "$text{'UNDEFINED'}" : ' ';
-    }
+  my $type = shift;
+  my $path = '';
+  my $c;
     
-    # Save and reload config
-    &clamav_save_global_settings (0);
-    &clamav_load_freshclam_config ();
-  }
-  
-  if (&clamav_get_acl ('global_settings_write') == 1 &&
-    &clamav_display_combo_freshclam_predefined (1) == 1)
+  if ($type eq 'clamav')
   {
-    print qq( 
-      <input type="submit" name="nsfreshclam_add" value="$text{'ADD_KEY'}">
-    );
+    %clamav_config = ();
+    $c = \%clamav_config;
   }
- 
-  print qq(<table border=1>);
-  foreach $key (sort keys %freshclam_config)
+  else
   {
-    next if ($key eq '');
-   
-    if ($freshclam_config{$key} eq '')
-    {
-      print qq(
-        <tr><td $cb>$key</td>
-        <input type="hidden" name="freshclam_$key">
-	<td><font color="silver"><i>$text{'NO_VALUE'}</i></font></td>
-      );
-    }
-    elsif ($key eq $newkey || $freshclam_config{$key} eq "$text{'UNDEFINED'}")
-    {
-      printf (qq(
-        <tr><td bgcolor="gray"><font color="white"><b>$key</b></font></td>
-        <td><input type="text" name="freshclam_$key" size=40
-        value="%s"></td>), &clamav_html_encode ($freshclam_config{$key}));
-    }
-    else
-    {
-      printf (qq(
-        <tr><td $cb>$key</td>
-        <td><input type="text" name="freshclam_$key" size=40
-        value="%s"></td>), &clamav_html_encode ($freshclam_config{$key}));
-    }
-    if (&clamav_get_acl ('global_settings_write') == 1)
-    {
-      print qq(
-        <td><input title="$text{'DELETE_ITEM'}" type="submit"
-        name="nsfreshclam_delete_$key"
-        value="$text{'DELETE'}"></td>
-        </tr>
-      );
-    }
-  }
-  print qq(</table>);
-}
-
-# clamav_load_clamav_config ()
-# IN: -
-# OUT: -
-#
-# Load the clamav config file in memory
-# 
-sub clamav_load_clamav_config
-{
-  my $cc = '';
-  
-  %clamav_config = ();
-  
-  $cc = $config{'clamav_clamav_conf'};
-  if (-f "$config{'clamav_working_path'}/.clamav/$remote_user/clamav.conf")
-  {
-    $cc = "$config{'clamav_working_path'}/.clamav/$remote_user/clamav.conf" 
+    %freshclam_config = ();
+    $c = \%freshclam_config;
   }
   
-  open (H, '<', $cc);
-  while (my $l = <H>)
-  {
-    next if $l =~ /^\s*#/;
-
-    $l =~ s/#.*$//g;
-
-    my ($key, @value) = split ('\s+', $l);
-    push (@{$clamav_config{$key}}, join (' ', @value));
-  }
-  close (H);
-}
-
-# clamav_load_freshclam_config ()
-# IN: -
-# OUT: -
-#
-# Load the freshclam config file in memory
-# 
-sub clamav_load_freshclam_config
-{
-  my $fc = '';
+  $path =
+    (-f "$config{'clamav_working_path'}/.clamav/$remote_user/$type.conf")?
+      "$config{'clamav_working_path'}/.clamav/$remote_user/$type.conf":
+      $config{'clamav_'.$type.'_conf'};
   
-  %freshclam_config = ();
-  
-  $fc = $config{'clamav_freshclam_conf'};
-  $fc = "$config{'clamav_working_path'}/.clamav/$remote_user/freshclam.conf" 
-    if (-f "$config{'clamav_working_path'}/.clamav/$remote_user/freshclam.conf");
-  
-  open (H, '<', $fc);
+  open (H, '<', $path);
   while (my $l = <H>)
   {
     next if $l =~ /^(\s*#|\n)/;
 
     $l =~ s/#.*$//g;
 
-    my ($key, @value) = split ('\s+', $l);
-    
-    if (!defined $freshclam_config{$key})
-      {$freshclam_config{$key} = join (' ', @value)}
-    else
-      {$freshclam_config{$key} .= ' '.join(' ', @value)}
+    my ($key, @value) = split (/\s+/, $l);
+
+    push (@{$c->{$key}}, join (' ', @value));
   }
+
   close (H);
 }
 
@@ -5079,5 +4961,25 @@ sub clamav_system_restore
 
   unlink ("$cpath/.backup_flag");
 }
+
+#################
+#
+sub clamav_debug ( $ $ )
+{
+  use Data::Dumper;
+  my ($txt, $to_file) = @_;
+  if ($to_file)
+  {
+    open (FH, '>>', '/tmp/clamav_debug.log');
+    print FH Dumper(shift)."\n";
+    close(FH);
+  }
+  else
+  {
+    print '<pre style="background:silver">'.Dumper($txt).'</pre>';
+  }
+}
+#
+#################
 
 1;
