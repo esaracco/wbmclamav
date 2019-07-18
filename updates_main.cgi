@@ -22,7 +22,13 @@ require './clamav-lib.pl';
 &clamav_check_acl ('database_update_view');
 &ReadParse ();
 
-&header($text{'FORM_TITLE'}, "", undef, 1, 0);
+&header ($text{'FORM_TITLE'}, '', undef, 1, 0);
+
+print qq(
+  <style>
+    .disabled {opacity:.6;pointer-events: none;cursor: default;}
+  </style>);
+
 print "<hr>\n";
 
 print qq(<form method="POST" action="$scriptname">);
@@ -75,7 +81,7 @@ if (&clamav_get_acl ('database_update_update') == 1)
 
 $res = &clamav_verif_refresh_method_ok ();
 
-if (&clamav_value_is ($res, "ER_CRON_PACKAGE"))
+if (&clamav_value_is ($res, 'ER_CRON_PACKAGE'))
 {
   print qq(<p><b>$text{'WARNING'}</b>: $text{'BAD_CONFIG_6'}</p>);
 }
@@ -84,17 +90,17 @@ elsif (!&clamav_update_manual ())
   print qq(<p><h1>$text{'UPDATE_TITLE_AUTO'}</h1></p>);
   
   # Config say to use a daemon but no daemon exist on the system
-  if (&clamav_value_is ($res, "ER_DAEMON_NOEXIST"))
+  if (&clamav_value_is ($res, 'ER_DAEMON_NOEXIST'))
   {
     print qq(<p><b>$text{'WARNING'}</b>: $text{'BAD_CONFIG_1'}</p>);
   }
   # Config say to use a daemon, but a cron exist on the system
-  elsif (&clamav_value_is ($res, "ER_DAEMON_CRONEXIST"))
+  elsif (&clamav_value_is ($res, 'ER_DAEMON_CRONEXIST'))
   {
     print qq(<p><b>$text{'WARNING'}</b>: $text{'BAD_CONFIG_2'}</p>);
   }
   # Config say tu use cron, but a daemon exist on the system
-  elsif (&clamav_value_is ($res, "ER_CRON_DAEMONEXIST"))
+  elsif (&clamav_value_is ($res, 'ER_CRON_DAEMONEXIST'))
   {
     print qq(<p><b>$text{'WARNING'}</b>: $text{'BAD_CONFIG_3'}</p>);
   }
@@ -122,8 +128,9 @@ elsif (!&clamav_update_manual ())
         print qq(<p><b>$text{'MSG_SUCCESS_FREQUENCY_UPDATE'}</b></p>);
       }
       @cron_line = &clamav_get_cron_settings ('update');
-      print &clamav_cron_settings_table ($cron_line[1], $cron_line[4]);
       $checked = ($#cron_line <= 0) ? ' checked="checked"' : '';
+      print &clamav_cron_settings_table ($cron_line[1], $cron_line[4],
+                                         $checked);
     }
     # user choose to update db with daemon
     else
@@ -156,13 +163,13 @@ elsif (!&clamav_update_manual ())
       
       $daemon_setting = &clamav_get_freshclam_daemon_settings ();
       $on = &clamav_get_freshclam_daemon_state ();
-      print qq(<input type="hidden" name="oldfreq" value="$daemon_setting">);
-      print &clamav_freshclam_daemon_settings_table ($daemon_setting); 
       $checked = ($on) ? '' : ' checked="checked"';
+      print qq(<input type="hidden" name="oldfreq" value="$daemon_setting">);
+      print &clamav_freshclam_daemon_settings_table ($daemon_setting, $checked); 
     }
   
     print qq(<p>);
-    print qq(<input id="noupdate" type="checkbox" name="noupdate" 
+    print qq(<input id="noupdate" type="checkbox" name="noupdate" onchange="document.getElementById('cron-frequency').className=(this.checked)?'disabled':''"
                     value="on"$checked>);
     print qq( <label for="noupdate">$text{'NEVER_REFRESH'}</label>);
     print qq(</p>);
@@ -178,12 +185,12 @@ elsif (!&clamav_update_manual ())
 else
 {
   # Config say manual update, but a cron exist on the system
-  if (&clamav_value_is ($res, "ER_MANUAL_CRONEXIST"))
+  if (&clamav_value_is ($res, 'ER_MANUAL_CRONEXIST'))
   {
     print qq(<p><b>$text{'WARNING'}</b>: $text{'BAD_CONFIG_4'}</p>);
   }
   # Config say manual update, but a daemon exist on the system
-  elsif (&clamav_value_is ($res, "ER_MANUAL_DAEMONEXIST"))
+  elsif (&clamav_value_is ($res, 'ER_MANUAL_DAEMONEXIST'))
   {
     print qq(<p><b>$text{'WARNING'}</b>: $text{'BAD_CONFIG_5'}</p>);
   }
@@ -192,4 +199,4 @@ else
 print qq(</form>);
 
 print qq(<hr>);
-&footer("", $text{'RETURN_INDEX_MODULE'});
+&footer ('', $text{'RETURN_INDEX_MODULE'});

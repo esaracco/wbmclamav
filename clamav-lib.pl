@@ -1077,10 +1077,11 @@ sub clamav_verif_refresh_method_ok
   
   if ($method == UP_MANUAL)
   {
-    return ER_MANUAL_CRONEXIST if (
-      -f "/etc/cron.d/clamav-freshclam" ||
-      &clamav_get_cron_settings ('update')
-    );
+    return ER_MANUAL_CRONEXIST if
+      (
+        -f '/etc/cron.d/clamav-freshclam' ||
+        &clamav_get_cron_settings ('update')
+      );
 
     if ($have_systemd)
     {
@@ -1095,15 +1096,17 @@ sub clamav_verif_refresh_method_ok
         (
           -e "$freshclam" &&
           !$test &&
-          ! -f "/etc/cron.d/clamav-freshclam"
+          ! -f '/etc/cron.d/clamav-freshclam'
         );
     }
   }
   elsif ($method == UP_DAEMON)
   {
     return ER_DAEMON_CRONEXIST if
-      (-f "/etc/cron.d/clamav-freshclam" ||
-       &clamav_get_cron_settings('update'));
+      (
+        -f '/etc/cron.d/clamav-freshclam' ||
+        &clamav_get_cron_settings('update')
+      );
 
     if ($have_systemd)
     {
@@ -1118,11 +1121,22 @@ sub clamav_verif_refresh_method_ok
   }
   elsif ($method == UP_CRON)
   {
-    return ER_CRON_DAEMONEXIST if (
-      -e "$freshclam" &&
-      !$test &&
-      ! -f "/etc/cron.d/clamav-freshclam"
-    );
+    if ($have_systemd)
+    {
+      return ER_CRON_DAEMONEXIST if
+        (
+          &daemon_control_systemd ('freshclam', 'status')
+        );
+    }
+    else
+    {
+      return ER_CRON_DAEMONEXIST if
+        (
+          -e "$freshclam" &&
+          !$test &&
+          ! -f '/etc/cron.d/clamav-freshclam'
+        );
+    }
   }
 
   return OK;
@@ -1416,7 +1430,7 @@ sub clamav_set_db_no_autoupdate
     else
     {
       &clamav_reactivate_system_file ($freshclam);
-      &daemon_control ($freshclam, "stop");
+      &daemon_control ($freshclam, 'stop');
       &clamav_deactivate_system_file ($freshclam);
     }
   }
@@ -2117,19 +2131,22 @@ sub clamav_get_cron_settings ( $ )
   return undef;
 }
 
-# clamav_freshclam_daemon_settings_table ( $ )
-# IN: frequency
+# clamav_freshclam_daemon_settings_table ( $ $ )
+# IN: - Frequency
+#     - C<1> if auto update is disabled
 # OUT: a buffer to display
 #
 # Build a HTML table with all possible frequencies for freshclam daemon
 # 
-sub clamav_freshclam_daemon_settings_table ( $ )
+sub clamav_freshclam_daemon_settings_table ( $ $ )
 {
-  my $freq = shift;
+  my ($freq, $no_auto_update) = @_;
   my $buffer = '';
 
+  $no_auto_update = ($no_auto_update) ? ' class="disabled"' : '';
+
   $buffer .= qq(
-    <table border="1">
+    <table id="cron-frequency" border="1"$no_auto_update>
     <tr $tb><td><b>$text{'FREQUENCY'}</b></td></tr>
     <tr $cb>
     <td><select name="freq">
@@ -2146,15 +2163,17 @@ sub clamav_freshclam_daemon_settings_table ( $ )
   return $buffer;
 }
 
-# clamav_cron_settings_table ( $ $ )
-# IN: default cron hour, default cron day
+# clamav_cron_settings_table ( $ $ $ )
+# IN: - Default cron hour
+#     - Default cron day
+#     - C<1> if auto update is disabled
 # OUT: a buffer to display
 #
 # Build a HTML table for choose hour a day for execution of refresh db cron
 #
-sub clamav_cron_settings_table
+sub clamav_cron_settings_table ( $ $ $ )
 {
-  my ($hour, $day) = @_;
+  my ($hour, $day, $no_auto_update) = @_;
   my $buffer = '';
   my $default = '';
   my $every_hour = '';
@@ -2164,9 +2183,10 @@ sub clamav_cron_settings_table
   ($every_hour, $hour) = split (/\//, $hour);
   ($every_hour, $hour) = ($hour, $every_hour) if (!$hour);
   
+  $no_auto_update = ($no_auto_update) ? ' class="disabled"' : '';
   $default = ($every_hour) ? ' checked="checked"' : '';
   $buffer .= qq(
-    <table border="1">
+    <table id="cron-frequency" border="1"$no_auto_update>
     <tr $tb><td><b>$text{'HOUR'}</b></td><td><b>$text{'DAY'}</b></td></tr>
     <tr $cb><td valign="bottom">
     <small><i><input id="every_hours" type="checkbox" name="every_hours"$default>&nbsp;<label for="every_hours">$text{'EVERY_X_HOURS'}</label></i></small><br><select name="hour">
