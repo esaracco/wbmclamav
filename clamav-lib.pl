@@ -441,11 +441,16 @@ sub clamav_get_proxy_settings
   &clamav_load_config ('freshclam');
 
   return 
-    ($freshclam_config{'HTTPProxyServer'} &&
-     $freshclam_config{'HTTPProxyPort'}) ?
-      ($freshclam_config{'HTTPProxyServer'},$freshclam_config{'HTTPProxyPort'})
-      :
-      ();
+    (
+      $freshclam_config{'HTTPProxyServer'}->[0] &&
+      $freshclam_config{'HTTPProxyPort'}->[0]
+    ) ?
+    (
+      $freshclam_config{'HTTPProxyServer'}->[0],
+      $freshclam_config{'HTTPProxyPort'}->[0]
+    )
+    :
+    ();
 }
 
 # clamav_remote_actions_take_arg ( $ )
@@ -816,7 +821,7 @@ sub clamav_get_freshclam_daemon_settings
 {
   &clamav_load_config ('freshclam');
   
-  my $ret = $freshclam_config{'Checks'};
+  my $ret = $freshclam_config{'Checks'}->[0];
 
   return ($ret eq '') ? 1 : $ret;
 }
@@ -1619,8 +1624,7 @@ sub clamav_save_freshclam_config
             'true' : 'false'];
       }
 
-      my @tmp = split (/ /, $freshclam_config{$key});
-      foreach (@tmp)
+      foreach (split (/ /, @{$freshclam_config{$key}}))
       {
         print H "$key $_\n";
       }
@@ -2128,10 +2132,10 @@ sub clamav_freshclam_daemon_settings_table ( $ )
     <td><select name="freq">
   );
 
-  foreach (1..50)
+  foreach my $f (1..50)
   {
-    my $default = ($_ == $freq) ? ' SELECTED' : '';
-    $buffer .= qq(<option value="$_"$default>$_</option>\n);
+    my $default = ($f == $freq) ? ' selected="selected"' : '';
+    $buffer .= qq(<option value="$f"$default>$f</option>\n);
   }
 
   $buffer .= qq(</select></td></tr></table>);
