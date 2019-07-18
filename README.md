@@ -29,39 +29,35 @@ tar zcvf wbmclamav.wbm.gz clamav/
 
 You need at least the following Perl modules in order to run wbmclamav:
 
-- Compress::Zlib
 - Date::Manip
 - File::Basename
 - File::Path
 - File::Find
 - File::Copy
+- HTML::Entities
+- IO::Socket
+- POSIX
+
+Depending on the softwares installed on your system, you may also need the following modules:
+
+- Compress::Zlib
 - GD
 - GD::Graph::lines
 - Getopt::Long
-- HTML::Entities
 - IO::File
-- IO::Socket
 - Mail::Internet
 - Mail::Mbox::MessageParser
 - Mail::SpamAssassin
 - Net::SMTP
-- POSIX
 
-They can be loaded for free from CPAN.
+All those modules can be loaded for free from CPAN.
 
-As 'root' you can try:
+As root you can try:
 
 ```bash
 # perl -MCPAN -e shell
-CPAN Shell> install Compress::Zlib Date::Manip File::Basename File::Path
-CPAN Shell> install File::Find File::Copy GD GD::Graph::lines
-CPAN Shell> install Getopt::Long HTML::Entities IO::File IO::Socket
-CPAN Shell> install Mail::Internet Mail::Mbox::MessageParser Mail::SpamAssassin
-CPAN Shell> install Net::SMTP POSIX
+CPAN Shell> install module1 module2 ...
 ```
-
-If other modules needs to be installed as well in order for this
-module to work properly, please let CPAN install them for you as well.
 
 ## License
 GPL
