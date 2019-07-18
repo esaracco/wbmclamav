@@ -1,6 +1,6 @@
 #!/usr/bin/perl
 
-# Copyright (C) 2003-2008
+# Copyright (C) 2003-2019
 # Emmanuel Saracco <emmanuel@esaracco.fr>
 #
 # This program is free software; you can redistribute it and/or modify
@@ -123,7 +123,7 @@ elsif (!&clamav_update_manual ())
       }
       @cron_line = &clamav_get_cron_settings ('update');
       print &clamav_cron_settings_table ($cron_line[1], $cron_line[4]);
-      $checked = ($#cron_line <= 0) ? ' CHECKED' : '';
+      $checked = ($#cron_line <= 0) ? ' checked="checked"' : '';
     }
     # user choose to update db with daemon
     else
@@ -158,7 +158,7 @@ elsif (!&clamav_update_manual ())
       $on = &clamav_get_freshclam_daemon_state ();
       print qq(<input type="hidden" name="oldfreq" value="$daemon_setting">);
       print &clamav_freshclam_daemon_settings_table ($daemon_setting); 
-      $checked = ($on) ? '' : ' CHECKED';
+      $checked = ($on) ? '' : ' checked="checked"';
     }
   
     print qq(<p>);
