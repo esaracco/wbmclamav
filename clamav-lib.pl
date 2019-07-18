@@ -2161,7 +2161,7 @@ sub clamav_cron_settings_table
   ($every_hour, $hour) = split (/\//, $hour);
   ($every_hour, $hour) = ($hour, $every_hour) if (!$hour);
   
-  $default = ($every_hour) ? ' CHECKED' : '';
+  $default = ($every_hour) ? ' checked="checked"' : '';
   $buffer .= qq(
     <table border="1">
     <tr $tb><td><b>$text{'HOUR'}</b></td><td><b>$text{'DAY'}</b></td></tr>
@@ -2171,19 +2171,19 @@ sub clamav_cron_settings_table
 
   foreach (0..23)
   {
-    $default = ($_ == $hour) ? ' SELECTED' : '';
+    $default = ($_ == $hour) ? ' selected="selected"' : '';
     $buffer .= qq(<option value="$_"$default>$_</option>\n);
   }
 
   $buffer .= qq(</select></td><td valign="bottom"><select name="day">);
 
   $day = 7 if ($day eq '*');
-  $default = ($day == 7) ? ' SELECTED' : '';
+  $default = ($day == 7) ? ' selected="selected"' : '';
   $buffer .= qq(<option value="7"$default>$text{'EVERYDAY'}</option>\n);
   for (my $i = 0; $i < 7; $i++)
   {
     my $value = $days[$i];
-    my $default = ($i == $day) ? ' SELECTED' : '';
+    my $default = ($i == $day) ? ' selected="selected"' : '';
                                                                                 
     $buffer .= qq(<option value="$i"$default>$value</option>\n);
   }
@@ -4064,8 +4064,10 @@ sub clamav_get_months_combo_options ( $ )
   my $i = 0;
   foreach (split (/ /, $text{'MONTHS_LIST'}))
   {
-    $buf .= "<option value=\"$i\"".(($i == $default) ? ' SELECTED' : '').
-            ">$_</option>\n";
+    $buf .=
+      "<option value=\"$i\"".
+      (($i == $default) ? ' selected="selected"' : '').
+      ">$_</option>\n";
     $i++;
   }
 
@@ -4718,8 +4720,8 @@ sub clamav_display_remote_actions ($ $ $ $)
     my $selected = ($key eq $action);
     my $name = sprintf ("$key - %s", ($clamav_remote_actions{$key} == 1) ?
                  "Argument needed ->" : "No argument");
-    printf qq(<option value="$key"%s>$name</option>), ($selected) ?
-      ' SELECTED' : '';
+    printf (qq(<option value="$key"%s>$name</option>),
+      ($selected) ? ' selected="selected"' : '');
   }
 
   print qq(
