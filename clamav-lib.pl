@@ -954,7 +954,7 @@ sub clamav_get_db_viruses_count
 #     in the config file
 # OUT: 1 if combo box has been displayed (if there is result)
 #
-# Display a combo box with freshclam predifined variables
+# Display a combo box with freshclam predefined variables
 #
 sub clamav_display_combos_viruses_prefixes ()
 {
@@ -1301,7 +1301,7 @@ sub clamav_get_last_db_update
     while (<H>)
     {
       chomp ();
-      my ($name, $value) = split (':');
+      my ($name, $value) = split (/:/);
       $main_infos .= "$text{$name}: <b>$value</b>" if ($name eq 'Version');
       $main_infos .= " - $text{$name}: <b>$value</b>" 
         if ($name eq 'Functionality level');
@@ -1316,7 +1316,7 @@ sub clamav_get_last_db_update
     while (<H>)
     {
       chomp ();
-      my ($name, $value) = split (':');
+      my ($name, $value) = split (/:/);
       $daily_infos .= "$text{$name}: <b>$value</b>" if ($name eq 'Version');
       $daily_infos .= " - $text{$name}: <b>$value</b>"
         if ($name eq 'Functionality level');
@@ -1619,7 +1619,7 @@ sub clamav_save_freshclam_config
             'true' : 'false'];
       }
 
-      my @tmp = split (' ', $freshclam_config{$key});
+      my @tmp = split (/ /, $freshclam_config{$key});
       foreach (@tmp)
       {
         print H "$key $_\n";
@@ -1697,7 +1697,7 @@ sub clamav_save_global_settings
         $val = ($val =~ /^(true|1|on|yes|t|y)$/i) ? 'true' : 'false';
       }
   
-      foreach (split (' ', $val))
+      foreach (split (/ /, $val))
       {
         print {$predefined{$type}->{'fh'}} "$k $_\n";
       }
@@ -3482,7 +3482,7 @@ sub clamav_print_quarantine_table_amavisd_new ( $ $ $ $ $ $ $ $ $ $ $ )
           qw(Date Subject From To X-AMaViS-Alert)
         );
       my $virus = $header{'X-AMaViS-Alert'};
-      ($virus) = (split (':', $virus))[1];
+      ($virus) = (split (/:/, $virus))[1];
       $virus =~ s/[ ,\n,\r]//g;
 
       next if (!&clamav_quarantine_add_row ($header{'Subject'}, 
@@ -3500,7 +3500,7 @@ sub clamav_print_quarantine_table_amavisd_new ( $ $ $ $ $ $ $ $ $ $ $ )
           qw(Date Subject From To X-Spam-Level)
         );
       my $level = ": $header{'X-Spam-Level'}";
-      ($level) = (split (':', $level))[1];
+      ($level) = (split (/:/, $level))[1];
       $level =~ s/[ ,\n,\r]//g;
 
       next if (!&clamav_quarantine_add_row ($header{'Subject'}, '', 
@@ -3617,7 +3617,7 @@ sub clamav_print_quarantine_table_qmailscanner ( $ $ $ $ $ $ $ $ $ $ $ )
     if ($search_type eq 'virus' && $header{'X-Spam-Level'} eq '')
     {
       my $virus = $header{'Quarantine-Description'};
-      $virus =~ s/[ ,\n,\r]//g;
+      $virus =~ s/[ \n\r]//g;
 
       next if (!&clamav_quarantine_add_row ($header{'Subject'}, 
         &urlize ($virus), $msg, $virus_name, $virus, $mail_from, 
@@ -3630,8 +3630,8 @@ sub clamav_print_quarantine_table_qmailscanner ( $ $ $ $ $ $ $ $ $ $ $ )
     elsif ($search_type eq 'spam' && $header{'X-Spam-Level'} ne '')
     {
       my $level = ": $header{'X-Spam-Level'}";
-      ($level) = (split (':', $level))[1];
-      $level =~ s/[ ,\n,\r]//g;
+      ($level) = (split (/:/, $level))[1];
+      $level =~ s/[ \n\r]//g;
 
       next if (!&clamav_quarantine_add_row ($header{'Subject'}, '', 
         $msg, '', $level, $mail_from, $header{'From'}, $mail_to, 
@@ -3904,7 +3904,7 @@ sub clamav_print_quarantine_table_display ( $ $ \% \@ )
 	{
           print $text{'VIRUS'};
 	}
-	my ($d, $h) = split (' ', $hrow{'date'});
+	my ($d, $h) = split (/ /, $hrow{'date'});
 	$export_line .= ';"'.$d.'";"'.$h.'"';
 	print qq(: $virus | $text{'SUBJECT'}: ${subject}"><i><small><a href="quarantine_viewmail.cgi?base=);
 	print &urlize ($hrow{'base'});
@@ -4058,7 +4058,7 @@ sub clamav_get_months_combo_options ( $ )
   my $buf = '';
   
   my $i = 0;
-  foreach (split (' ', $text{'MONTHS_LIST'}))
+  foreach (split (/ /, $text{'MONTHS_LIST'}))
   {
     $buf .= "<option value=\"$i\"".(($i == $default) ? ' SELECTED' : '').
             ">$_</option>\n";
@@ -4286,7 +4286,7 @@ sub clamav_get_quarantine_infos ()
     $infos{'graph_name'} = 
       "$remote_user-quarantine_graph-".(time()).".png";
     $infos{'size'} = 
-      (split (' ', `$du -sh $config{'clamav_quarantine'}`))[0];
+      (split (/ /, `$du -sh $config{'clamav_quarantine'}`))[0];
 
     # amavisd-new
     if (&clamav_is_amavisd_new ())
