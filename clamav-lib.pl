@@ -1541,7 +1541,7 @@ sub clamav_set_freshclam_daemon_settings ( $ $ )
   }
   else
   {
-    &daemon_control ($freshclam, "restart");
+    &daemon_control ($freshclam, 'restart');
   }
 
   if (!&clamav_get_freshclam_daemon_state ())
@@ -1604,10 +1604,15 @@ sub daemon_control
 sub clamav_save_freshclam_config
 {
   require "$root_directory/$module_name/data/freshclam_predefined.pm";
-  
-  &lock_file ($config{'clamav_freshclam_conf'});
 
-  open (H, '>', $config{'clamav_freshclam_conf'});
+  $fc = $config{'clamav_freshclam_conf'};
+
+  # Backup config before
+  copy ($fc, "$fc.clamav-backup");
+
+  &lock_file ($fc);
+
+  open (H, '>', $fc);
   foreach my $key (sort keys %freshclam_config)
   {
     foreach my $v (@{$freshclam_config{$key}})
@@ -1619,12 +1624,10 @@ sub clamav_save_freshclam_config
       # If key does not accept argument -> boolean
       if ($freshclam_predefined{$key} == 0)
       {
-        $freshclam_config{$key} = [
-          ($freshclam_config{$key} =~ /^(true|1|on|yes|t|y)$/i) ?
-            'true' : 'false'];
+        $v = ($v =~ /^(true|1|on|yes|t|y)$/i) ? 'true' : 'false';
       }
 
-      foreach (split (/ /, @{$freshclam_config{$key}}))
+      foreach (split (/ /, $v))
       {
         print H "$key $_\n";
       }
@@ -1632,7 +1635,7 @@ sub clamav_save_freshclam_config
   }
   close (H);
 
-  &unlock_file ($config{'clamav_freshclam_conf'});
+  &unlock_file ($fc);
 }
 
 # clamav_save_global_settings ()
