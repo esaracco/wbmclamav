@@ -3,6 +3,11 @@
 #
 # GNU GENERAL PUBLIC LICENSE
 
+use WebminCore;
+#FIXME Wil not work if module directory is not "clamav".
+use lib &get_current_dir().'/../clamav/lib';
+use ClamavConstants;
+
 require 'clamav-lib.pl';
 
 # module_uninstall ()
