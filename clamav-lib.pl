@@ -2313,8 +2313,6 @@ sub clamav_is_freshclam_alive ()
   return $ret;
 }
 
-
-
 # clamav_get_filtered_email_content ( $ @ )
 # IN: email file name on the disk, header fields to delete
 # OUT: a string with the content of the mail
@@ -4748,6 +4746,38 @@ sub clamav_display_remote_actions ($ $ $ $)
     </select></td>
     <td valign="bottom"><input type="text" name="arg" value="$arg"></td></tr>
     </table>);
+}
+
+# clamav_send_remote_action ( $ $ $ $ )
+# IN: hostname
+#     port
+#     clamav command
+#     argument for clamav command if needed
+# OUT: -
+#
+# Send action to remote ClalAV daemon.
+#
+sub clamav_send_remote_action ( $ $ $ $ )
+{
+  my ($host, $port, $action, $arg) = @_;
+  my $ret;
+
+  alarm (15);
+  if (my $sh = new IO::Socket::INET (
+                 Proto => 'tcp',
+                 PeerAddr => $host,
+                 PeerPort => $port))
+  {
+    alarm (0);
+
+    printf $sh "$action%s\r\n", ($arg) ? " $arg" : '';
+
+    $ret = '';
+    while (<$sh>) {$ret .= $_}
+    close ($sh);
+  }
+
+  return $ret;
 }
 
 # clamav_update_manual ()

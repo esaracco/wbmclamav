@@ -88,7 +88,7 @@ MSG_CONFIG_ALERT_WORKING_PATH=<b>AVISO: </b>Por favor, indique o caminho de trab
 MSG_CONFIG_WARNING_QUARANTINE_TO_SHORT=<b>AVISO: </b>O caminho da quarentena é muito pequeno (%s)! Para prevenir a destruição de arquivos do sistema quando apagar a quarentena, existe um número mínimo de 8 caracteres para o caminho da quarentena.
 MSG_ERROR_APPLY_GLOBAL_SETTINGS=Ocorreu um erro ao reiniciar o daemon do ClamAV. Veja o <a href="logs_main.cgi?lines=20&logfile=%s" target="_BLANK">arquivo de log</a> para mais detalhes.
 MSG_ERROR_FILE_UPLOAD=<b>Sem arquivo para enviar<b>
-MSG_ERROR_NO_RESPONSE=O host remoto não existe ou não está respondendo na porta especificada
+MSG_ERROR_NO_CONNECTION=O host remoto não existe ou não está respondendo na porta especificada
 MSG_ERROR_QUARANTINE_UPDATE_MAXDAYS=A sua entrada para número de dias não está em um formato correto
 MSG_ERROR_SIGNATURES_CONFIG=<b>Você deve ter ambas as ferramentas <source>strings</code> e <source>hexdump</code> instaladas no servidor para utilizar esta sessão</b>
 MSG_ERROR_STATUS_REMOVE=Ocorreu um problema durante o apagamento do e-mail!

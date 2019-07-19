@@ -46,27 +46,20 @@ print qq(<p><input type="submit" name="next" value="$text{'SEND'}"></p>);
 
 if ($next)
 {
-  my $h = 0;
-  my $error = '';
-  my $line = '';
-  
-  alarm (15);
-  if (&open_socket ($host, $port, $h, \$error))
+  my $msg = &clamav_send_remote_action ($host, $port, $action, $arg);
+
+  if (!defined ($msg))
   {
-    alarm (0);
-    printf $h "$action%s\r\n", ($arg) ? " $arg" : '';
-
-    print qq(<p><h2>$text{'SERVER_RESPONSE'}</h2></p>);
-
-    select (STDOUT);
-    print qq(<pre style="background:silver;">);
-    while (<$h>) {print}
-    print qq(</pre>);
-    close ($h);
+    print qq(<b>$text{'MSG_ERROR_NO_CONNECTION'}</b>);
+  }
+  elsif ($msg eq '')
+  {
+    print qq(<b>$text{'MSG_ERROR_NO_ANSWER'}</b>);
   }
   else
   {
-    print qq(<b>$text{'MSG_ERROR_NO_RESPONSE'}</b>);
+    print qq(<p><b>ClamAV daemon answer is:</b></p>);
+    print qq(<pre style="background:silver">$msg</pre>);
   }
 }
 
