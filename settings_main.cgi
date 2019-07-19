@@ -9,6 +9,8 @@ require './clamav-lib.pl';
 &clamav_check_acl ('global_settings_view');
 &ReadParse ();
 
+my $msg;
+
 # Clean temp if first access
 if ($ENV{'REQUEST_METHOD'} eq 'GET')
 {
@@ -32,25 +34,24 @@ if ($in{'next'})
   my $old_alive = &clamav_is_clamd_alive ();
 
   $error = &clamav_save_global_settings (1);
-  print qq(<p>);
+  $msg = qq(<p>);
   if ($error)
   {
-    print "<p>$error<p>";
-    print qq(<p/><b>$text{'MSG_CONFIGS_RESTORED'}</b>);
+    $msg .= qq("<p>$error<p><p/><b>$text{'MSG_CONFIGS_RESTORED'}</b>);
   }
   else
   {
-    print qq(<p>);
     if (&clamav_is_clamd_alive () eq $old_alive)
     {
-      print qq(<b>$text{'MSG_SUCCES_APPLY_GLOBAL_SETTINGS'}</b>);
+      $msg .= qq(<b>$text{'MSG_SUCCES_APPLY_GLOBAL_SETTINGS'}</b>);
     }
     else
     {
-      printf (qq(<b>$text{'MSG_ERROR_APPLY_GLOBAL_SETTINGS'}</b>),
-        $config{'clamav_clamav_log'});
+      $msg .= sprintf (qq(<b>$text{'MSG_ERROR_APPLY_GLOBAL_SETTINGS'}</b>),
+                $config{'clamav_clamav_log'});
     }
   }
+  $msg .= qq(</p>);
 }
 elsif ($ENV{REQUEST_METHOD} eq 'POST')
 {
@@ -78,6 +79,7 @@ print qq(
 print qq(<form method="POST" action="$scriptname">);
 
 print qq(<h2 id="clamav"><a href="#top">^</a> $text{'SETTINGS_CLAMAV_TITLE'}</h2>);
+print $msg if ($msg);
 if (&clamav_get_acl ('global_settings_write') == 1)
 {
   print qq(<p><input type="submit" name="next" onclick="this.form.action+='#clamav'" value="$text{'APPLY'}"></p>);
@@ -85,6 +87,7 @@ if (&clamav_get_acl ('global_settings_write') == 1)
 &clamav_display_settings ('clamav', $add_item_c, $delete_item_c);
 
 print qq(<h2 id="freshclam"><a href="#top">^</a> $text{'SETTINGS_FRESHCLAM_TITLE'}</h2>);
+print $msg if ($msg);
 if (&clamav_get_acl ('global_settings_write') == 1)
 {
   print qq(<p><input type="submit" name="next" onclick="this.form.action+='#freshclam'" value="$text{'APPLY'}"></p>);
