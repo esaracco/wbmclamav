@@ -3,18 +3,16 @@
 #
 # GNU GENERAL PUBLIC LICENSE
 
-use WebminCore;
-#FIXME Wil not work if module directory is not "clamav".
-use lib &get_current_dir().'/../clamav/lib';
+#FIXME module_info{'dir'} does not seem accessible from here...
+#      First item should be a absolute path to our module
+use lib $INC[0].'/lib';
 use ClamavConstants;
 
 require 'clamav-lib.pl';
 
 # module_uninstall ()
-# IN: -
-# OUT: -
 #
-# Called by Webmin when module is uninstalled
+# Called by Webmin when module is uninstalled.
 # 
 sub module_uninstall
 {
