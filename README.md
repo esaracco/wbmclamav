@@ -38,19 +38,20 @@ You need at least the following Perl modules in order to run wbmclamav:
 - IO::Socket
 - POSIX
 
-Depending on the softwares installed on your system, you may also need the following modules:
+Depending on the software installed on your system and your wbmclamav configuration options, you may also need the following modules:
 
 - Compress::Zlib
 - GD
 - GD::Graph::lines
 - Getopt::Long
 - IO::File
+- LWP::UserAgent
 - Mail::Internet
 - Mail::Mbox::MessageParser
 - Mail::SpamAssassin
 - Net::SMTP
 
-All those modules can be loaded for free from CPAN.
+All those modules can be loaded from CPAN.
 
 As root you can try:
 
