@@ -15,8 +15,5 @@
   'FILDES' => 0,
   'STATS' => 0,
   'IDSESSION' => 0,
-  'INSTREAM' => 0,
-  'DETSTATSCLEAR' => 0,
-  'DETSTATS' => 0,
-  'ALLMATCHSCAN' => 1
+  'INSTREAM' => 0
 );
