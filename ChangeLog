@@ -63,7 +63,7 @@
 
 	  - Fixed clamav version check.
 
-	  - Updated for new clamav 0.100.3. Old versions of ClamAV are not
+	  - Updated for new clamav 0.100.2. Old versions of ClamAV are not
 	    supported anymore.
 
 	  - Added the following clamav options:
