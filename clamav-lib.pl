@@ -309,7 +309,7 @@ sub clamav_main_check_config
     $msg = $text{'MSG_CONFIG_ALERT_CLAMAV_CONF'};
   }
   elsif ($config{'clamav_db1'} eq '' ||
-         ! -f &clamav_get_main_db_path () ||
+         ! -f &clamav_get_db_path ('main') ||
          !&is_secure ($config{'clamav_db1'}))
   {
     $msg = $text{'MSG_CONFIG_ALERT_DB1'};
@@ -1259,29 +1259,19 @@ sub clamav_scandir ( $ $ $ $ )
   close (H);
 }
 
-# clamav_get_main_db_path ()
-# IN: -
-# OUT: main database
+# clamav_get_db_path ()
+# IN: C<main> for the main DB, C<daily> for the daily DB.
+# OUT: Database
 #
-# Return the full path/name of the main database
+# Return the full path/name of the database.
 #
-sub clamav_get_main_db_path
+sub clamav_get_db_path ( $ )
 {
-  my $datadir = dirname ($config{'clamav_db1'});
-  return (-f "$datadir/main.cld") ? "$datadir/main.cld" : "$datadir/main.cvd";
-}
+  my $type = (shift eq 'main') ? 'main' : 'daily';
+  my $datadir = dirname ($config{'clamav_db'.(($type eq 'main')?1:2)});
 
-# clamav_get_daily_db_path ()
-# IN: -
-# OUT: daily database
-#
-# Return the full path/name of the daily database
-#
-sub clamav_get_daily_db_path
-{
-  my $datadir = dirname ($config{'clamav_db2'});
-  return 
-    (-f "$datadir/daily.cld") ? "$datadir/daily.cld" : "$datadir/daily.cvd";
+  return (-f "$datadir/$type.cld") ? "$datadir/$type.cld" :
+           (-f "$datadir/$type.cvd") ? "$datadir/$type.cvd" : '';
 }
 
 # clamav_get_last_db_update ()
@@ -1297,51 +1287,51 @@ sub clamav_get_last_db_update
   my $main_infos = '';
   my $daily = '';
   my $daily_infos = '';
-  my $maindb = clamav_get_main_db_path ();
-  my $dailydb = clamav_get_daily_db_path ();
+  my $maindb = &clamav_get_db_path ('main');
+  my $dailydb = &clamav_get_db_path ('daily');
+  my $sigtool = &has_command ('sigtool');
          
   if (-f $maindb)
   {
     $main = &make_date ((stat($maindb))[9]);
-    open (H, &has_command ('sigtool')." --info $maindb 2>&1 |");
-    while (<H>)
-    {
-      chomp ();
-      my ($name, $value) = split (/:/);
-      $main_infos .= "$text{$name}: <b>$value</b>" if ($name eq 'Version');
-      $main_infos .= " - $text{$name}: <b>$value</b>" 
-        if ($name eq 'Functionality level');
-    }
-    close (H);
+
+    my ($v, $f) =
+      `$sigtool --info $maindb 2>&1` =~
+        /Version\s*:\s*([^\n]+).*Functionality\s+level\s*:\s*([^\n]+)/si;
+
+    $main_infos =
+      "$text{'CLAMAV_DB_VERSION'}: <b>$v</b> - ".
+      "$text{'CLAMAV_DB_FUNCTIONALITY_LEVEL'}: <b>$f</b>"
   }
 
   if (-f $dailydb)
   {
     $daily = &make_date ((stat($dailydb))[9]);
-    open (H, &has_command ('sigtool')." --info $dailydb 2>&1 |");
-    while (<H>)
-    {
-      chomp ();
-      my ($name, $value) = split (/:/);
-      $daily_infos .= "$text{$name}: <b>$value</b>" if ($name eq 'Version');
-      $daily_infos .= " - $text{$name}: <b>$value</b>"
-        if ($name eq 'Functionality level');
-    }
-    close (H);
+
+    my ($v, $f) =
+      `$sigtool --info $dailydb 2>&1` =~
+        /Version\s*:\s*([^\n]+).*Functionality\s+level\s*:\s*([^\n]+)/si;
+
+    $daily_infos =
+      "$text{'CLAMAV_DB_VERSION'}: <b>$v</b> - ".
+      "$text{'CLAMAV_DB_FUNCTIONALITY_LEVEL'}: <b>$f</b>"
   }
 
   return ($main, $daily, $main_infos, $daily_infos);
 }
 
 # clamav_is_a_script ( $ )
-# IN: The file to check
-# OUT: True if the file is a script
+# IN: The file to check.
+# OUT: C<1> if the file is a script.
 #
 # Check if a given file is a script.
 # 
 sub clamav_is_a_script
 {
   my $file = shift;
+
+  return 0 if (! -f $file);
+
   my $filec = &has_command ('file');
   my $res = `$filec $file`;
 
