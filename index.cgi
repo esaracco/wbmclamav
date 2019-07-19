@@ -50,6 +50,14 @@ sub clamav_add_if_acl_ok ($ $ $ $)
   $text{'LINK_SIGNATURES'}, 'images/signatures.png');
 
 &header($text{'FORM_TITLE'}, undef, undef, 1, 1, 0, undef, undef, undef, "<img src='images/icon.gif'/><br/><a href=\"https://wbmclamav.esaracco.fr\" target=\"_BLANK\">$text{'HOMEPAGE'}</a>&nbsp;|&nbsp;<a href=\"https://wbmclamav.esaracco.fr/download\" target=\"_BLANK\">$text{'DOWNLOAD'}</a>&nbsp;|&nbsp<a href=\"http://www.clamav.net/download\" target=\"_BLANK\">$text{'LATEST_CLAMAV'}</a>");
+
+if (my ($m, $c) = &clamav_check_new_release ())
+{
+  printf (qq(
+    <p align=center><b>$text{'NEW_RELEASE_AVAILABLE'}</b></p>
+  ), $m, $c, $m);
+}
+
 print "<hr>\n";
 
 &clamav_main_check_config ();

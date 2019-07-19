@@ -5,6 +5,7 @@ clamav_quarantine_soft=Utiliser le scanner de contenu suivant,4,0-Aucun,1-amavis
 clamav_quarantine=Répertoire quarantaine,7
 clamav_spam_user=Utilisateur SpamAssassin
 line2=ClamAV,11
+clamav_check_new=M'avertir si une nouvelle du module est disponible,1,1-Oui,0-Non
 clamav_sys_user=Utilisateur système ClamAV
 clamav_sys_group=Groupe système ClamAV
 clamav_init_script=Emplacement script démarrage (si sysvinit),8

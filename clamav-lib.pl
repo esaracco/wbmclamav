@@ -71,6 +71,7 @@ eval'use Mail::SpamAssassin';$deps{'Mail::SpamAssassin'} = 1 if ($@);
 eval'use GD';$deps{'GD'} = 1 if ($@);
 eval'use GD::Graph::lines';$deps{'GD::Graph::lines'} = 1 if ($@);
 eval'use Mail::Mbox::MessageParser';$deps{'Mail::Mbox::MessageParser'}=1 if($@);
+eval'use LWP::UserAgent';$deps{'LWP::UserAgent'} = 1 if ($@);
 
 # Freshclam configuration
 my %freshclam_config = ();
@@ -120,6 +121,24 @@ sub clamav_check_acl ( $ )
     print qq(<hr>);
     &clamav_check_config_exit ($text{'MSG_ACL_DENIED'})
   }
+}
+
+# clamav_check_new_release ()
+# OUT: New release version.
+#
+# Check if a new wbmclamav release is available.
+#
+sub clamav_check_new_release ()
+{
+  return if (!$config{'clamav_check_new'});
+
+  my $r = (LWP::UserAgent->new())->get("https://wbmclamav.esaracco.fr/VERSION");
+
+  my ($local_version) = $module_info{'version'} =~ /^([^g]+)/;
+
+  return ($r->is_success &&
+          $r->content =~ /^(.+),(.+)$/ && $1 ne $local_version) ?
+           ($1, $2) : ();
 }
 
 # clamav_is_qmailscanner ()
@@ -4248,6 +4267,11 @@ sub clamav_check_deps ()
   elsif ($config{'clamav_quarantine_soft'} != CS_AMAVIS)
   {
     delete $deps{'Mail::Mbox::MessageParser'};
+  }
+  # If we do not war user for new module release
+  elsif (!$config{'clamav_check_new'})
+  {
+    delete $deps{'LWP::UserAgent'};
   }
 
   return if (!%deps);

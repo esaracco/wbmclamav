@@ -1,3 +1,4 @@
+clamav_check_new=0
 clamav_sys_user=clamav
 clamav_sys_group=adm
 clamav_working_path=/tmp

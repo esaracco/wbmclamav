@@ -1,3 +1,4 @@
+clamav_check_new=0
 clamav_working_path=/tmp
 clamav_init_restore_path=/var/backups
 clamav_init_script=/etc/init.d/clamd
