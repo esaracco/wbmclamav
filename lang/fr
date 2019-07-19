@@ -201,6 +201,7 @@ SENDER=Expéditeur
 SERVER_RESPONSE=Réponse du serveur
 SETTINGS_CLAMAV_TITLE=Configuration de ClamAV
 SETTINGS_DESCRIPTION=Cette section vous donne la possibilité de contrôler le contenu de tous les fichiers de configuration de ClamAV. Réfléchissez bien avant de les modifier.
+SETTINGS_MULTIVALUED=Les options suivies d'un astérisque sont multivaluées et peuvent donc être ajoutées plusieurs fois.
 SETTINGS_FRESHCLAM_TITLE=Configuration de Freshclam
 SETTINGS_TITLE=Configuration générale
 SHOW_INFECTED_ONLY=N'afficher que les fichiers infectés

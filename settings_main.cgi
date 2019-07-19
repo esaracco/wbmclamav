@@ -37,6 +37,7 @@ print "<hr>\n";
 
 print qq(<h1>$text{'SETTINGS_TITLE'}</h1>);
 print qq(<p>$text{'SETTINGS_DESCRIPTION'}</p>);
+print qq(<p>$text{'SETTINGS_MULTIVALUED'}</p>);
 
 if ($in{'next'})
 {

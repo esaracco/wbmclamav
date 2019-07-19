@@ -520,9 +520,10 @@ sub clamav_display_combo_predefined ( $ $ )
   print qq(<select name="ns${type}_add_key">\n);
   foreach my $key (sort keys %p)
   {
-    if (!defined ($c{$key}) || $p{$key} == 2)
+    my $multi = ($p{$key} == 2) ? ' *' : '';
+    if (!defined ($c{$key}) || $multi)
     {
-      print qq(<option value="$key">$key</option>\n);
+      print qq(<option value="$key">$key$multi</option>\n);
     }
   }
   print qq(</select>\n);
@@ -1882,7 +1883,7 @@ sub clamav_display_settings
     );
   }
 
-  print qq(<table border=1>);
+  print qq(<p/><table border=1>);
   foreach $key (sort keys %$c)
   {
     next if ($key eq '');

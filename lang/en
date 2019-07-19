@@ -205,6 +205,7 @@ SEARCH_STRICT=Exact match
 SENDER=Sender
 SETTINGS_CLAMAV_TITLE=ClamAV settings
 SETTINGS_DESCRIPTION=This section gives you the ability to control content of all ClamAV configuration files. Change them carefully.
+SETTINGS_MULTIVALUED=Options followed by an asterisk are multivalued and can be added multiple times.
 SETTINGS_FRESHCLAM_TITLE=Freshclam settings
 SETTINGS_TITLE=Global settings
 SHOW_INFECTED_ONLY=Only show infected files
