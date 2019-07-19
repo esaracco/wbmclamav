@@ -28,9 +28,11 @@ print qq(<p>$text{'SETTINGS_MULTIVALUED'}</p>);
 
 if ($in{'next'})
 {
+  # Keep clamd status before update
+  my $old_alive = &clamav_is_clamd_alive ();
+
   $error = &clamav_save_global_settings (1);
   print qq(<p>);
-
   if ($error)
   {
     print "<p>$error<p>";
@@ -39,7 +41,7 @@ if ($in{'next'})
   else
   {
     print qq(<p>);
-    if (&clamav_is_clamd_alive ())
+    if (&clamav_is_clamd_alive () eq $old_alive)
     {
       print qq(<b>$text{'MSG_SUCCES_APPLY_GLOBAL_SETTINGS'}</b>);
     }

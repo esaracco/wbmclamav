@@ -977,30 +977,6 @@ sub clamav_display_combos_viruses_prefixes ()
   return $ret;
 }
 
-# clamav_get_freshclam_daemon_state ()
-# IN: -
-# OUT: true if the freshclam daemon is deactivated
-#
-# Return the actual state of the freshclam daemon service
-# 
-sub clamav_get_freshclam_daemon_state
-{
-  my $ret;
-
-  if (&clamav_check_systemd ())
-  {
-    $ret = &daemon_control_systemd ('freshclam', 'status');
-  }
-  else
-  {
-    $ret = ($gconfig{'os_type'} =~ /bsd/) ?
-      (&clamav_bsd_get_state ('freshclam') eq 'YES') : 
-      (&find_byname ('freshclam'));
-  }
-
-  return $ret;
-}
-
 # clamav_bsd_get_state ( $ )
 # IN: daemon name (clamav or freshclam)
 # OUT: system setting for the daemon (NO or YES)
@@ -1535,7 +1511,7 @@ sub clamav_set_freshclam_daemon_settings ( $ $ )
     &daemon_control ($freshclam, 'restart');
   }
 
-  if (!&clamav_get_freshclam_daemon_state ())
+  if (!&clamav_is_freshclam_alive ())
   {
     &clamav_set_db_no_autoupdate ();
     return 0;
@@ -1712,9 +1688,16 @@ sub clamav_save_global_settings
   {
     if ($restart)
     {
-      &clamav_activate_clamd ();
+      # Restart clamd only if it is runniong
+      if (&clamav_is_clamd_alive ())
+      {
+        &clamav_activate_clamd ();
+      }
       
-      if ($config{'clamav_refresh_use_cron'} == UP_DAEMON)
+      # Restart freshclam daemon only if it is configured as deamon and if it
+      # is running
+      if ($config{'clamav_refresh_use_cron'} == UP_DAEMON &&
+          &clamav_is_freshclam_alive ())
       {
         &daemon_control ($config{'clamav_freshclam_init_script'}, 'restart');
       }
@@ -2305,6 +2288,32 @@ sub clamav_is_clamd_alive
       &find_byname ('clamav-milter') : &find_byname ('clamd');
   }
 }
+
+# clamav_is_freshclam_alive ()
+# IN: -
+# OUT: C<1> if the freshclam daemon is running.
+#
+# Return the actual state of the freshclam daemon service.
+#
+sub clamav_is_freshclam_alive ()
+{
+  my $ret;
+
+  if (&clamav_check_systemd ())
+  {
+    $ret = &daemon_control_systemd ('freshclam', 'status');
+  }
+  else
+  {
+    $ret = ($gconfig{'os_type'} =~ /bsd/) ?
+      (&clamav_bsd_get_state ('freshclam') eq 'YES') :
+      (&find_byname ('freshclam'));
+  }
+
+  return $ret;
+}
+
+
 
 # clamav_get_filtered_email_content ( $ @ )
 # IN: email file name on the disk, header fields to delete

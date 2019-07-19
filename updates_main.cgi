@@ -148,7 +148,7 @@ elsif (!&clamav_update_manual ())
       }
       
       $daemon_setting = &clamav_get_freshclam_daemon_settings ();
-      $on = &clamav_get_freshclam_daemon_state ();
+      $on = &clamav_is_freshclam_alive ();
       $checked = ($on) ? '' : ' checked="checked"';
       print qq(<input type="hidden" name="oldfreq" value="$daemon_setting">);
       print &clamav_freshclam_daemon_settings_table ($daemon_setting, $checked); 
