@@ -4711,8 +4711,11 @@ sub quarantine_get_infos_qmailscanner ()
 sub clamav_display_remote_actions ($ $ $ $)
 {
   my ($host, $port, $action, $arg) = @_;
+  my $class = '';
 
   require "$root_directory/$module_name/data/clamav_remote_actions.pm";
+
+  $action ||= 'PING';
 
   print qq(
     <table border="1">
@@ -4720,20 +4723,23 @@ sub clamav_display_remote_actions ($ $ $ $)
       <td><input type="text" name="host" value="$host"></td></tr>
       <tr><td $cb>$text{'PORT'}</td>
       <td><input type="text" name="port" value="$port"></td></tr>
-      <tr><td $cb>$text{'COMMAND'}<br><select name="action">);
+      <tr><td $cb>$text{'COMMAND'}<br><select name="action" onchange="var v=this.options[this.selectedIndex].text;var a=document.getElementById('clamd-arg');var av=document.getElementById('clamd-arg-v');if(v.indexOf('*')!=-1){a.style.display='block'}else{av.value='';a.style.display='none'}">);
 
   foreach my $key (sort keys %clamav_remote_actions)
   {
     my $selected = ($key eq $action);
-    my $name = sprintf ("$key - %s", ($clamav_remote_actions{$key} == 1) ?
-                 "Argument needed ->" : "No argument");
+    my $have_arg = ($clamav_remote_actions{$key} == 1);
+
+    $class = ' style="display:none"' if ($selected && !$have_arg);
+
+    my $name = sprintf ("$key%s", ($have_arg) ? ' *' : '');
     printf (qq(<option value="$key"%s>$name</option>),
       ($selected) ? ' selected="selected"' : '');
   }
 
   print qq(
     </select></td>
-    <td valign="bottom"><input type="text" name="arg" value="$arg"></td></tr>
+    <td id="clamd-arg" $class valign="bottom"><small>File/directory to scan:</small><br/><input type="text" name="arg" id="clamd-arg-v" value="$arg"></td></tr>
     </table>);
 }
 

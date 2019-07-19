@@ -26,7 +26,8 @@ elsif (!&clamav_remote_actions_take_arg ($action) && $arg)
   $msg = $text{'MSG_ERROR_TAKE_NO_ARG'};
 }
 
-&header($text{'FORM_TITLE'}, "", undef, 1, 0);
+&header ($text{'FORM_TITLE'}, '', undef, 1, 0, undef, undef,
+  '<link rel="stylesheet" type="text/css" href="css/styles.css"/>');
 print "<hr>\n";
 
 print qq(<h1>$text{'REMOTE_CONTROL_TITLE'}</h1>);
