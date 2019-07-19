@@ -1837,23 +1837,28 @@ sub clamav_display_settings
   
   if ($deletekey || $newkey)
   {
-    # Delete a simple value key
-    if (exists ($p{$deletekey}))
+    if ($deletekey)
     {
-      delete $in{$type."_$deletekey\[\]"} if ($deletekey);
-    }
-    # Delete multiple values key
-    else
-    {
-      $deletekey =~ /^(.*)_(\d+)$/;
-      my ($name, $todelete) = ($1, $2);
-      my @a = split (chr (0), $in{$type."_$name\[\]"});
-      splice (@a, $todelete, 1);
-      $in{$type."_$name\[\]"} = join (chr (0), @a);
-    }
+      my ($pre) = $deletekey =~ /^([^_]+)/;
 
+      # Delete a simple value key or if the key was deprecated and does not
+      # exists anymore on clamav/freshclam
+      if (exists ($p{$deletekey}) || !exists ($p{$pre}))
+      {
+        delete $in{$type."_$deletekey\[\]"};
+      }
+      # Delete multiple values key
+      else
+      {
+        $deletekey =~ /^(.*)_(\d+)$/;
+        my ($name, $todelete) = ($1, $2);
+        my @a = split (chr (0), $in{$type."_$name\[\]"});
+        splice (@a, $todelete, 1);
+        $in{$type."_$name\[\]"} = join (chr (0), @a);
+      }
+    }
     # Add a new key in the config file
-    if ($newkey)
+    elsif ($newkey)
     {
       # Add multiple values key
       if ($p{$newkey} == 2)
