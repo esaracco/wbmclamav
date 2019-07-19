@@ -81,18 +81,19 @@ elsif ($ENV{REQUEST_METHOD} eq 'POST')
 
 print qq(<form method="POST" action="$scriptname">);
 
-print qq(<h2>$text{'SETTINGS_CLAMAV_TITLE'}</h2>);
-
-&clamav_display_settings ('clamav', $add_item_c, $delete_item_c);
-
-print qq(<h2>$text{'SETTINGS_FRESHCLAM_TITLE'}</h2>);
-
-&clamav_display_settings ('freshclam', $add_item_f, $delete_item_f);
-
+print qq(<h2 id="clamav">$text{'SETTINGS_CLAMAV_TITLE'}</h2>);
 if (&clamav_get_acl ('global_settings_write') == 1)
 {
   print qq(<p><input type="submit" name="next" value="$text{'APPLY'}"></p>);
 }
+&clamav_display_settings ('clamav', $add_item_c, $delete_item_c);
+
+print qq(<h2 id="freshclam">$text{'SETTINGS_FRESHCLAM_TITLE'}</h2>);
+if (&clamav_get_acl ('global_settings_write') == 1)
+{
+  print qq(<p><input type="submit" name="next" value="$text{'APPLY'}"></p>);
+}
+&clamav_display_settings ('freshclam', $add_item_f, $delete_item_f);
 
 print qq(</form>);
 

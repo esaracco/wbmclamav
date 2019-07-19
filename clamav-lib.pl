@@ -1879,7 +1879,7 @@ sub clamav_display_settings
   {
     &clamav_display_combo_predefined ($type, 1);
     print qq( 
-      <input type="submit" name="ns${type}_add" value="$text{'ADD_KEY'}">
+      <input type="submit" name="ns${type}_add" onclick="this.form.action+='#$type'" value="$text{'ADD_KEY'}">
     );
   }
 
@@ -1926,6 +1926,7 @@ sub clamav_display_settings
         print qq(
           <td><input title="$text{'DELETE_ITEM'}" type="submit"
           name="ns${type}_delete_$key$endkey"
+          onclick="this.form.action+='#$type'"
           value="$text{'DELETE'}"></td>
           </tr>
         );
