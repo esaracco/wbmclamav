@@ -494,19 +494,15 @@ sub clamav_display_combo_quarantine_items_types ()
 
 # clamav_display_combo_predefined ( $ )
 # IN: - Type : C<clamav>, C<freshclam>
-#     - C<1> if combo must not display values that already exist in the config
-#       file
 # OUT: 1 if combo box has been displayed (if there is result)
 #
 # Display a combo box with clamav or freshclam predefined variables
 #
 sub clamav_display_combo_predefined ( $ $ )
 {
-  my ($type, $uniq) = @_;
-  my $buf = '';
+  my $type = shift;
   my %p;
   my %c;
-  my $ok = 0;
 
   require "$root_directory/$module_name/data/${type}_predefined.pm";
 
@@ -521,21 +517,15 @@ sub clamav_display_combo_predefined ( $ $ )
     %c = %freshclam_config;
   }
   
-  $buf = qq(<select name="ns${type}_add_key">\n);
+  print qq(<select name="ns${type}_add_key">\n);
   foreach my $key (sort keys %p)
   {
     if (!defined ($c{$key}) || $p{$key} == 2)
     {
-      $ok = 1;
-      $buf .= qq(<option value="$key">$key</option>\n)
+      print qq(<option value="$key">$key</option>\n);
     }
   }
-  $buf .= qq(</select>\n);
-
-  # Only print if there is result
-  print $buf if ($ok == 1);
-
-  return $ok;
+  print qq(</select>\n);
 }
 
 # clamav_quarantine_resend_check_config ()
@@ -1884,9 +1874,9 @@ sub clamav_display_settings
     &clamav_load_config ($type);
   }
 
-  if (&clamav_get_acl ('global_settings_write') == 1 &&
-    &clamav_display_combo_predefined ($type, 1) == 1)
+  if (&clamav_get_acl ('global_settings_write') == 1)
   {
+    &clamav_display_combo_predefined ($type, 1);
     print qq( 
       <input type="submit" name="ns${type}_add" value="$text{'ADD_KEY'}">
     );
