@@ -3,11 +3,13 @@
 #
 # GNU GENERAL PUBLIC LICENSE
 
-#FIXME module_info{'dir'} does not seem accessible from here...
-#      First item should be a absolute path to our module
-use lib $INC[0].'/lib';
-use ClamavConstants;
+BEGIN {
 
+  unshift (@INC, $ENV{'FOREIGN_ROOT_DIRECTORY'}.'/'.
+                   $ENV{'FOREIGN_MODULE_NAME'}.'/lib');
+};
+
+use ClamavConstants;
 require 'clamav-lib.pl';
 
 # module_uninstall ()
