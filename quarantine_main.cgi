@@ -44,7 +44,8 @@ elsif ($in{'export'})
    "$config{'clamav_working_path'}/.clamav/$remote_user/quarantine-export.csv");
 }
 
-&header($text{'FORM_TITLE'}, '', undef, 1, 0);
+&header ($text{'FORM_TITLE'}, '', undef, 1, 0, undef, undef,
+  '<link rel="stylesheet" type="text/css" href="css/styles.css"/>');
 print "<hr/>\n";
 
 print qq(
@@ -192,22 +193,22 @@ print qq(<p>$text{'QUARANTINE_CRON_DESCRIPTION'}</p>);
 print $msg;
 
 @cron_line = &clamav_get_cron_settings ('purge');
+$checked = ($#cron_line <= 0) ? ' checked="checked"' : '';
 
-print &clamav_cron_settings_table ($cron_line[1], $cron_line[4]);
+print &clamav_cron_settings_table ($cron_line[1], $cron_line[4], $checked);
 if ($maxdays eq '')
 {
   $maxdays = $cron_line[8];
 }
 
 # maxdays
-print qq(<p>);
+printf (qq(<p id="max-days"%s>), ($checked)?' class="disabled"':'');
 print qq($text{'DELETE_MAX_DAYS'} <input type="text" name="maxdays" size="2" value="$maxdays"> $text{'DAYS'});
 print qq(</p>);
 
 # npurge
-$checked = ($#cron_line <= 0) ? ' CHECKED' : '';
 print qq(<p>);
-print qq(<input type="checkbox" id="nopurgeid" name="nopurge" value="on"$checked>);
+print qq(<input type="checkbox" id="nopurgeid" name="nopurge" onchange="document.getElementById('cron-frequency').className=document.getElementById('max-days').className=(this.checked)?'disabled':''" value="on"$checked>);
 print qq( <label for="nopurgeid">$text{'QUARANTINE_PURGE_NEVER'}</label>);
 print qq(</p>);
 

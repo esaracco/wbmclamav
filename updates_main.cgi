@@ -12,12 +12,8 @@ require './clamav-lib.pl';
 &clamav_check_acl ('database_update_view');
 &ReadParse ();
 
-&header ($text{'FORM_TITLE'}, '', undef, 1, 0);
-
-print qq(
-  <style>
-    .disabled {opacity:.6;pointer-events: none;cursor: default;}
-  </style>);
+&header ($text{'FORM_TITLE'}, '', undef, 1, 0, undef, undef,
+  '<link rel="stylesheet" type="text/css" href="css/styles.css"/>');
 
 print "<hr>\n";
 
