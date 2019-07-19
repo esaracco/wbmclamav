@@ -18,6 +18,9 @@
 # Foundation, Inc., 59 Temple Place, Suite 330,
 # Boston, MA 02111-1307, USA.
 
+use lib './lib';
+use ClamavConstants;
+
 require './clamav-lib.pl';
 &clamav_check_acl ('database_update_view');
 &ReadParse ();
@@ -81,7 +84,7 @@ if (&clamav_get_acl ('database_update_update') == 1)
 
 $res = &clamav_verif_refresh_method_ok ();
 
-if (&clamav_value_is ($res, 'ER_CRON_PACKAGE'))
+if ($res == ER_CRON_PACKAGE)
 {
   print qq(<p><b>$text{'WARNING'}</b>: $text{'BAD_CONFIG_6'}</p>);
 }
@@ -90,17 +93,17 @@ elsif (!&clamav_update_manual ())
   print qq(<p><h1>$text{'UPDATE_TITLE_AUTO'}</h1></p>);
   
   # Config say to use a daemon but no daemon exist on the system
-  if (&clamav_value_is ($res, 'ER_DAEMON_NOEXIST'))
+  if ($res == ER_DAEMON_NOEXIST)
   {
     print qq(<p><b>$text{'WARNING'}</b>: $text{'BAD_CONFIG_1'}</p>);
   }
   # Config say to use a daemon, but a cron exist on the system
-  elsif (&clamav_value_is ($res, 'ER_DAEMON_CRONEXIST'))
+  elsif ($res == ER_DAEMON_CRONEXIST)
   {
     print qq(<p><b>$text{'WARNING'}</b>: $text{'BAD_CONFIG_2'}</p>);
   }
   # Config say tu use cron, but a daemon exist on the system
-  elsif (&clamav_value_is ($res, 'ER_CRON_DAEMONEXIST'))
+  elsif ($res == ER_CRON_DAEMONEXIST)
   {
     print qq(<p><b>$text{'WARNING'}</b>: $text{'BAD_CONFIG_3'}</p>);
   }
@@ -185,12 +188,12 @@ elsif (!&clamav_update_manual ())
 else
 {
   # Config say manual update, but a cron exist on the system
-  if (&clamav_value_is ($res, 'ER_MANUAL_CRONEXIST'))
+  if ($res == ER_MANUAL_CRONEXIST)
   {
     print qq(<p><b>$text{'WARNING'}</b>: $text{'BAD_CONFIG_4'}</p>);
   }
   # Config say manual update, but a daemon exist on the system
-  elsif (&clamav_value_is ($res, 'ER_MANUAL_DAEMONEXIST'))
+  elsif ($res == ER_MANUAL_DAEMONEXIST)
   {
     print qq(<p><b>$text{'WARNING'}</b>: $text{'BAD_CONFIG_5'}</p>);
   }

@@ -18,6 +18,9 @@
 # Foundation, Inc., 59 Temple Place, Suite 330,
 # Boston, MA 02111-1307, USA.
 
+use lib './lib';
+use ClamavConstants;
+
 require './clamav-lib.pl';
 &clamav_check_acl ('quarantine_view');
 &ReadParse ();
@@ -112,7 +115,7 @@ elsif ($in{'delete'})
 elsif ($in{'delete_all'})
 {
   $res = &clamav_purge_quarantine ();
-  if (!&clamav_value_is ($res, 'OK'))
+  if ($res != OK)
   {
     $msg = sprintf (qq(
       <b>$text{'MSG_ERROR_STATUS_PURGE_ALL'}</b>

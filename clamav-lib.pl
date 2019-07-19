@@ -19,6 +19,9 @@
 use WebminCore;
 &init_config ();
 
+use lib './lib';
+use ClamavConstants;
+
 use constant {
   # Min stable clamav version supported by this module
   SUPPORTED_VERSION => '0.101.2',
@@ -53,20 +56,7 @@ use constant {
   # Update method constants
   UP_DAEMON => 0,
   UP_CRON => 1,
-  UP_MANUAL => 2,
-
-  KO => 0,
-  OK => 1,
-
-  # Cron/daemon errors for clamav refresh method
-  ER_DAEMON_NOEXIST => 2,
-  ER_DAEMON_CRONEXIST => 3,
-  ER_CRON_DAEMONEXIST => 4,
-  ER_MANUAL_CRONEXIST => 5,
-  ER_MANUAL_DAEMONEXIST => 6,
-  ER_CRON_PACKAGE => 7,
-
-  NET_PING_KO => 8
+  UP_MANUAL => 2
 };
 
 our $clamav_error = '';
@@ -4751,22 +4741,6 @@ sub clamav_display_remote_actions ($ $ $ $)
     </select></td>
     <td valign="bottom"><input type="text" name="arg" value="$arg"></td></tr>
     </table>);
-}
-
-# clamav_value_is ( $ $ )
-# IN: The variable to test, the value to test
-# OUT: 1 if the variable is equal to the value of the given constant name
-#
-# Test if a given variable is equal to a module constant
-# 
-sub clamav_value_is
-{
-  my ($val, $const) = @_;
-  my $ret = 0;
-
-  eval ("\$ret = (\$val == $const);");
-
-  return $ret;
 }
 
 # clamav_update_manual ()

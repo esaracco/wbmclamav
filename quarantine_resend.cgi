@@ -1,6 +1,6 @@
 #!/usr/bin/perl
 
-# Copyright (C) 2003-2008
+# Copyright (C) 2003-2019
 # Emmanuel Saracco <emmanuel@esaracco.fr>
 #
 # This program is free software; you can redistribute it and/or modify
@@ -17,6 +17,9 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330,
 # Boston, MA 02111-1307, USA.
+
+use lib './lib';
+use ClamavConstants;
 
 require './clamav-lib.pl';
 &clamav_check_acl ('quarantine_view');
@@ -102,7 +105,7 @@ else
 
     $res = &clamav_resend_email ($email, $smtp, $from, $to);
 
-    if (&clamav_value_is ($res, "NET_PING_KO"))
+    if ($res == NET_PING_KO)
     {
       &redirect ("/$module_name/quarantine_main.cgi?resended=1&" . 
         "&errstr=" . 
@@ -110,14 +113,14 @@ else
 	"&errfile=" . &urlize ($email));
     }
     # A error occured
-    elsif (!&clamav_value_is ($res, "OK"))
+    elsif ($res != OK)
     {
       &redirect ("/$module_name/quarantine_main.cgi?resended=1&" . 
         "&errstr=" . &urlize ($clamav_error) . 
 	"&errfile=" . &urlize ($email));
     }
     # If all was ok
-    elsif (&clamav_value_is ($res, "OK"))
+    elsif ($res == OK)
     {
       # Remove E-Mails files
       if ($deleteafter)
