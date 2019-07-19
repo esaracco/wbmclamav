@@ -35,7 +35,7 @@ else
 &header($text{'FORM_TITLE'}, '', undef, 1, 0);
 print "<hr>\n";
 
-print qq(<h1>$text{'SETTINGS_TITLE'}</h1>);
+print qq(<h1 id="top">$text{'SETTINGS_TITLE'}</h1>);
 print qq(<p>$text{'SETTINGS_DESCRIPTION'}</p>);
 print qq(<p>$text{'SETTINGS_MULTIVALUED'}</p>);
 
@@ -79,16 +79,23 @@ elsif ($ENV{REQUEST_METHOD} eq 'POST')
   }
 }
 
+print qq(
+  <ul>
+    <li><a href="#clamav">$text{'SETTINGS_CLAMAV_TITLE'}</a></li>
+    <li><a href="#freshclam">$text{'SETTINGS_FRESHCLAM_TITLE'}</a></li>
+  </ul>
+);
+
 print qq(<form method="POST" action="$scriptname">);
 
-print qq(<h2 id="clamav">$text{'SETTINGS_CLAMAV_TITLE'}</h2>);
+print qq(<h2 id="clamav"><a href="#top">^</a> $text{'SETTINGS_CLAMAV_TITLE'}</h2>);
 if (&clamav_get_acl ('global_settings_write') == 1)
 {
   print qq(<p><input type="submit" name="next" onclick="this.form.action+='#clamav'" value="$text{'APPLY'}"></p>);
 }
 &clamav_display_settings ('clamav', $add_item_c, $delete_item_c);
 
-print qq(<h2 id="freshclam">$text{'SETTINGS_FRESHCLAM_TITLE'}</h2>);
+print qq(<h2 id="freshclam"><a href="#top">^</a> $text{'SETTINGS_FRESHCLAM_TITLE'}</h2>);
 if (&clamav_get_acl ('global_settings_write') == 1)
 {
   print qq(<p><input type="submit" name="next" onclick="this.form.action+='#freshclam'" value="$text{'APPLY'}"></p>);
