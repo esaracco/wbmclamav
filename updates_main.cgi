@@ -114,8 +114,8 @@ elsif (!&clamav_update_manual ())
         print qq(<p><b>$text{'MSG_SUCCESS_FREQUENCY_UPDATE'}</b></p>);
       }
       @cron_line = &clamav_get_cron_settings ('update');
-      $checked = ($#cron_line <= 0) ? ' checked="checked"' : '';
-      print &clamav_cron_settings_table ($cron_line[1], $cron_line[4],
+      $checked = (@cron_line) ? '' : ' checked="checked"';
+      print &clamav_cron_settings_table ($cron_line[1]||0, $cron_line[4]||7,
                                          $checked);
     }
     # user choose to update db with daemon

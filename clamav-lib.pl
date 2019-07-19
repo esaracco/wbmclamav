@@ -1057,7 +1057,7 @@ sub clamav_verif_refresh_method_ok
     {
       return ER_MANUAL_DAEMONEXIST if
         (
-          -e "$freshclam" &&
+          -e $freshclam &&
           !$test &&
           ! -f '/etc/cron.d/clamav-freshclam'
         );
@@ -1079,7 +1079,7 @@ sub clamav_verif_refresh_method_ok
     else
     {
       # If problem with sysvinit
-      return ER_DAEMON_NOEXIST if (! -e "$freshclam");
+      return ER_DAEMON_NOEXIST if (! -e $freshclam);
     }
   }
   elsif ($method == UP_CRON)
@@ -1095,7 +1095,7 @@ sub clamav_verif_refresh_method_ok
     {
       return ER_CRON_DAEMONEXIST if
         (
-          -e "$freshclam" &&
+          -e $freshclam &&
           !$test &&
           ! -f '/etc/cron.d/clamav-freshclam'
         );
@@ -1548,16 +1548,7 @@ sub daemon_control
 {
   my ($bin, $op) = @_;
 
-  if ($op eq 'restart')
-  {
-    #&daemon_control ($bin, "stop");
-    #&daemon_control ($bin, "start");
-    system ($bin, 'restart')
-  }
-  else
-  {
-    system ($bin, $op);
-  }
+  system ($bin, $op);
 
   sleep (1);
 }
@@ -1616,7 +1607,6 @@ sub clamav_save_global_settings
   my $restart = shift;
   my $cc = '';
   my $fc = '';
-  my $buf = '';
 
   require "$root_directory/$module_name/data/freshclam_predefined.pm";
   require "$root_directory/$module_name/data/clamav_predefined.pm";
@@ -1876,6 +1866,7 @@ sub clamav_display_settings
 
     foreach $val (@{$c->{$key}})
     {
+      # If options has no value yet
       if ($val eq '')
       {
         print qq(
@@ -1884,6 +1875,7 @@ sub clamav_display_settings
   	<td><font color="silver"><i>$text{'NO_VALUE'}</i></font></td>
         );
       }
+      # If the key has just been added
       elsif ($key eq $newkey || $val eq "$text{'UNDEFINED'}")
       {
         printf (qq(
@@ -1891,6 +1883,7 @@ sub clamav_display_settings
           <td><input type="text" name="${type}_$key\[\]" size=40
           value="%s"></td>), &clamav_html_encode ($val));
       }
+      # Key has value
       else
       {
         printf (qq(
@@ -2006,9 +1999,9 @@ sub clamav_get_logfiles
 {
   my @ret = ();
 
-  foreach my $key (%config)
+  while (my ($k, $v) = each (%config))
   {
-    push @ret, $key if ($key =~ /^.*\.log$/);
+    push (@ret, $v) if ($v =~ /\.log$/);
   }
 
   return @ret;
@@ -2071,30 +2064,24 @@ sub clamav_update_db
 sub clamav_get_cron_settings ( $ )
 {
   my $type = shift;
-  my @lines = ();
-  my @cron_line = ();
-  my @tmp = ();
-  my $path = '';
+  my @cron_line;
+  my $path = &clamav_get_cron_path ();
 
-  $path = &clamav_get_cron_path ();
-
-  return undef if (! -e "$path");
+  return if (! -e $path);
 
   open (H, '<', $path);
-  @lines = <H>;
-  close (H);
-                                                                                
-  foreach (@lines)
+  while (my @tmp = split (/#/, <H>))
   {
-    @tmp = split (/#/, $_);
-    $tmp[0] =~ s/[\$,(,)]+//g;
-    @cron_line = split (/\s+/, $tmp[0]);
-
-    return @cron_line
-      if ($tmp[1] =~ /$type/);
+    if ($tmp[1] =~ /$type/)
+    {
+      $tmp[0] =~ s/[\$()]+//g;
+      @cron_line = split (/\s+/, $tmp[0]);
+      last;
+    }
   }
-                                                                                
-  return undef;
+  close (H);
+
+  return @cron_line;
 }
 
 # clamav_freshclam_daemon_settings_table ( $ $ )
@@ -2356,8 +2343,7 @@ sub clamav_get_file_content ( $ )
   my $file = shift;
   my $content = '';
 
-  return if (!&is_secure ($file));
-  return if (! -f $file);
+  return if (!&is_secure ($file) || ! -f $file);
 
   if ($file =~ /\.gz$/)
   {
@@ -4275,7 +4261,10 @@ sub clamav_check_deps ()
                                                                                 
   print qq($text{'PERL_DEPS_ERROR'});
   print qq(<ul>);
-  foreach my $mod (keys %deps) {print qq(<li><b>$mod</b></li>\n);}
+  while (my ($k, $v) = each (%deps))
+  {
+    print qq(<li><b>$k</b></li>\n);
+  }
   print qq(</ul>);
   
   &clamav_check_config_exit ('', 1);
@@ -4895,7 +4884,7 @@ sub clamav_system_backup
 
   while (my ($path, $empty) = each (%system_files))
   {
-    next if (! -f "$path");
+    next if (! -f $path);
   
     $path =~ /^(.*)\/(.*)$/;
     my ($dir, $file) = ($1, $2);
@@ -4982,21 +4971,21 @@ sub clamav_system_restore
     }
   }
 
-  foreach my $path (keys %system_files)
+  while (my ($k, $v) = each (%system_files))
   {
-    next if (defined ($files) && @$files && !grep /$path/, @$files);
-    $path =~ /^(.*)\/(.*)$/;
+    next if (defined ($files) && @$files && !grep /$k/, @$files);
+    $k =~ /^(.*)\/(.*)$/;
     my ($dir, $file) = ($1, $2);
     
     # If source or destination do not exists anymore, do not bother
-    next if (! -f "$cpath/$dir/$file" || ! -f $path);
+    next if (! -f "$cpath/$dir/$file" || ! -f $k);
  
     # Backup current system file before restoring file backuped by this module,
     # just in case something wrong happened
-    copy ("$path/$file", "$path.clamav-backup-".time());
+    copy ("$k/$file", "$k.clamav-backup-".time());
 
     # Restore file
-    copy ("$cpath/$dir/$file", $path);
+    copy ("$cpath/$dir/$file", $k);
   }
 
   unlink ("$cpath/.backup_flag");

@@ -193,13 +193,10 @@ print qq(<p>$text{'QUARANTINE_CRON_DESCRIPTION'}</p>);
 print $msg;
 
 @cron_line = &clamav_get_cron_settings ('purge');
-$checked = ($#cron_line <= 0) ? ' checked="checked"' : '';
+$checked = (@cron_line) ? '' : ' checked="checked"';
 
-print &clamav_cron_settings_table ($cron_line[1], $cron_line[4], $checked);
-if ($maxdays eq '')
-{
-  $maxdays = $cron_line[8];
-}
+print &clamav_cron_settings_table($cron_line[1]||0, $cron_line[4]||7, $checked);
+$maxdays = $cron_line[8] if ($maxdays eq '' && $cron_line[8]);
 
 # maxdays
 printf (qq(<p id="max-days"%s>), ($checked)?' class="disabled"':'');
