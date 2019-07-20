@@ -1,3 +1,21 @@
+2019-07-21 Emmanuel Saracco <emmanuel@esaracco.fr>
+
+	* Version: 0.20
+
+	  Please, consider to ugrade to 0.20 as soon as possible. This release
+	  fix a lot of important bugs.
+
+	  - Added a configuration option to check the release of new versions
+	    of wbmclamav.
+	  - Big rewrite and (a lot of) debug in the Global Settings section.
+	  - Fix freshclam configuration writing and database update management.
+	  - Fix module uninstallation error.
+	  - Debug/improved ClamAV daemon remote access.
+	  - Module index loading optimization.
+	  - Signatures database update fixes.
+	  - Cleaning/optimization, HTML fixes and enhancement.
+	  - Optimizing ClamAV database information retrieval.
+
 2019-07-13 Emmanuel Saracco <emmanuel@esaracco.fr>
 
 	* Version: 0.19
