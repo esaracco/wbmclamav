@@ -59,8 +59,9 @@ if ($next)
   }
   else
   {
+  $msg =~ s/\n/<br>/g;
     print qq(<p><b>ClamAV daemon answer is:</b></p>);
-    print qq(<pre style="background:silver">$msg</pre>);
+    print qq(<div class="crs-output">$msg</div>);
   }
 }
 

@@ -4739,7 +4739,7 @@ sub clamav_display_remote_actions ($ $ $ $)
 
   print qq(
     </select></td>
-    <td id="clamd-arg" $class valign="bottom"><small>File/directory to scan:</small><br/><input type="text" name="arg" id="clamd-arg-v" value="$arg"></td></tr>
+    <td id="clamd-arg" $class valign="bottom"><small>$text{'FD_TO_SCAN'}:</small><br/><input type="text" name="arg" id="clamd-arg-v" value="$arg"></td></tr>
     </table>);
 }
 

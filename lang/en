@@ -1,3 +1,4 @@
+FD_TO_SCAN=File/directory to scan
 NEW_RELEASE_AVAILABLE=A new wbmclamav release (%s) for ClamAV >= %s is available <a href="https://wbmclamav.esaracco.fr/download/wbmclamav-%s.wbm.gz">here</a>!
 BACKUP=Backup
 FILE=File

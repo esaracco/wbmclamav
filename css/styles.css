@@ -3,3 +3,12 @@
   pointer-events:none;
   cursor: default;
 }
+
+.crs-output {
+  background:#ccc;
+  max-width:98%;
+  border:1px solid gray;
+  padding:5px;
+  font-family:arial,verdana,helvetica,courier;
+  font-size:0.8rem
+}

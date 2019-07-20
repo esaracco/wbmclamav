@@ -1,3 +1,4 @@
+FD_TO_SCAN=Fichier/répertoire à scanner
 NEW_RELEASE_AVAILABLE=Une nouvelle version de wbmclamav (%s) pour ClamAV >= %s est disponible <a href="https://wbmclamav.esaracco.fr/download/wbmclamav-%s.wbm.gz">ici</a>!
 ACTION=Action
 ACTIVATE=Activer ClamAV
