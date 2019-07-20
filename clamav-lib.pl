@@ -1533,7 +1533,7 @@ sub daemon_control_systemd
   my $ret =
     !system (&has_command('systemctl')." $op clamav-$type 2>&1 > /dev/null");
 
-  sleep (1);
+  sleep (1) if ($op ne 'status');
 
   return $ret;
 }
@@ -1548,9 +1548,11 @@ sub daemon_control
 {
   my ($bin, $op) = @_;
 
-  system ($bin, $op);
+  my $ret = !system ($bin, $op);
 
-  sleep (1);
+  sleep (1) if ($op ne 'status');
+
+  return $ret;
 }
 
 # clamav_save_freshclam_config ()
