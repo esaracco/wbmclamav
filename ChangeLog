@@ -1,5 +1,12 @@
 2019-07-21 Emmanuel Saracco <emmanuel@esaracco.fr>
 
+	* Version: 0.20.1
+
+	Hotfix : Fix an error in module configuration that hid important
+	options.
+
+2019-07-21 Emmanuel Saracco <emmanuel@esaracco.fr>
+
 	* Version: 0.20
 
 	  Please, consider to ugrade to 0.20 as soon as possible. This release
