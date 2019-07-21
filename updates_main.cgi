@@ -12,10 +12,7 @@ require './clamav-lib.pl';
 &clamav_check_acl ('database_update_view');
 &ReadParse ();
 
-&header ($text{'FORM_TITLE'}, '', undef, 1, 0, undef, undef,
-  '<link rel="stylesheet" type="text/css" href="css/styles.css"/>');
-
-print "<hr>\n";
+&clamav_header ();
 
 print qq(<form method="POST" action="$scriptname">);
 print qq(<p>$text{'UPDATE_PAGE_DESCRIPTION_GENERAL'}</p>);

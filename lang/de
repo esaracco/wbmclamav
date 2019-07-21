@@ -52,7 +52,7 @@ HOUR=Stunde
 INDEX_PAGE_DESCRIPTION=<a href="http://www.clamav.net">Clam Antivirus</a> beschützt Sie vor den Meisten Viren (Würmer, trojanische Pferde, Polymorphe etc). Wenn es mit Software wie <a href="http://www.amavis.org" target="_BLANK">amavisd-new</a> benutzt wird, verschiebt es infizierte Emails in Quarantäne. Seine Unterschriftendatenbank muß regelmäßig aktualisiert werden (diese Datenbank enthält Zeichenketten, mit denen fast jeder bekannte Virus identifiziert werden kann).
 INFECTED_FILES=Infizierte Dateien
 KNOWN_VIRUSES=Bekannte Viren
-LAST_UPDATES_DESCRIPTION=Letzte Aktualisierungen (falls Sie gerade eine manuelle Aktualisierung vorgenommen haben <a href="">laden</a> Sie bitte die Site neu).
+LAST_UPDATES_DESCRIPTION=Letzte Aktualisierungen (falls Sie gerade eine manuelle Aktualisierung vorgenommen haben <a href="/updates_main.cgi">laden</a> Sie bitte die Site neu).
 LATEST_CLAMAV=ClamAV
 LINES_OF=Zeilen von
 LINK_BACKUP_RESTORE_PAGE=Systemwiederherstellung
@@ -99,7 +99,7 @@ MSG_WHITE_CHARS_REMOVED=<b>Leerzeichen wurden vom Namen des Virus entfernt</b>
 NAME=Name
 NEVER_REFRESH=Niemals automatisch aktualisieren.
 NEXT=Weiter
-NOT_YET_UPDATED=Es wurde noch keine Aktualisierung vorgenommen (falls Sie gerade eine manuelle Aktualisierung vorgenommen haben <a href="">laden</a> Sie bitte die Site neu).
+NOT_YET_UPDATED=Es wurde noch keine Aktualisierung vorgenommen (falls Sie gerade eine manuelle Aktualisierung vorgenommen haben <a href="/updates_main.cgi">laden</a> Sie bitte die Site neu).
 NO_RESULT=<b>Kein Ergebnis für "%s"</b>
 NO_RESULT_QUARANTINE=Kein Ergebnis bei dieser Suche
 NO_VALUE=Kein Wert

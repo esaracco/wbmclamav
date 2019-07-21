@@ -1,6 +1,6 @@
 #!/usr/bin/perl
 
-# Copyright (C) 2003-2012
+# Copyright (C) 2003-2019
 # Emmanuel Saracco <emmanuel@esaracco.fr>
 #
 # GNU GENERAL PUBLIC LICENSE
@@ -12,8 +12,7 @@ require './clamav-lib.pl';
 my $scandir = ($in{'next'} and $in{'what'} ne '');
 my $msg = '';
 
-&header($text{'FORM_TITLE'}, "", undef, 1, 0);
-print "<hr>\n";
+&clamav_header ();
 
 # delete files if requested
 if (&clamav_get_acl ('directories_check_delete') == 1 && $in{'delete'} ne '')
@@ -53,7 +52,7 @@ print &file_chooser_button('what', 1, 0);
 if (&clamav_has_clamscan !~ /clamdscan/)
 {
   $checked = ($in{'recursive'} eq 'on') ? ' CHECKED' : '';
-  print qq(<p><input id="recursive" type="checkbox" name="recursive" value="on"$checked /> );
+  print qq(<p/><p><input id="recursive" type="checkbox" name="recursive" value="on"$checked /> );
   print qq(<label for="recursive">$text{'CHECK_SUB'}</label></p>);
 }
 else

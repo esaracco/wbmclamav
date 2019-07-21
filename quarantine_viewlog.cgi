@@ -1,6 +1,6 @@
 #!/usr/bin/perl
 
-# Copyright (C) 2003-2008
+# Copyright (C) 2003-2019
 # Emmanuel Saracco <emmanuel@esaracco.fr>
 #
 # GNU GENERAL PUBLIC LICENSE
@@ -9,8 +9,7 @@ require './clamav-lib.pl';
 &clamav_check_acl ('quarantine_view');
 &ReadParse ();
 
-&header($text{'FORM_TITLE'}, "", undef, 1, 0);
-print "<hr>\n";
+&clamav_header ();
 
 print qq(<h1>$text{'QUARANTINE_VIEWLOG_PAGE_TITLE'}</h1>\n);
 print qq(<p>$text{'QUARANTINE_VIEWLOG_PAGE_DESCRIPTION'}</p>);

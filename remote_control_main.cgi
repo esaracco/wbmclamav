@@ -1,6 +1,6 @@
 #!/usr/bin/perl
 
-# Copyright (C) 2003-2008
+# Copyright (C) 2003-2019
 # Emmanuel Saracco <emmanuel@esaracco.fr>
 #
 # GNU GENERAL PUBLIC LICENSE
@@ -26,9 +26,7 @@ elsif (!&clamav_remote_actions_take_arg ($action) && $arg)
   $msg = $text{'MSG_ERROR_TAKE_NO_ARG'};
 }
 
-&header ($text{'FORM_TITLE'}, '', undef, 1, 0, undef, undef,
-  '<link rel="stylesheet" type="text/css" href="css/styles.css"/>');
-print "<hr>\n";
+&clamav_header ();
 
 print qq(<h1>$text{'REMOTE_CONTROL_TITLE'}</h1>);
 print qq(<p>$text{'REMOTE_CONTROL_DESCRIPTION'}</p>);
@@ -61,7 +59,7 @@ if ($next)
   {
   $msg =~ s/\n/<br>/g;
     print qq(<p><b>ClamAV daemon answer is:</b></p>);
-    print qq(<div class="crs-output">$msg</div>);
+    print qq(<div class="raw-output">$msg</div>);
   }
 }
 

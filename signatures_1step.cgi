@@ -24,8 +24,7 @@ if ($in{'main'} && !$upload)
   &redirect ("/$module_name/signatures_main.cgi?error=1");
 }
 
-&header($text{'FORM_TITLE'}, '', undef, 1, 0);
-print "<hr>\n";
+&clamav_header ();
 
 if ($upload)
 {

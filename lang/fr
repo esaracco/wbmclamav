@@ -64,7 +64,7 @@ INDEX_PAGE_DESCRIPTION=<a href="http://www.clamav.net" target="_BLANK">ClamAV An
 INFECTED_FILES=Fichiers infectés
 INFECTED_FILES_WHERE_MOVED=Fichiers infectés déplacés dans:
 KNOWN_VIRUSES=Virus connus
-LAST_UPDATES_DESCRIPTION=Dernières mises à jour (si vous venez de faire une mise à jour manuelle, veuillez <a href="">recharger</a> cette page):
+LAST_UPDATES_DESCRIPTION=Dernières mises à jour (si vous venez de faire une mise à jour manuelle, veuillez <a href="/updates_main.cgi">recharger</a> cette page):
 LATEST_CLAMAV=ClamAV
 LINES_OF=(les) lignes de
 LINK_BACKUP_RESTORE_PAGE=Sauvegarde/Restauration du système
@@ -144,7 +144,7 @@ NEXT=Suivant
 NONE=Aucun
 NOTASPAM=Ne plus considérer ces courriels comme spam
 NOTASPAM_TOOLTIP=Dire à SpamAssassin que ces courriels ne sont pas du spam
-NOT_YET_UPDATED=Aucune mise à jour n'a encore été faite (si vous venez de faire une mise à jour manuelle, veuillez <a href="">recharger</a> cette page).
+NOT_YET_UPDATED=Aucune mise à jour n'a encore été faite (si vous venez de faire une mise à jour manuelle, veuillez <a href="/updates_main.cgi">recharger</a> cette page).
 NO_RESULT=<b>Pas de résultat pour "%s"</b>
 NO_RESULT_QUARANTINE=Aucun résultat pour cette recherche
 NO_VALUE=Pas de valeur

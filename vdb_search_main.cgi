@@ -11,8 +11,7 @@ require './clamav-lib.pl';
 
 &clamav_vdb_preprocess_inputs (\%in);
 
-&header($text{'FORM_TITLE'}, '', undef, 1, 0);
-print "<hr/>\n";
+&clamav_header ();
 
 $search = (($in{'search'} && ($in{'prefix0'} || $in{'virus'})) || $in{'all'});
 
@@ -39,7 +38,7 @@ print qq(
 
 # strict match check box
 $checked = ($in{'strict'} eq 'on') ? ' CHECKED' : '';
-print qq(<p><input id="strict" type="checkbox" name="strict" value="on"$checked> );
+print qq(<p/><p><input id="strict" type="checkbox" name="strict" value="on"$checked> );
 print qq(<label for="strict">$text{'SEARCH_STRICT'}</label>);
 
 # case sensitive check box

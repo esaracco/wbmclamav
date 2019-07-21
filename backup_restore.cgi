@@ -14,8 +14,7 @@ my $i = 0;
 my @files = ();
 my $restore_enabled = 0;
 
-&header($text{'FORM_TITLE'}, "", undef, 1, 0);
-print "<hr>\n";
+&clamav_header ();
 
 &clamav_main_check_config ();
 &clamav_check_deps ();

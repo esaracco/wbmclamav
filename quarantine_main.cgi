@@ -44,9 +44,7 @@ elsif ($in{'export'})
    "$config{'clamav_working_path'}/.clamav/$remote_user/quarantine-export.csv");
 }
 
-&header ($text{'FORM_TITLE'}, '', undef, 1, 0, undef, undef,
-  '<link rel="stylesheet" type="text/css" href="css/styles.css"/>');
-print "<hr/>\n";
+&clamav_header ();
 
 print qq(
   <form action="$scriptname" method="post">
@@ -83,7 +81,7 @@ if ($in{'next'})
 }
 elsif ($in{'resend'})
 {
-  $msg = qq(<h3>$text{'MSG_SUCCESS_STATUS_RESEND'}</h3>);
+  $msg = qq(<p><b>$text{'MSG_SUCCESS_STATUS_RESEND'}</b></p>);
 }
 elsif ($in{'delete'})
 {
@@ -97,8 +95,8 @@ elsif ($in{'delete'})
   }
 
   $msg = ($ok) ? 
-    qq(<h3>$text{'MSG_SUCCESS_STATUS_REMOVE'}</h3>) :
-    qq(<h3>$text{'MSG_ERROR_STATUS_REMOVE'}</h3>);
+    qq(<p><b>$text{'MSG_SUCCESS_STATUS_REMOVE'}</b></p>) :
+    qq(<p><b>$text{'MSG_ERROR_STATUS_REMOVE'}</b></p>);
 }
 elsif ($in{'delete_all'})
 {
@@ -116,7 +114,7 @@ elsif ($in{'delete_all'})
   }
   else
   {
-    $msg = qq(<h3>$text{'MSG_SUCCESS_STATUS_PURGE_ALL'}</h3>);
+    $msg = qq(<p><b>$text{'MSG_SUCCESS_STATUS_PURGE_ALL'}</b></p>);
   }
 }
 
@@ -140,20 +138,44 @@ if (&clamav_is_amavisd_new () ||
     &clamav_is_qmailscanner () || 
     &clamav_is_mailscanner ())
 {
+
+  print qq(<div>);
+    if  (1 || %in && !$in{'refresh'} && !$in{'delete_all'})
+  {
+    print qq(<input type="submit" name="refresh" value="$text{'QUARANTINE_REFRESH_STATS'}"/>);
+    }
+    print qq(<p/>);
+    if ($quarantine_infos{'graph_name'})
+    {
+      print qq(&nbsp;<a href="#" onclick="document.getElementById('graph').style.display = (document.getElementById('graph').style.display == 'none') ? 'block' : 'none'">$text{'QUARANTINE_SHOWHIDE_GRAPH'}</a>);
+    }
+    print qq(<p/><img id="graph" style="display:none" src="/$module_name/tmp/$quarantine_infos{'graph_name'}"/>);
+  print qq(<div>);
+
+if(0){
   print qq(<table><tr><td>);
-  if  (%in && !$in{'refresh'} && !$in{'delete_all'}) {print qq(<input type="submit" name="refresh" value="$text{'QUARANTINE_REFRESH_STATS'}"/>)}
-  if ($quarantine_infos{'graph_name'}) {print qq(&nbsp;<input type="button" onclick="document.getElementById('graph').style.display = (document.getElementById('graph').style.display == 'none') ? 'block' : 'none'" value="$text{'QUARANTINE_SHOWHIDE_GRAPH'}"></td></tr>
-<tr style="background-color:black;border: 1px solid black;display:none;" id="graph"><td><img src="/$module_name/tmp/$quarantine_infos{'graph_name'}"/></td></tr>);}
-print qq(</table>);
+  if  (%in && !$in{'refresh'} && !$in{'delete_all'})
+  {
+    print qq(<input type="submit" name="refresh" value="$text{'QUARANTINE_REFRESH_STATS'}"/>);
+  }
+  if ($quarantine_infos{'graph_name'})
+  {
+    print qq(&nbsp;<input type="button" onclick="document.getElementById('graph').style.display = (document.getElementById('graph').style.display == 'none') ? 'block' : 'none'" value="$text{'QUARANTINE_SHOWHIDE_GRAPH'}"></td></tr>
+<tr style="background-color:black;border: 1px solid black;display:none;" id="graph"><td><img src="/$module_name/tmp/$quarantine_infos{'graph_name'}"/></td></tr>);
+  }
+  print qq(</table>);
+
+}
+
+
 }
 elsif (%in && !$in{'refresh'} && !$in{'delete_all'})
 {
-  print qq(
-    <input type="submit" name="refresh" value="$text{'QUARANTINE_REFRESH_STATS'}"/>);
+  print qq(<input type="submit" name="refresh" value="$text{'QUARANTINE_REFRESH_STATS'}"/>);
 }
 
 # Global quarantine data
-print qq(<table>);
+print qq(<p/><table>);
 printf qq(
   <tr><td><i>$text{'QUARANTINE_DIRECTORY'}</i></td><td><b>%s</b></td></tr>
   <tr><td><i>$text{'QUARANTINE_SIZE'}</i></td><td><b>%s</b></td></tr>
@@ -179,7 +201,7 @@ if (&clamav_is_amavisd_new ())
 }
 print qq(</table>);
 
-print qq(<p>$text{'QUARANTINE_PAGE_DESCRIPTION'}</p>);
+print qq(<p/><p>$text{'QUARANTINE_PAGE_DESCRIPTION'}</p>);
 
 print qq(<h1>$text{'QUARANTINE_CLEANING'}</h1>);
 
@@ -236,12 +258,12 @@ if (defined $in{'resended'})
   }
   else
   {
-    $msg = qq(<h3>$text{'MSG_SUCCESS_STATUS_RESEND'}</h3>);
+    $msg = qq(<p><b>$text{'MSG_SUCCESS_STATUS_RESEND'}</b></p>);
   }
 }
 elsif (defined $in{'removed'})
 {
-  $msg = qq(<h3>$text{'MSG_SUCCESS_STATUS_REMOVE'}</h3>);
+  $msg = qq(<p><b>$text{'MSG_SUCCESS_STATUS_REMOVE'}</b></p>);
 }
 
 print $msg;

@@ -11,8 +11,7 @@ require './clamav-lib.pl';
 
 if (not $in{'next'})
 {
-  &header($text{'FORM_TITLE'}, "", undef, 1, 0);
-  print "<hr>\n";
+  &clamav_header ();
 
   print qq(<h1>$text{'QUARANTINE_REMOVE_PAGE_TITLE'}</h1>\n);
   print qq(<p>$text{'QUARANTINE_REMOVE_PAGE_DESCRIPTION'}</p>);

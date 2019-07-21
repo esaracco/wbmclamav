@@ -9,8 +9,7 @@ require './clamav-lib.pl';
 &clamav_check_acl ('signature_use');
 &ReadParse ();
 
-&header($text{'FORM_TITLE'}, "", undef, 1, 0);
-print "<hr>\n";
+&clamav_header ();
 
 &clamav_signatures_check_config ();
 

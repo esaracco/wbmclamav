@@ -1,5 +1,5 @@
 name=clamav
-version=0.20.1
+version=0.20.1git20190721
 category=system
 desc=ClamAV Antivirus
 desc_fr=Antivirus ClamAV

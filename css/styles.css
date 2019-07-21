@@ -4,7 +4,8 @@
   cursor: default;
 }
 
-.crs-output {
+.raw-output {
+  color:#000;
   background:#ccc;
   max-width:98%;
   border:1px solid gray;

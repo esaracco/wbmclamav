@@ -21,8 +21,7 @@ my $notaspam = (defined ($in{"notaspam"})) ? $in{"notaspam"} : '';
 
 if (!$in{'next'} || ($smtp ne '' && !&smtphost_is_alive ($smtp)))
 {
-  &header($text{'FORM_TITLE'}, "", undef, 1, 0);
-  print "<hr>\n";
+  &clamav_header ();
 
   &clamav_quarantine_resend_check_config ();
 

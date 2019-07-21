@@ -47,7 +47,7 @@ INDEX_PAGE_DESCRIPTION=O <a href="http://www.clamav.net" target="_BLANK">Clam An
 INFECTED_FILES=Arquivos infectados
 INFECTED_FILES_WHERE_MOVED=Mover arquivos infectados para:
 KNOWN_VIRUSES=Vírus conhecidos
-LAST_UPDATES_DESCRIPTION=Último update (se você atualizou uma atualização manual, <a href="">recarregue</a> esta página.
+LAST_UPDATES_DESCRIPTION=Último update (se você atualizou uma atualização manual, <a href="/updates_main.cgi">recarregue</a> esta página.
 LATEST_CLAMAV=ClamAV
 LINES_OF=linhas de
 LINK_LOGS=Visualizador de logs
@@ -106,7 +106,7 @@ MSG_WHITE_CHARS_REMOVED=<b>Caracteres em branco foram removidos do nome do víru
 NAME=Nome
 NEVER_REFRESH=Nunca atualizar automaticamente.
 NEXT=Próximo
-NOT_YET_UPDATED=Nenhuma atualização foi realizada (se você executou uma atualização manual, por favor <a href="">recarregue</a> esta página.
+NOT_YET_UPDATED=Nenhuma atualização foi realizada (se você executou uma atualização manual, por favor <a href="/updates_main.cgi">recarregue</a> esta página.
 NO_RESULT=<b>Sem resultado para "%s"</b>
 NO_RESULT_QUARANTINE=Sem resultados para esta pesquisa
 NO_VALUE=Sem valor

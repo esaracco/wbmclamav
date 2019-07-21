@@ -21,8 +21,7 @@ else
   &clamav_check_acl ('global_settings_write');
 }
 
-&header($text{'FORM_TITLE'}, '', undef, 1, 0);
-print "<hr>\n";
+&clamav_header ();
 
 print qq(<h1 id="top">$text{'SETTINGS_TITLE'}</h1>);
 print qq(<p>$text{'SETTINGS_DESCRIPTION'}</p>);

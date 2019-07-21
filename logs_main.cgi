@@ -1,6 +1,6 @@
 #!/usr/bin/perl
 
-# Copyright (C) 2003-2008
+# Copyright (C) 2003-2019
 # Emmanuel Saracco <emmanuel@esaracco.fr>
 #
 # GNU GENERAL PUBLIC LICENSE
@@ -9,8 +9,7 @@ require './clamav-lib.pl';
 &clamav_check_acl ('logs_viewer_view');
 &ReadParse ();
 
-&header($text{'FORM_TITLE'}, "", undef, 1, 0);
-print "<hr>\n";
+&clamav_header ();
 
 print qq(<form method="POST" action="$scriptname">);
 
