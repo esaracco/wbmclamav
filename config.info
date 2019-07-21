@@ -1,12 +1,13 @@
+line1=Global,11
 clamav_working_path=Working directory,7
 clamav_init_restore_path=Backup directory (should not be a temporary directory),7
 
-line1=Quarantine,11
+line2=Quarantine,11
 clamav_quarantine_soft=Use the following content scanner,4,0-None,1-amavisd new,2-amavis ng,3-Clamav Milter,4-MailScanner,5-QMailScanner
 clamav_quarantine=Quarantine repository directory,7
 clamav_spam_user=SpamAssassin user
 
-line2=ClamAV,11
+line3=ClamAV,11
 clamav_check_new=Warn me when a new module release is available,1,1-Yes,0-No
 clamav_sys_user=ClamAV system user
 clamav_sys_group=ClamAV system group
@@ -16,7 +17,7 @@ clamav_clamav_conf=Configuration file path,8
 clamav_db1=Main virus signatures database path,8
 clamav_db2=Daily virus signatures database path,8
 
-line3=Freshclam,11
+line4=Freshclam,11
 clamav_freshclam_conf=Configuration file path,8
 clamav_refresh_use_cron=Refresh method for viruses database?,4,2-Manual update,0-Daemon,1-Cron
 clamav_freshclam_log=Logfile path,8
