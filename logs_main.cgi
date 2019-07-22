@@ -18,7 +18,7 @@ print qq(<p>$text{'LOGS_PAGE_DESCRIPTION'}</p>);
 print qq($text{'DISPLAY'} );
 print qq(<select name="lines">);
 printf "<option value=\"0\"%s>%s</option>", 
-  (not $in{'lines'}) ? ' SELECTED' : '', $text{'ALL'};
+  (!$in{'lines'}) ? ' SELECTED' : '', $text{'ALL'};
 foreach $value (qw(10 20 50 100 150 200 250 300))
 {
   printf "<option value=\"%s\"%s>%s</option>", 
@@ -52,4 +52,4 @@ if (grep (/$in{'logfile'}/, @logs))
 }
 
 print qq(<hr>);
-&footer("", $text{'RETURN_INDEX_MODULE'});
+&footer('', $text{'RETURN_INDEX_MODULE'});

@@ -2931,7 +2931,7 @@ sub clamav_print_log
     {@content = `$tail -n $lines $file`}
   close (H);
                                                                                 
-  printf (qq(<textarea cols=80 rows=30>%s</textarea>\n), 
+  printf (qq(<textarea rows=30 style="width:100%">%s</textarea>\n), 
           &clamav_html_encode ("@content"));
 }
 

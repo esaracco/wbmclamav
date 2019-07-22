@@ -13,14 +13,14 @@ require './clamav-lib.pl';
 
 &clamav_header ($text{'LINK_VDB_SEARCH'});
 
-$search = ($in{'search'} && ($in{'prefix0'} || $in{'virus'}));
+$search = (defined($in{'search'}) && ($in{'prefix0'} || $in{'virus'}));
 
 printf "<p><i>$text{'VDB_SEARCH_VIRUSES_COUNT'}</i> ",
   &clamav_get_db_viruses_count ();
 print qq( [<a href="/$module_name/updates_main.cgi">$text{'VDB_SEARCH_UPDATE_DB'}</a>]</p>);
 print qq(<p>$text{'VDB_SEARCH_DESCRIPTION'}</p>);
 
-if ($in{'search'} && !$in{'prefix0'} && !$in{'virus'})
+if (defined($in{'search'}) && !$in{'prefix0'} && !$in{'virus'})
 {
   print qq(<p><b>$text{'MSG_VIRUS_NAME'}</b></p>);
 }

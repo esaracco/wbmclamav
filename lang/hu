@@ -47,7 +47,7 @@ INDEX_PAGE_DESCRIPTION=A <a href="http://www.clamav.net" target="_BLANK">Clam An
 INFECTED_FILES=Fetõzött fájlok
 INFECTED_FILES_WHERE_MOVED=Fertõzött fájlok el lettek mozgatva ide:
 KNOWN_VIRUSES=Ismert vírusok
-LAST_UPDATES_DESCRIPTION=Utoljára frissítve (ha csak kézi frissítést csinált, akkor kérem kattintson a <a href="/updates_main.cgi">újratöltésre</a> ezen az oldalon):
+LAST_UPDATES_DESCRIPTION=Utoljára frissítve (ha csak kézi frissítést csinált, akkor kérem kattintson a <a href="updates_main.cgi">újratöltésre</a> ezen az oldalon):
 LATEST_CLAMAV=ClamAV
 LINES_OF=sorok szám
 LINK_LOGS=Napló megtekintõ
@@ -106,7 +106,7 @@ MSG_WHITE_CHARS_REMOVED=<b>Felesleges karkatereket eltávolítottam a vírus nevébõ
 NAME=Név
 NEVER_REFRESH=Sose frissült automatikusan.
 NEXT=Következõ
-NOT_YET_UPDATED=Nem történt frissítés (Ha Ön csak kézileg indítja a frissítést, akkor kérem kattintson az <a href="/updates_main.cgi">újratöltés</a>re ezen az oldalon)
+NOT_YET_UPDATED=Nem történt frissítés (Ha Ön csak kézileg indítja a frissítést, akkor kérem kattintson az <a href="updates_main.cgi">újratöltés</a>re ezen az oldalon)
 NO_RESULT=<b>Nincs eredménye a "%s"</b>
 NO_RESULT_QUARANTINE=Nincs eredménye ennek a keresési kritériumnak
 NO_VALUE=Nincs érték

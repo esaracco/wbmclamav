@@ -26,7 +26,7 @@ else
 print qq(<p>$text{'SETTINGS_DESCRIPTION'}</p>);
 print qq(<p>$text{'SETTINGS_MULTIVALUED'}</p>);
 
-if ($in{'next'})
+if (defined($in{'next'}))
 {
   # Keep clamd status before update
   my $old_alive = &clamav_is_clamd_alive ();
@@ -54,10 +54,10 @@ if ($in{'next'})
 elsif ($ENV{REQUEST_METHOD} eq 'POST')
 {
   # If there is a item to add
-  if ($in{'nsclamav_add'} || $in{'nsfreshclam_add'})
+  if (defined($in{'nsclamav_add'}) || defined($in{'nsfreshclam_add'}))
   {
-    $add_item_c = $in{'nsclamav_add_key'} if ($in{'nsclamav_add'});
-    $add_item_f = $in{'nsfreshclam_add_key'} if ($in{'nsfreshclam_add'});
+    $add_item_c = $in{'nsclamav_add_key'} if (defined($in{'nsclamav_add'}));
+    $add_item_f = $in{'nsfreshclam_add_key'} if (defined($in{'nsfreshclam_add'}));
   }
   # If there is a item to delete
   else

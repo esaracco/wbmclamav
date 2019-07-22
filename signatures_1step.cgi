@@ -9,8 +9,7 @@ require '../webmin/webmin-lib.pl';
 require './clamav-lib.pl';
 &clamav_check_acl ('signature_use');
 
-if ($ENV{REQUEST_METHOD} eq 'POST') { &ReadParseMime(); }
-else { &ReadParse(); }
+($ENV{REQUEST_METHOD} eq 'POST') ? &ReadParseMime() : &ReadParse();
 
 my $sha1 = $in{'sha1'}||'';
 my $size = $in{'size'}||0;

@@ -108,7 +108,7 @@ INDEX_PAGE_DESCRIPTION=The <a href="http://www.clamav.net" target="_BLANK">ClamA
 INFECTED_FILES=Infected files
 KNOWN_VIRUSES=Known viruses
 ENGINE_VERSION=Engine version
-LAST_UPDATES_DESCRIPTION=Last update (if you've just performed a manual update, please <a href="/updates_main.cgi">reload</a> this page):
+LAST_UPDATES_DESCRIPTION=Last update (if you've just performed a manual update, please <a href="updates_main.cgi">reload</a> this page):
 LATEST_CLAMAV=ClamAV
 LINES_OF=lines of
 EMPTY=Empty
@@ -164,7 +164,7 @@ MSG_WHITE_CHARS_REMOVED=<b>Spaces have been removed</b>
 NAME=Name
 NEVER_REFRESH=Never update automatically.
 NEXT=Next
-NOT_YET_UPDATED=No update has been performed yet (if you've just performed a manual update, please <a href="/updates_main.cgi">reload</a> this page).
+NOT_YET_UPDATED=No update has been performed yet (if you've just performed a manual update, please <a href="updates_main.cgi">reload</a> this page).
 NO_RESULT=<b>No result for "%s"</b>
 NO_RESULT_QUARANTINE=No result for this search
 NO_VALUE=No value

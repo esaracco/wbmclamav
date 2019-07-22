@@ -19,7 +19,7 @@ my $to = (defined ($in{"to"}) && $in{"to"} ne '') ? $in{"to"} : '';
 my $deleteafter = (defined ($in{"deleteafter"})) ? $in{"deleteafter"} : '';
 my $notaspam = (defined ($in{"notaspam"})) ? $in{"notaspam"} : '';
 
-if (!$in{'next'} || ($smtp ne '' && !&smtphost_is_alive ($smtp)))
+if (!defined($in{'next'}) || ($smtp ne '' && !&smtphost_is_alive ($smtp)))
 {
   &clamav_header ($text{'QUARANTINE_RESEND_PAGE_TITLE'});
 

@@ -19,12 +19,12 @@ my $restore_enabled = 0;
 &clamav_main_check_config ();
 &clamav_check_deps ();
 
-if ($in{"init"})
+if (defined($in{"init"}))
 {
   &clamav_system_backup ();
   $msg = qq(<b>$text{"MSG_SUCCESS_BACKUP"}</b>);
 }
-elsif ($in{"restore"})
+elsif (defined($in{"restore"}))
 {
   while (my ($k, $v) = each (%in))
   {

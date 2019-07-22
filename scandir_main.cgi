@@ -9,7 +9,7 @@ require './clamav-lib.pl';
 &clamav_check_acl ('directories_check_view');
 &ReadParse ();
 
-my $scandir = ($in{'next'} and $in{'what'} ne '');
+my $scandir = (defined($in{'next'}) && $in{'what'} ne '');
 my $msg = '';
 
 &clamav_header ($text{'LINK_SCANDIR'});

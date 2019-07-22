@@ -12,12 +12,26 @@ require './clamav-lib.pl';
 &clamav_check_acl ('database_update_view');
 &ReadParse ();
 
+my $main = $in{'main'};
+my $daily = $in{'daily'};
+my $main_infos = $in{'main_infos'};
+my $daily_infos = $in{'daily_infos'};
+
 &clamav_header ($text{'LINK_UPDATE_PAGE'});
 
 print qq(<form method="POST" action="$scriptname">);
 print qq(<p>$text{'UPDATE_PAGE_DESCRIPTION_GENERAL'}</p>);
 
-($main, $daily, $main_infos, $daily_infos) = &clamav_get_last_db_update ();
+if (!$main)
+{
+  ($main, $daily, $main_infos, $daily_infos) = &clamav_get_last_db_update ();
+}
+
+print qq(<input type="hidden" name="main" value="$main"/>);
+print qq(<input type="hidden" name="daily" value="$daily"/>);
+print qq(<input type="hidden" name="main_infos" value="$main_infos"/>);
+print qq(<input type="hidden" name="daily_infos" value="$daily_infos"/>);
+
 if ($main ne '')
 {
   print qq(<p>$text{'LAST_UPDATES_DESCRIPTION'}</p>);
@@ -52,7 +66,7 @@ if (&clamav_get_acl ('database_update_update') == 1)
 {
   print qq(<p><h2>$text{'UPDATE_TITLE_MANUAL'}</h2></p>);
 
-  if ($in{'update'})
+  if (defined($in{'update'}))
   {
     print qq(<p>$text{'UPDATE_REPORT'}</p>);
     &clamav_update_db ();
@@ -95,9 +109,10 @@ elsif (!&clamav_update_manual ())
     # user choose to update db with cron
     if ($config{'clamav_refresh_use_cron'})
     {
-      if ($in{'next'} && &clamav_get_acl ('database_update_update') == 1)
+      if (defined($in{'next'}) &&
+          &clamav_get_acl ('database_update_update') == 1)
       {
-        if ($in{'noupdate'})
+        if (defined($in{'noupdate'}))
         {
           &clamav_set_db_no_autoupdate ();
         }
@@ -105,7 +120,7 @@ elsif (!&clamav_update_manual ())
         {
           my $hour = $in{'hour'};
   
-  	$hour = "*/$hour" if ($in{'every_hours'} and $in{'hour'});
+          $hour = "*/$hour" if (defined($in{'every_hours'}) && $hour);
           &clamav_set_cron_update ($hour, $in{'day'});
         }
         print qq(<p><b>$text{'MSG_SUCCESS_FREQUENCY_UPDATE'}</b></p>);
@@ -120,11 +135,12 @@ elsif (!&clamav_update_manual ())
     {
       print qq(<p>$text{'UPDATE_FRESHCLAM_DAEMON_CHOICE'}</p>);
       
-      if ($in{'next'} && &clamav_get_acl ('database_update_update') == 1)
+      if (defined($in{'next'}) &&
+          &clamav_get_acl ('database_update_update') == 1)
       {
         my $ret = 0;
 	
-        if ($in{'noupdate'})
+        if (defined($in{'noupdate'}))
         {
           $ret = &clamav_set_db_no_autoupdate ();
         }

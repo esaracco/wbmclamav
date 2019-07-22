@@ -23,7 +23,7 @@ my $msg = '';
 
 $cp = 0 if ($old_search_type ne '');
 
-if ($in{'resend'})
+if (defined($in{'resend'}))
 {
   my $args = &clamav_join_from_url ('quarantine_file');
   if ($args)
@@ -38,7 +38,7 @@ if ($in{'resend'})
 
   delete $in{'resend'};
 }
-elsif ($in{'export'})
+elsif (defined($in{'export'}))
 {
   &clamav_download (
    "$config{'clamav_working_path'}/.clamav/$remote_user/quarantine-export.csv");
@@ -53,7 +53,7 @@ print qq(
 
 &clamav_quarantine_main_check_config ();
 
-if ($in{'next'})
+if (defined($in{'next'}))
 {
   if ($in{'nopurge'} eq 'on')
   {
@@ -73,17 +73,17 @@ if ($in{'next'})
     {
       my $hour = $in{'hour'};
 
-      $hour = "*/$hour" if ($in{'every_hours'} and $in{'hour'});
+      $hour = "*/$hour" if (defined($in{'every_hours'}) && $hour);
       &clamav_set_cron_purge ($hour, $in{'day'}, $maxdays);
       $msg = qq(<p><b>$text{'MSG_SUCCESS_QUARANTINE_CRON_UPDATE'}</b></p>);
     }
   }
 }
-elsif ($in{'resend'})
+elsif (defined($in{'resend'}))
 {
   $msg = qq(<p><b>$text{'MSG_SUCCESS_STATUS_RESEND'}</b></p>);
 }
-elsif ($in{'delete'})
+elsif (defined($in{'delete'}))
 {
   my $ok = 1;
   foreach my $key (keys %in)
@@ -98,7 +98,7 @@ elsif ($in{'delete'})
     qq(<p><b>$text{'MSG_SUCCESS_STATUS_REMOVE'}</b></p>) :
     qq(<p><b>$text{'MSG_ERROR_STATUS_REMOVE'}</b></p>);
 }
-elsif ($in{'delete_all'})
+elsif (defined($in{'delete_all'}))
 {
   $res = &clamav_purge_quarantine ();
   if ($res != OK)
@@ -283,7 +283,7 @@ print qq(
 );
 
 # if form submit, do the quarantine search
-if ($in{'search'})
+if (defined($in{'search'}))
 {
   if (&clamav_is_quarantine_repository_empty ())
   {

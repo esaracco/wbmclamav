@@ -20,8 +20,6 @@ $virus_name .= "$p1." if ($p1);
 $virus_name .= "$p2." if ($p2);
 $virus_name .= $in{'virus_name'} if ($in{'virus_name'});
 
-
-
 # check the validity of the given signature
 if (my $ret = &clamav_check_signature ($in{'sha1'}.':'.$in{'size'}.':'.$virus_name))
 {
