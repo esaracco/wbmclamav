@@ -86,12 +86,12 @@ if (&clamav_get_acl ('clamav_start_stop') == 1)
     if (&clamav_is_clamd_alive () == ())
     {
       print qq(<input type="hidden" name="status" value="1">);
-      print qq(<input type="submit" value="$text{'ACTIVATE'}">\n);
+      print qq(<button type="submit" class="btn btn-success">$text{'ACTIVATE'}</button>);
     }
     else
     {
       print qq(<input type="hidden" name="status" value="0">);
-      print qq(<input type="submit" value="$text{'DEACTIVATE'}">\n);
+      print qq(<button type="submit" class="btn btn-success">$text{'DEACTIVATE'}</button>);
     }
     print qq(</p></form>\n);
   }

@@ -11,11 +11,10 @@ require './clamav-lib.pl';
 
 &clamav_vdb_preprocess_inputs (\%in);
 
-&clamav_header ();
+&clamav_header ($text{'LINK_VDB_SEARCH'});
 
-$search = (($in{'search'} && ($in{'prefix0'} || $in{'virus'})) || $in{'all'});
+$search = ($in{'search'} && ($in{'prefix0'} || $in{'virus'}));
 
-print qq(<h1>$text{'VDB_SEARCH_TITLE'}</h1>);
 printf "<p><i>$text{'VDB_SEARCH_VIRUSES_COUNT'}</i> ",
   &clamav_get_db_viruses_count ();
 print qq( [<a href="/$module_name/updates_main.cgi">$text{'VDB_SEARCH_UPDATE_DB'}</a>]</p>);
@@ -31,10 +30,7 @@ print qq(<form method="POST" action="$scriptname">);
 print &clamav_display_combos_viruses_prefixes ($in{'prefix0'}, $in{'prefix1'});
 
 # search string input
-print qq(
-  <input type="text" name="virus" value="$in{'virus'}"/>
-  <input type="submit" name="search" value="$text{'SEARCH'}">
-);
+print qq(<input type="text" name="virus" value="$in{'virus'}"/>);
 
 # strict match check box
 $checked = ($in{'strict'} eq 'on') ? ' CHECKED' : '';
@@ -51,14 +47,12 @@ $checked = ($in{'sort'} eq 'on') ? ' CHECKED' : '';
 print qq(<p><input id="sort" type="checkbox" name="sort" value="on"$checked> );
 print qq(<label for="sort">$text{'SEARCH_SORT_RESULT'}</label></p>);
 
-print qq(<input type="submit" name="all" value="$text{'DISPLAY_ALL'}"></p>);
+print qq(<button type="submit" name="search" class="btn btn-success">$text{'SEARCH'}</button>);
 
 print qq(</form>);
 
 if ($search)
 {
-  $in{'virus'} = '' if ($in{'all'});
-
   print qq(<p>);
   &clamav_vdb_search (\%in);
   print qq(</p>);

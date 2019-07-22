@@ -12,7 +12,7 @@ require './clamav-lib.pl';
 &clamav_check_acl ('database_update_view');
 &ReadParse ();
 
-&clamav_header ();
+&clamav_header ($text{'LINK_UPDATE_PAGE'});
 
 print qq(<form method="POST" action="$scriptname">);
 print qq(<p>$text{'UPDATE_PAGE_DESCRIPTION_GENERAL'}</p>);
@@ -50,7 +50,7 @@ if ($proxy_server)
 
 if (&clamav_get_acl ('database_update_update') == 1)
 {
-  print qq(<p><h1>$text{'UPDATE_TITLE_MANUAL'}</h1></p>);
+  print qq(<p><h2>$text{'UPDATE_TITLE_MANUAL'}</h2></p>);
 
   if ($in{'update'})
   {
@@ -58,7 +58,7 @@ if (&clamav_get_acl ('database_update_update') == 1)
     &clamav_update_db ();
   }
   print qq(<p>$text{'UPDATE_PAGE_DESCRIPTION_MANUAL'}</p>);
-  print qq(<p><input type="submit" name="update" value="$text{'UPDATE_NOW'}">);
+  print qq(<p><button type="submit" name="update" class="btn btn-success">$text{'UPDATE_NOW'}</button>);
   print qq(</p>);
 }
 
@@ -70,7 +70,7 @@ if ($res == ER_CRON_PACKAGE)
 }
 elsif (!&clamav_update_manual ())
 {
-  print qq(<p><h1>$text{'UPDATE_TITLE_AUTO'}</h1></p>);
+  print qq(<p><h2>$text{'UPDATE_TITLE_AUTO'}</h2></p>);
   
   # Config say to use a daemon but no daemon exist on the system
   if ($res == ER_DAEMON_NOEXIST)
@@ -151,17 +151,15 @@ elsif (!&clamav_update_manual ())
       print &clamav_freshclam_daemon_settings_table ($daemon_setting, $checked); 
     }
   
-    print qq(<p>);
+    print qq(<p/>);
     print qq(<input id="noupdate" type="checkbox" name="noupdate" onchange="document.getElementById('cron-frequency').className=(this.checked)?'disabled':''"
                     value="on"$checked>);
     print qq( <label for="noupdate">$text{'NEVER_REFRESH'}</label>);
-    print qq(</p>);
   
     if (&clamav_get_acl ('database_update_update') == 1)
     {
-      print qq(<p>);
-      print qq(<input type="submit" name="next" value="$text{'APPLY'}">);
-      print qq(</p>);
+      print qq(<p/>);
+      print qq(<button type="submit" name="next" class="btn btn-success">$text{'APPLY'}</button>);
     }
   }
 }

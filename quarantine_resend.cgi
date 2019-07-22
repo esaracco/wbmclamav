@@ -21,11 +21,9 @@ my $notaspam = (defined ($in{"notaspam"})) ? $in{"notaspam"} : '';
 
 if (!$in{'next'} || ($smtp ne '' && !&smtphost_is_alive ($smtp)))
 {
-  &clamav_header ();
+  &clamav_header ($text{'QUARANTINE_RESEND_PAGE_TITLE'});
 
   &clamav_quarantine_resend_check_config ();
-
-  print qq(<h1>$text{'QUARANTINE_RESEND_PAGE_TITLE'}</h1>\n);
 
   if ($smtp ne '' && !&smtphost_is_alive ($smtp))
   {
@@ -69,12 +67,12 @@ if (!$in{'next'} || ($smtp ne '' && !&smtphost_is_alive ($smtp)))
 
     printf qq(<p><input type="checkbox" id="deleteafter" value="1" name="deleteafter"%s> <label for="deleteafter">$text{'DELETEAFTER'}</label></p>), ($deleteafter) ? ' checked' : '';
 
-    print qq(<p><input type="submit" name="next" value="$text{'RESEND'}"></p>\n);
+    print qq(<p><button type="submit" name="next" class="btn btn-success">$text{'RESEND'}</button></p>\n);
     
     print qq(</form>);
   }
 
-  print qq(<hr);
+  print qq(<hr/>);
   &footer ("quarantine_main.cgi", $text{'RETURN_QUARANTINE_LIST'});
 }
 else

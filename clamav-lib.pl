@@ -95,10 +95,13 @@ if (&clamav_system_ok ('backup') &&
 #
 # Display header.
 #
-sub clamav_header ()
+sub clamav_header ( $ )
 {
+  my $title = shift;
+
   &header ($text{'FORM_TITLE'}, '', undef, 1, 0);
   print qq(<link rel="stylesheet" type="text/css" href="css/styles.css?$module_info{'version'}"/><hr/>);
+  print qq(<h1 id="top">$title</h1>) if ($title);
 }
 
 # clamav_get_acl ( $ )
@@ -921,7 +924,7 @@ sub clamav_vdb_search ( $ )
       print qq(<table width="99%"><tr $tb><td><b>$text{'NAME'}</b></td></tr>);
     }
 
-    print '<tr style="background:'.(($index++ % 2 == 0) ? '' : '#f6f6f6').'"><td>'.$_.'</td></tr>';
+    print '<tr'.(($index++ % 2 == 0) ? '' : ' style="background:#f6f6f6"').'"><td>'.$_.'</td></tr>';
   }
   close (H);
   
@@ -1866,7 +1869,7 @@ sub clamav_display_settings
   {
     &clamav_display_combo_predefined ($type, 1);
     print qq( 
-      <input type="submit" name="ns${type}_add" onclick="this.form.action+='#$type'" value="$text{'ADD_KEY'}">
+      <button type="submit" name="ns${type}_add" onclick="this.form.action=(window.location.href.split('#')[0])+'#$type'" class="btn btn-info">$text{'ADD_KEY'}</button>
     );
   }
 
@@ -1916,7 +1919,7 @@ sub clamav_display_settings
         print qq(
           <td><input title="$text{'DELETE_ITEM'}" type="submit"
           name="ns${type}_delete_$key$endkey"
-          onclick="this.form.action+='#$type'"
+          onclick="this.form.action=(window.location.href.split('#')[0])+'#$type'"
           value="$text{'DELETE'}"></td>
           </tr>
         );
@@ -2153,10 +2156,10 @@ sub clamav_cron_settings_table ( $ $ $ )
   $no_auto_update = ($no_auto_update) ? ' class="disabled"' : '';
   $default = ($every_hour) ? ' checked="checked"' : '';
   $buffer .= qq(
-    <table id="cron-frequency" border="1"$no_auto_update>
+    <table id="cron-frequency" border="0"$no_auto_update>
     <tr $tb><td><b>$text{'HOUR'}</b></td><td><b>$text{'DAY'}</b></td></tr>
     <tr><td valign="bottom">
-    <small><i><input id="every_hours" type="checkbox" name="every_hours"$default>&nbsp;<label for="every_hours">$text{'EVERY_X_HOURS'}</label></i></small><br><select name="hour">
+    <p/><small><i><input id="every_hours" type="checkbox" name="every_hours"$default>&nbsp;<label for="every_hours">$text{'EVERY_X_HOURS'}</label></i></small><br><select name="hour">
   );
 
   foreach (0..23)
@@ -3283,7 +3286,8 @@ sub clamav_print_quarantine_table_amavis_ng ( $ $ $ $ $ $ $ $ $ $ $ )
   print qq(</tr>);
 
   # Write javascript function to select/unselect all items
-  &clamav_print_javascript_check_uncheck_all (0, 'quarantine_file');
+  &clamav_print_javascript_check_uncheck_all (
+    'quarantine-result', 'quarantine_file');
 
   # Display search result
   for ($i = ceil ($current * MAX_PAGE_ITEMS); 
@@ -3767,7 +3771,7 @@ sub clamav_download ()
   {
     print "Content-Disposition: inline; filename=\"quarantine-export.csv\"\n";
     print "Cache-Control: must-revalidate, post-check=0, pre-check=0\n";
-    print "pragma: public\n";
+    print "Pragma: public\n";
   }
   else
   {
@@ -3804,43 +3808,42 @@ sub clamav_print_quarantine_table_display ( $ $ \% \@ )
   my $STRING_MAX_LEN = 30;
 
   if (&clamav_get_acl ('quarantine_delete') == 1 ||
-    &clamav_get_acl ('quarantine_resend') == 1)
+      &clamav_get_acl ('quarantine_resend') == 1)
   {
     # Write javascript function to select/unselect all items
-    &clamav_print_javascript_check_uncheck_all (0, 'quarantine_file');
+    &clamav_print_javascript_check_uncheck_all (
+      'quarantine-result', 'quarantine_file');
+
+    print '<hr/>';
 
     if (&clamav_get_acl ('quarantine_export') == 1)
     {
-      print qq(<input type="submit" name="export" 
-                      value="$text{'EXPORT'}">);
+      print qq(<p/><button type="button" class="btn btn-info" onclick="location.href='quarantine_main.cgi?export=1'">$text{'EXPORT'}</button>);
     }
 
      print qq(
-       <p>
+       <p/>
        <input id="checkuncheck" type="checkbox" 
               onClick="check_uncheck_all (this.checked)"> 
        <label for="checkuncheck">$text{'CHECK_UNCHECK_ALL'}</label>
-       </p>
      );
 	 
     if (&clamav_get_acl ('quarantine_delete') == 1)
     {
       print qq(
-        <p><input type="submit" name="delete" 
-	          value="$text{'DELETE_SELECTED'}">);
+        <p/><button type="submit" name="delete" 
+	          class="btn btn-info">$text{'DELETE_SELECTED'}</button>);
     }
     
     if (&clamav_get_acl ('quarantine_resend') == 1)
     {
-      print qq(<input type="submit" name="resend" 
-                      value="$text{'RESEND_SELECTED'}">);
+      print qq(&nbsp;<button type="submit" name="resend" 
+                      class="btn btn-info">$text{'RESEND_SELECTED'}</button>);
     }
-
-    print qq(</p>);
   }
 
   print qq(
-    <table border=1>
+    <p/><table border=1 width="100%">
     <tr $tb>
     <td><b>$text{'DATE'}</b></td><td><b>$text{'SUBJECT'}</b></td>);
   # Spam
@@ -3862,7 +3865,7 @@ sub clamav_print_quarantine_table_display ( $ $ \% \@ )
   print qq(<td><b>$text{'FROM'}</b></td><td><b>$text{'TO'}</b></td>);
 
   if (&clamav_get_acl ('quarantine_resend') == 1 ||
-    &clamav_get_acl ('quarantine_delete') == 1)
+      &clamav_get_acl ('quarantine_delete') == 1)
   {
     print qq(<td><b>$text{'ACTION'}</b></td>);
   }
@@ -3904,9 +3907,9 @@ sub clamav_print_quarantine_table_display ( $ $ \% \@ )
     if ($search_type eq 'spam') {$virusc = length ($virusc)}
       else {$virusc = &clamav_html_encode ($virusc)}
 
-    my $bg = ($index++ % 2 == 0) ? '' : '#f6f6f6';
+    my $bg = ($index++ % 2 == 0) ? '' : ' style="background:#f6f6f6"';
     print qq(
-        <tr style="background:$bg">
+        <tr$bg>
 	<td title="$text{'DATE'}: $hrow{'date'} | $text{'FROM'}: $from | $text{'TO'}: $to | );
 	# Spam
 	if ($search_type eq 'spam')
@@ -4018,7 +4021,7 @@ sub clamav_html_encode ( $ )
 }
 
 # clamav_print_javascript_check_uncheck_all ( $ $ )
-# IN: index of the form in the page.
+# IN: id of the form.
 #     field name.
 # OUT: -
 #
@@ -4029,12 +4032,15 @@ sub clamav_print_javascript_check_uncheck_all ( $ $ )
   my ($form, $name) = @_;
   
   print qq(
-    <script language="javascript">
+    <script>
       function check_uncheck_all (value)
       {
-        for (var i = 0; i < document.forms[$form].length; i++)
-	  if (document.forms[$form][i].name.indexOf ('$name') >= 0)
-	    document.forms[$form][i].checked = value;
+        var form = document.getElementById('$form');
+        for (var i = 0, len = form.length; i < len; i++)
+        {
+	  if (form[i].name.indexOf ('$name') >= 0)
+	    form[i].checked = value;
+        }
       }
     </script>
   );
@@ -4735,11 +4741,11 @@ sub clamav_display_remote_actions ($ $ $ $)
 
   print qq(
     <table border="1">
-      <tr><td>$text{'HOST'}</td>
+      <tr><td><b>$text{'HOST'}</b></td>
       <td><input type="text" name="host" value="$host"></td></tr>
-      <tr><td>$text{'PORT'}</td>
+      <tr><td><b>$text{'PORT'}</b></td>
       <td><input type="text" name="port" value="$port"></td></tr>
-      <tr><td>$text{'COMMAND'}<br><select name="action" onchange="var v=this.options[this.selectedIndex].text;var a=document.getElementById('clamd-arg');var av=document.getElementById('clamd-arg-v');if(v.indexOf('*')!=-1){a.style.display='block'}else{av.value='';a.style.display='none'}">);
+      <tr><td><b>$text{'COMMAND'}</b><br><select name="action" onchange="var v=this.options[this.selectedIndex].text;var a=document.getElementById('clamd-arg');var av=document.getElementById('clamd-arg-v');if(v.indexOf('*')!=-1){a.style.display='block'}else{av.value='';a.style.display='none'}">);
 
   foreach my $key (sort keys %clamav_remote_actions)
   {
@@ -4755,7 +4761,7 @@ sub clamav_display_remote_actions ($ $ $ $)
 
   print qq(
     </select></td>
-    <td id="clamd-arg" $class valign="bottom"><small>$text{'FD_TO_SCAN'}:</small><br/><input type="text" name="arg" id="clamd-arg-v" value="$arg"></td></tr>
+    <td id="clamd-arg" $class valign="bottom"><small><i>$text{'FD_TO_SCAN'}:</i></small><br/><input type="text" name="arg" id="clamd-arg-v" value="$arg"></td></tr>
     </table>);
 }
 

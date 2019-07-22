@@ -12,7 +12,7 @@ require './clamav-lib.pl';
 my $scandir = ($in{'next'} and $in{'what'} ne '');
 my $msg = '';
 
-&clamav_header ();
+&clamav_header ($text{'LINK_SCANDIR'});
 
 # delete files if requested
 if (&clamav_get_acl ('directories_check_delete') == 1 && $in{'delete'} ne '')
@@ -26,7 +26,6 @@ if (&clamav_get_acl ('directories_check_delete') == 1 && $in{'delete'} ne '')
   $msg = $text{'FILES_DELETED'};
 }  
 
-print qq(<h1>$text{'SCANDIR_TITLE'}</h1>);
 print qq(<p>$text{'SCANDIR_DESCRIPTION'}</p>);
 
 print qq(<p><b>$msg</b></p>) if ($msg ne '');
@@ -70,7 +69,7 @@ printf qq(<label for="move">$text{'MOVE_INFECTED_FILES'}</label> <input type="te
 print &file_chooser_button('move_path', 1, 0);
 print qq(</p>);
 
-print qq(<p><input type="submit" name="next" value="$text{'CHECK_DIR'}"></p>);
+print qq(<p><button type="submit" name="next" class="btn btn-success">$text{'CHECK_DIR'}</button></p>);
 
 if ($scandir)
 {

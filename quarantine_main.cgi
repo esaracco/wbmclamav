@@ -44,10 +44,10 @@ elsif ($in{'export'})
    "$config{'clamav_working_path'}/.clamav/$remote_user/quarantine-export.csv");
 }
 
-&clamav_header ();
+&clamav_header ($text{'LINK_QUANRANTINE_PAGE'});
 
 print qq(
-  <form action="$scriptname" method="post">
+  <form action="$scriptname" method="post" id="quarantine-result">
   <input type="hidden" name="cp" value="$cp">
   <input type="hidden" name="old_search_type" value="$search_type">);
 
@@ -118,7 +118,7 @@ elsif ($in{'delete_all'})
   }
 }
 
-if (!%in || $in{'refresh'} || $in{'delete_all'})
+if (!%in || !defined($in{'directory'}))
 {
   %quarantine_infos = &clamav_get_quarantine_infos ();
 }
@@ -131,48 +131,22 @@ else
   }
 }
 
-print qq(<h1>$text{'QUARANTINE_PAGE_TITLE'}</h1>);
+print qq(<div>);
+print qq(<button type="submit" name="refresh" class="btn btn-success">$text{'QUARANTINE_REFRESH_STATS'}</button>);
 
 # Quarantine evolution graph (amavisd-new, mailscanner and qmailscanner only)
 if (&clamav_is_amavisd_new () || 
     &clamav_is_qmailscanner () || 
     &clamav_is_mailscanner ())
 {
-
-  print qq(<div>);
-    if  (1 || %in && !$in{'refresh'} && !$in{'delete_all'})
-  {
-    print qq(<input type="submit" name="refresh" value="$text{'QUARANTINE_REFRESH_STATS'}"/>);
-    }
-    print qq(<p/>);
-    if ($quarantine_infos{'graph_name'})
-    {
-      print qq(&nbsp;<a href="#" onclick="document.getElementById('graph').style.display = (document.getElementById('graph').style.display == 'none') ? 'block' : 'none'">$text{'QUARANTINE_SHOWHIDE_GRAPH'}</a>);
-    }
-    print qq(<p/><img id="graph" style="display:none" src="/$module_name/tmp/$quarantine_infos{'graph_name'}"/>);
-  print qq(<div>);
-
-if(0){
-  print qq(<table><tr><td>);
-  if  (%in && !$in{'refresh'} && !$in{'delete_all'})
-  {
-    print qq(<input type="submit" name="refresh" value="$text{'QUARANTINE_REFRESH_STATS'}"/>);
-  }
+  print qq(<p/>);
   if ($quarantine_infos{'graph_name'})
   {
-    print qq(&nbsp;<input type="button" onclick="document.getElementById('graph').style.display = (document.getElementById('graph').style.display == 'none') ? 'block' : 'none'" value="$text{'QUARANTINE_SHOWHIDE_GRAPH'}"></td></tr>
-<tr style="background-color:black;border: 1px solid black;display:none;" id="graph"><td><img src="/$module_name/tmp/$quarantine_infos{'graph_name'}"/></td></tr>);
+    print qq(&nbsp;<a href="#" onclick="document.getElementById('graph').style.display = (document.getElementById('graph').style.display == 'none') ? 'block' : 'none'">$text{'QUARANTINE_SHOWHIDE_GRAPH'}</a>);
   }
-  print qq(</table>);
-
+  print qq(<p/><img id="graph" style="display:none" src="/$module_name/tmp/$quarantine_infos{'graph_name'}"/>);
 }
-
-
-}
-elsif (%in && !$in{'refresh'} && !$in{'delete_all'})
-{
-  print qq(<input type="submit" name="refresh" value="$text{'QUARANTINE_REFRESH_STATS'}"/>);
-}
+print qq(<div>);
 
 # Global quarantine data
 print qq(<p/><table>);
@@ -203,11 +177,11 @@ print qq(</table>);
 
 print qq(<p/><p>$text{'QUARANTINE_PAGE_DESCRIPTION'}</p>);
 
-print qq(<h1>$text{'QUARANTINE_CLEANING'}</h1>);
+print qq(<h2>$text{'QUARANTINE_CLEANING'}</h2>);
 
 if (&clamav_get_acl ('quarantine_delete') == 1)
 {
-  print qq(<p><input type="submit" name="delete_all" value="$text{'PURGE_QUARANTINE_NOW'}"></p>);
+  print qq(<p><button type="submit" name="delete_all" class="btn btn-success">$text{'PURGE_QUARANTINE_NOW'}</button></p>);
 }
 
 print qq(<p>$text{'QUARANTINE_CRON_DESCRIPTION'}</p>);
@@ -234,26 +208,26 @@ print qq(</p>);
 print qq(<p>);
 if (&clamav_get_acl ('quarantine_delete') == 1)
 {
-  print qq(<input type="submit" name="next" value="$text{'APPLY'}">);
+  print qq(<button type="submit" name="next" class="btn btn-success">$text{'APPLY'}</button>);
 }
 print qq(</p>);
 
-print qq(<h1>$text{'QUARANTINE_RESEARCH'}</h1>);
+print qq(<h2>$text{'QUARANTINE_RESEARCH'}</h2>);
 
 if (defined $in{'resended'})
 {
   if (defined ($in{'errstr'}) && $in{'errstr'} ne '')
   {
     $msg = sprintf (qq(
-      <b>$text{'MSG_ERROR_STATUS_RESEND'}</b>
-      <p />
+      <p><b>$text{'MSG_ERROR_STATUS_RESEND'}</b></p>
+      <p>
       <blockquote>
         <b>File</b>: %s<br>
         <b>Message</b>: %s
       </blockquote>
-      ),
-      &clamav_html_encode ($in{'errfile'}),
-      &clamav_html_encode ($in{'errstr'})
+      </p>),
+      $in{'errfile'},
+      $in{'errstr'}
     );
   }
   else
@@ -293,18 +267,19 @@ if (!(
   &clamav_is_milter () || 
   &clamav_is_mailscanner () || 
   &clamav_is_qmailscanner ()))
-  {print qq(<tr><td $cb><b>$text{'VIRUS'}</b>:</td><td><input type="text" name="virus_name" value="$in{'virus_name'}"></td><td>&nbsp;</td></tr>)}
+  {print qq(<tr><td $cb><b>$text{'VIRUS'}</b>:</td><td><input type="text" name="virus_name" value="$in{'virus_name'}"></td></tr>)}
 else
   {print qq(<input type="hidden" name="virus_name" value="">)}
 
-print qq(<tr><td $cb><b>$text{'SENDER'}</b>:</td><td><input type="text" name="mail_from" value="$in{'mail_from'}"></td><td><input type="submit" value="$text{'SEARCH'}" name="search"></td></tr>
-  <tr><td $cb><b>$text{'RECIPIENT'}</b>:</td><td><input type="text" name="mail_to" value="$in{'mail_to'}"></td><td>&nbsp;</td></tr>
+print qq(<tr><td $cb><b>$text{'SENDER'}</b>:</td><td><input type="text" name="mail_from" value="$in{'mail_from'}"></td></tr>
+  <tr><td $cb><b>$text{'RECIPIENT'}</b>:</td><td><input type="text" name="mail_to" value="$in{'mail_to'}"></td></tr>
   <tr><td $cb valign="top"><b>$text{'PERIOD'}</b>:</td><td colspan="2" nowrap valign="top">);
 &clamav_get_period_chooser ($in{'day1'}, $in{'month1'}, $in{'year1'}, $in{'day2'}, $in{'month2'}, $in{'year2'});
 print qq(
   </td></tr>
+  <tr><td colspan="2"><p/><button type="submit" class="btn btn-success" name="search">$text{'SEARCH'}</button></td></tr>
   </table>
-  <p>
+  <p/>
 );
 
 # if form submit, do the quarantine search

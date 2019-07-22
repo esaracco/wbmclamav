@@ -9,11 +9,10 @@ require './clamav-lib.pl';
 &clamav_check_acl ('logs_viewer_view');
 &ReadParse ();
 
-&clamav_header ();
+&clamav_header ($text{'LINK_LOGS'});
 
 print qq(<form method="POST" action="$scriptname">);
 
-print qq(<h1>$text{'LOGS_PAGE_TITLE'}</h1>\n);
 print qq(<p>$text{'LOGS_PAGE_DESCRIPTION'}</p>);
 
 print qq($text{'DISPLAY'} );
@@ -40,12 +39,12 @@ foreach $log (@logs)
   );
 }
 print qq(</select>);
-print qq(<p>);
-print qq(<input type="submit" value="$text{'DISPLAY'}">);
+print qq(<p/>);
+print qq(<button type="submit" class="btn btn-success">$text{'DISPLAY'}</button>);
 
 print qq(</form>);
 
-print qq(<p>);
+print qq(<p/>);
 
 if (grep (/$in{'logfile'}/, @logs))
 {

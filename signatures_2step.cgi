@@ -28,9 +28,8 @@ if (my $ret = &clamav_check_signature ($in{'sha1'}.':'.$in{'size'}.':'.$virus_na
   &redirect (sprintf (qq(/$module_name/signatures_1step.cgi?error=%s&sha1=%s&size=%s&virus_name=%s&prefix0=%s&prefix1=%s), &urlize($ret), &urlize($in{'sha1'}), &urlize($in{'size'}), &urlize($in{'virus_name'}), &urlize($p1), &urlize($p2)));
 }
 
-&clamav_header ();
+&clamav_header ($text{'LINK_SIGNATURES'});
 
-print qq(<h1>$text{'SIGNATURES_TITLE'}</h1>);
 print qq(<p>$text{'SIGNATURES_DESCRIPTION'}</p>);
 
 print qq(<h2>$text{'SIGNATURES_BUILD_END_STEP'}</h2>);
@@ -39,7 +38,7 @@ print qq(<p>$text{'MSG_WHITE_CHARS_REMOVED'}</p>) if ($updated);
 
 printf qq(<div class="raw-output">%s:%s:%s</div>), &html_escape($in{'sha1'}), &html_escape($in{'size'}), &html_escape($virus_name);
 
-print qq(<p>$text{'SIGNATURES_BUILD_END_STEP_DESCRIPTION'}</p>);
+print qq(<p/>$text{'SIGNATURES_BUILD_END_STEP_DESCRIPTION'});
 
 print qq(<hr>);
 &footer ('signatures_main.cgi', $text{'RETURN_SIGNATURES_MAIN'});

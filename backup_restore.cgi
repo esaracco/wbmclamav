@@ -14,7 +14,7 @@ my $i = 0;
 my @files = ();
 my $restore_enabled = 0;
 
-&clamav_header ();
+&clamav_header ($text{'LINK_BACKUP_RESTORE_PAGE'});
 
 &clamav_main_check_config ();
 &clamav_check_deps ();
@@ -39,21 +39,19 @@ $restore_enabled = &clamav_system_ok ("restore");
 
 print qq(<form method="POST" action="$scriptname">);
 
-print qq(<h1>$text{"BACKUP_RESTORE_TITLE"}</h1>\n);
-
 print qq(<b>$msg</b>) if ($msg);
 
 printf qq(<p>$text{'BACKUP_RESTORE_DESCRIPTION'}</p>), $module_name;
 
 print qq(<table width="80%" border=1>);
 print qq(<tr><td valign="center" align="center" width="50%">);
-printf qq(<input type="submit" name="init" value="$text{"BACKUP"}"%s></td>),
-  ($restore_enabled) ? " disabled" : "";
+printf qq(<button type="submit" name="init" class="btn btn-success"%s>$text{"BACKUP"}</button></td>),
+  ($restore_enabled) ? ' disabled' : '';
 if (!&clamav_first_backup ())
 {
   print qq(<td valign="top" align="right" width="50%">);
   print "<table border=1>";
-  print qq(<tr $tb><th>$text{"FILE"}</th><th>$text{"RESTORE"}</th></tr>);
+  print qq(<tr $tb><td><b>$text{"FILE"}</b></td><td><b>$text{"RESTORE"}</b></td></tr>);
   foreach my $path (keys %{&clamav_get_system_files ()})
   {
     my $checked = 1;
@@ -69,8 +67,8 @@ if (!&clamav_first_backup ())
   }
   print "</table>";
   printf
-    qq(<input type="submit" name="restore" value="$text{'RESTORE'}"%s></td>),
-      ($restore_enabled) ? "" : " disabled";
+    qq(<p/><button type="submit" name="restore" class="btn btn-success"%s>$text{'RESTORE'}</button></td>),
+      ($restore_enabled) ? '' : ' disabled';
 }
 print qq(</tr></table>);
 

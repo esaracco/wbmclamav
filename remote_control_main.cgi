@@ -26,9 +26,8 @@ elsif (!&clamav_remote_actions_take_arg ($action) && $arg)
   $msg = $text{'MSG_ERROR_TAKE_NO_ARG'};
 }
 
-&clamav_header ();
+&clamav_header ($text{'LINK_REMOTE_CONTROL'});
 
-print qq(<h1>$text{'REMOTE_CONTROL_TITLE'}</h1>);
 print qq(<p>$text{'REMOTE_CONTROL_DESCRIPTION'}</p>);
 
 if ($msg ne '')
@@ -41,7 +40,7 @@ print qq(<form method="POST" action="$scriptname">);
 
 &clamav_display_remote_actions ($host, $port, $action, $arg);
 
-print qq(<p><input type="submit" name="next" value="$text{'SEND'}"></p>);
+print qq(<p/><button type="submit" name="next" class="btn btn-success">$text{'SEND'}</button>);
 
 if ($next)
 {

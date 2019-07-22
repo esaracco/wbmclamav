@@ -24,7 +24,7 @@ if ($in{'main'} && !$upload)
   &redirect ("/$module_name/signatures_main.cgi?error=1");
 }
 
-&clamav_header ();
+&clamav_header ($text{'LINK_SIGNATURES'});
 
 if ($upload)
 {
@@ -36,7 +36,6 @@ print qq(<form method="POST" action="signatures_2step.cgi">);
 printf qq(<input type="hidden" name="sha1" value="%s">), &html_escape($sha1);
 printf qq(<input type="hidden" name="size" value="%s">), &html_escape($size);
 
-print qq(<h1>$text{'SIGNATURES_TITLE'}</h1>);
 print qq(<p>$text{'SIGNATURES_DESCRIPTION'}</p>);
 
 print qq(<h2>$text{'SIGNATURES_THIRD_STEP'}</h2>);
@@ -46,14 +45,14 @@ print qq(<p><b>$error</b></p>) if ($error);
 print qq(<p>$text{'SIGNATURES_THIRD_STEP_DESCRIPTION'}</p>);
 
 print qq(<table border=1>);
-print qq(<tr><td $cb valign="top" nowrap>$text{'NAME'}:</td><td>);
+print qq(<tr><td $cb valign="top" nowrap><b>$text{'NAME'}:</b></td><td>);
 print &clamav_display_combos_viruses_prefixes ($in{'prefix0'}, $in{'prefix1'});
 printf qq(<input type="text" name="virus_name" value="%s" size="60"></td>), &html_escape($virus_name);
-printf qq(<tr><td $cb valign="top" nowrap>$text{'SIGNATURE'}:</td><td>%s</td>), &html_escape($sha1);
-printf qq(<tr><td $cb valign="top" nowrap>$text{'FILE_SIZE'}:</td><td>%s</td>), &html_escape($size);
+printf qq(<tr><td $cb valign="top" nowrap><b>$text{'SIGNATURE'}:</b></td><td>%s</td>), &html_escape($sha1);
+printf qq(<tr><td $cb valign="top" nowrap><b>$text{'FILE_SIZE'}:</b></td><td>%s</td>), &html_escape($size);
 print qq(</table>);
 
-print qq(<p><input type="submit" name="next3" value="$text{'END'}"></p>);
+print qq(<p/><button type="submit" name="next3" class="btn btn-success">$text{'END'}</button>);
 
 print qq(</form>);
 
