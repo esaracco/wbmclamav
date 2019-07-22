@@ -15,12 +15,16 @@ my $msg = '';
 &clamav_header ($text{'LINK_SCANDIR'});
 
 # delete files if requested
-if (&clamav_get_acl ('directories_check_delete') == 1 && $in{'delete'} ne '')
+if (defined($in{'delete'}) && 
+    &clamav_get_acl ('directories_check_delete') == 1)
 {
-  foreach my $key (keys %in)
+  while (my ($k, $v) = each (%in))
   {
-    next if ($key !~ /infected_file/);
-    unlink ($in{$key}) if (-f $in{$key});
+    if ($k =~ /infected_file/ &&
+        $v =~ /virus|spam|badh|banned/ && &is_secure ($v))
+    {
+      unlink ($v);
+    }
   }
 
   $msg = $text{'FILES_DELETED'};
@@ -30,13 +34,13 @@ print qq(<p>$text{'SCANDIR_DESCRIPTION'}</p>);
 
 print qq(<p><b>$msg</b></p>) if ($msg ne '');
 
-if ($in{'next'} && (! -d $in{'what'} || !&is_secure ($in{'what'})))
+if (defined($in{'next'}) && (! -d $in{'what'} || !&is_secure ($in{'what'})))
 {
   print qq(<p><b>$text{'MSG_CLAMSCAN_BAD_SCAN_DIR'}</b></p>);
   $scandir = 0;
 }
 
-if ($in{'next'} && ($in{'move'} eq 'on') && (! -d $in{'move_path'} ||
+if (defined($in{'next'}) && ($in{'move'} eq 'on') && (! -d $in{'move_path'} ||
                                              !&is_secure ($in{'move_path'})))
 {
   print qq(<p><b>$text{'MSG_CLAMSCAN_BAD_MOVE_DIR'}</b></p>);

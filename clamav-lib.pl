@@ -1138,7 +1138,7 @@ sub clamav_scandir ( $ $ $ $ )
   my $recursive_option = ($clamscan !~ /clamdscan/ && $recursive) ? ' -r ' : '';
   my $tmp_file = '';
 
-  return if (!&is_secure ("$move_path $recursive_option $dir"));
+  return if (! -e $dir || ($move_path && !-e $move_path));
 
   $| = 1;
       
@@ -1151,100 +1151,96 @@ sub clamav_scandir ( $ $ $ $ )
   }
 
   print qq(
-    <table border=0 width="90%">
-    <tr><td $tb align="center"><b>$text{'CLAMSCAN_COMMAND'}:</b> <code>$clamscan $move_path_option $recursive_option $dir</code></td></tr>
-    <tr><td valign="top" align="center">
+    <table border=0 width="100%">
+    <tr $tb><td align="center"><b>$text{'CLAMSCAN_COMMAND'}:</b> <code>$clamscan $move_path_option $recursive_option $dir</code></td></tr>
+    <tr><td>&nbsp;</td></tr>
+    <tr><td align=center>
+    <table border=0 width="80%">
+      <tr $tb><td colspan=3 align=center><b>$text{''}</b></td></tr>
   );
-  print qq(<table border=0>);
-
+   
+  # Display scanned files
+  my $index = 0;
+  my $line = '';
   open (H, "$clamscan $move_path_option $recursive_option $dir 2>&1 |");
-  while (<H>)
+  while (($line = <H>) && $line !~ /SCAN SUMMARY/)
   {
-    my ($file, $state) = split (/:/, $_, 2);
-    next if (!$file || !$state);
-
+    next if ($line !~ /^([^:]+)\s*\:\s*(.*)$/ || $2 =~ /moved to/);
+    my ($file, $state) = ($1, $2);
     my $state_bg = '';
     my $right = '&nbsp;';
     my $is_infected = 0;
 
     if ($state =~ /OK/)
     {
-      $state_bg = 'green';
+      $state_bg = 'success';
       $state = '&nbsp;';
     }
     elsif ($state =~ /FOUND/)
     {
       $infected++;
       $is_infected = 1;
-      $state_bg = 'red';
+      $state_bg = 'error';
       $state =~ s/FOUND//g;
-      $state = qq(<b>$state</b>);
+      $state = qq(<b>$state</b>&nbsp;);
       if ($move_path)
       {
-        $tmp_file = $move_path.basename($file);
-        $right = 
-          qq(<input type="checkbox" 
-	            name="infected_file$infected" value="$tmp_file">);
+        $tmp_file = "$move_path/".basename($file);
+        $right =
+          qq(&nbsp;<input type="checkbox" 
+                name="infected_file$infected" value="$tmp_file">);
       }
       else
       {
-        $right = 
-          qq(<input type="checkbox" 
-	            name="infected_file$infected" value="$file">);
+        $right =
+          qq(&nbsp;<input type="checkbox" 
+                name="infected_file$infected" value="$file">);
       }
     }
-    
-    if (($file =~ /known viruses/i) && ($report == 0))
-    {
-      $report = 1;
-      
-      print qq(
-        <tr><td colspan="3">&nbsp;</td></tr>
-        <tr><td colspan="3" align="center">
-          <input type="submit" value="$text{'DELETE_SELECTED'}" name="delete">
-        </td></tr>
-      ) if (&clamav_get_acl ('directories_check_delete') == 1 && $infected > 0);
 
-      print qq(</table>);
-      print "<p/><p align=center><b>$text{'REPORT'}</b></p><p/>";
-      print qq(<table border=0 cellspacing=2 cellpadding=2 width="100%">);
-      if ($move_path && $infected)
-      {
-        print qq(
-          <tr><td align="right" width="50%">
-	  <b>$text{'INFECTED_FILES_WHERE_MOVED'}</b>:</td>
-	  <td colspan="2" align="left" width="50%">$move_path</td></tr>
-        );
-      }
-    }
-    
-    if (!$report)
+    if (!$infected_only || ($infected_only && $is_infected))
     {
-      if ((!$is_infected && $infected_only) || $state =~ /moved to/) {}
-      else
-      {
-        print qq(<tr><td>$file</td>);
-
-	if (&clamav_get_acl ('directories_check_delete') == 1)
-	  {print qq(<td bgcolor="$state_bg">$state</td><td>$right</td></tr>)}
-	else
-	  {print qq(<td bgcolor="$state_bg">$state</td></tr>)}
-      }
-    }
-    else
-    {
-      my $oldfile = $file;
-      $file =~ tr/a-z/A-Z/;
-      $file =~ s/ /_/g;
-      $text{$file} = $oldfile if (!exists ($text{$file}));
+      my $bg = ($index++ % 2 == 0) ? '' : ' style="background:#f6f6f6"';
       print qq(
-        <tr><td align="right" width="50%"><b>$text{$file}</b>:</td>
-	<td colspan="2" align="left" width="50%">$state</td></tr>
-      );
+        <tr$bg>
+          <td width="45%" align=right valign=middle>$state<span class="circle $state_bg"></span>&nbsp;</td>
+          <td width="10%" align=center>$right</td>
+          <td width="45%">$file</td>
+        </tr>);
     }
   }
-  print qq(</table>) if ($report);
-  print qq(</td></tr></table>);
+  print qq(</table></td></tr>);
+  if ($infected && &clamav_get_acl ('directories_check_delete') == 1)
+  {
+    print qq(<tr><td>&nbsp;</td></tr>);
+
+    if ($move_path)
+    {
+      print qq(
+        <tr>
+          <td align=center><b>$text{'INFECTED_FILES_WHERE_MOVED'}</b> $move_path</td>
+        </tr>
+        <tr><td>&nbsp;</td></tr>);
+    }
+    print qq(<tr><td align=center><button type="submit" name="delete" class="btn btn-danger">$text{'DELETE_SELECTED'}</button></td></tr>);
+  }
+  print qq(<tr><td>&nbsp;</td></tr>);
+  print qq(</table>);
+
+  # Display scan report
+  if ($line =~ /SCAN SUMMARY/)
+  {
+    print qq(<table width="100%">);
+    print qq(<tr $tb><td colspan=2 align=center><b>$text{'REPORT'}</b></td></tr>);
+    $index = 0;
+    while ($line = <H>)
+    {
+      my ($k, $v) = $line =~ /^([^:]+)\s*\:\s*(.*)$/;
+      my $bg = ($index++ % 2 == 0) ? '' : ' style="background:#f6f6f6"';
+      print qq(<tr$bg><td align=right><b>$k:</b></td><td align=left>$v</td></tr>);
+    }
+    print qq(</table>);
+  }
   
   close (H);
 }
@@ -2157,19 +2153,24 @@ sub clamav_cron_settings_table ( $ $ $ )
   $default = ($every_hour) ? ' checked="checked"' : '';
   $buffer .= qq(
     <table id="cron-frequency" border="0"$no_auto_update>
-    <tr $tb><td><b>$text{'HOUR'}</b></td><td><b>$text{'DAY'}</b></td></tr>
-    <tr><td valign="bottom">
-    <p/><small><i><input id="every_hours" type="checkbox" name="every_hours"$default>&nbsp;<label for="every_hours">$text{'EVERY_X_HOURS'}</label></i></small><br><select name="hour">
+      <tr $tb>
+        <td><b>$text{'HOUR'}</b></td>
+        <td><b>$text{'DAY'}</b></td>
+      </tr>
+      <tr>
+        <td><p/><small><i><input id="every_hours" type="checkbox" name="every_hours"$default>&nbsp;<label for="every_hours">$text{'EVERY_X_HOURS'}</label></i></small></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><select name="hour">
   );
-
   foreach (0..23)
   {
     $default = ($_ == $hour) ? ' selected="selected"' : '';
     $buffer .= qq(<option value="$_"$default>$_</option>\n);
   }
-
-  $buffer .= qq(</select></td><td valign="bottom"><select name="day">);
-
+  $buffer .= qq(</select></td>
+        <td valign="bottom"><select name="day">);
   $day = 7 if ($day eq '*');
   $default = ($day == 7) ? ' selected="selected"' : '';
   $buffer .= qq(<option value="7"$default>$text{'EVERYDAY'}</option>\n);
@@ -2180,8 +2181,9 @@ sub clamav_cron_settings_table ( $ $ $ )
                                                                                 
     $buffer .= qq(<option value="$i"$default>$value</option>\n);
   }
-
-  $buffer .= qq(</select></td></tr></table>);
+  $buffer .= qq(</select></td>
+      </tr>
+    </table>);
 
   return $buffer;
 }
@@ -5033,7 +5035,7 @@ sub clamav_debug ( $ $ )
   }
   else
   {
-    print '<pre style="background:silver">'.Dumper($txt).'</pre>';
+    print '<pre style="background:silver;color:black">'.Dumper($txt).'</pre>';
   }
 }
 #

@@ -1,7 +1,7 @@
 .disabled {
   opacity:.6;
   pointer-events:none;
-  cursor: default;
+  cursor:default;
 }
 
 .raw-output {
@@ -12,4 +12,19 @@
   padding:5px;
   font-family:arial,verdana,helvetica,courier;
   font-size:0.8rem
+}
+
+.circle {
+  height:10px;
+  width:10px;
+  border-radius:50%;
+  display:inline-block;
+}
+
+.circle.success {
+  background-color:green;
+}
+
+.circle.error {
+  background-color:red;
 }

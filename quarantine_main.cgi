@@ -142,7 +142,7 @@ if (&clamav_is_amavisd_new () ||
   print qq(<p/>);
   if ($quarantine_infos{'graph_name'})
   {
-    print qq(&nbsp;<a href="#" onclick="document.getElementById('graph').style.display = (document.getElementById('graph').style.display == 'none') ? 'block' : 'none'">$text{'QUARANTINE_SHOWHIDE_GRAPH'}</a>);
+    print qq(&nbsp;<a href="#" onclick="document.getElementById('graph').style.display = (document.getElementById('graph').style.display == 'none') ? 'block' : 'none';return false">$text{'QUARANTINE_SHOWHIDE_GRAPH'}</a>);
   }
   print qq(<p/><img id="graph" style="display:none" src="/$module_name/tmp/$quarantine_infos{'graph_name'}"/>);
 }

@@ -76,7 +76,7 @@ print qq(
 
 print qq(<form method="POST" action="$scriptname">);
 
-print qq(<h2 id="clamav"><a href="#top">^</a> $text{'SETTINGS_CLAMAV_TITLE'}</h2>);
+print qq(<h2 id="clamav"><a href="#top"><small><sup>^top</sup></small></a> $text{'SETTINGS_CLAMAV_TITLE'}</h2>);
 print $msg if ($msg);
 if (&clamav_get_acl ('global_settings_write') == 1)
 {
@@ -84,7 +84,7 @@ if (&clamav_get_acl ('global_settings_write') == 1)
 }
 &clamav_display_settings ('clamav', $add_item_c, $delete_item_c);
 
-print qq(<h2 id="freshclam"><a href="#top">^</a> $text{'SETTINGS_FRESHCLAM_TITLE'}</h2>);
+print qq(<h2 id="freshclam"><a href="#top"><small><sup>^top</sup></small></a> $text{'SETTINGS_FRESHCLAM_TITLE'}</h2>);
 print $msg if ($msg);
 if (&clamav_get_acl ('global_settings_write') == 1)
 {
