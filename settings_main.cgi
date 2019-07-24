@@ -9,17 +9,7 @@ require './clamav-lib.pl';
 &clamav_check_acl ('global_settings_view');
 &ReadParse ();
 
-my $msg;
-
-# Clean temp if first access
-if ($ENV{'REQUEST_METHOD'} eq 'GET')
-{
-  &clamav_clean_global_settings_tempfiles ();
-}
-else
-{
-  &clamav_check_acl ('global_settings_write');
-}
+my ($_success, $_error) = ('', '');
 
 &clamav_header ($text{'LINK_SETTINGS'});
 
@@ -28,44 +18,51 @@ print qq(<p>$text{'SETTINGS_MULTIVALUED'}</p>);
 
 if (defined($in{'next'}))
 {
+  &clamav_check_acl ('global_settings_write');
+
   # Keep clamd status before update
   my $old_alive = &clamav_is_clamd_alive ();
 
   $error = &clamav_save_global_settings (1);
-  $msg = qq(<p>);
   if ($error)
   {
-    $msg .= qq("<p>$error<p><p/><b>$text{'MSG_CONFIGS_RESTORED'}</b>);
+    $_error = "<b>$error</b><p/>$text{'MSG_CONFIGS_RESTORED'}";
   }
   else
   {
     if (&clamav_is_clamd_alive () eq $old_alive)
     {
-      $msg .= qq(<b>$text{'MSG_SUCCES_APPLY_GLOBAL_SETTINGS'}</b>);
+      $_success = $text{'MSG_SUCCES_APPLY_GLOBAL_SETTINGS'};
     }
     else
     {
-      $msg .= sprintf (qq(<b>$text{'MSG_ERROR_APPLY_GLOBAL_SETTINGS'}</b>),
-                $config{'clamav_clamav_log'});
+      $_error = sprintf ($text{'MSG_ERROR_APPLY_GLOBAL_SETTINGS'},
+                  $config{'clamav_clamav_log'});
     }
   }
-  $msg .= qq(</p>);
 }
-elsif ($ENV{REQUEST_METHOD} eq 'POST')
+# If there is a item to add
+elsif (defined($in{'nsclamav_add'}) || defined($in{'nsfreshclam_add'}))
 {
-  # If there is a item to add
-  if (defined($in{'nsclamav_add'}) || defined($in{'nsfreshclam_add'}))
-  {
-    $add_item_c = $in{'nsclamav_add_key'} if (defined($in{'nsclamav_add'}));
-    $add_item_f = $in{'nsfreshclam_add_key'} if (defined($in{'nsfreshclam_add'}));
-  }
-  # If there is a item to delete
-  else
-  {
-    $delete_item_c = &clamav_global_settings_get_delete_item ('clamav');
-    $delete_item_f = &clamav_global_settings_get_delete_item ('freshclam');
-  }
+  &clamav_check_acl ('global_settings_write');
+
+  $add_item_c = $in{'nsclamav_add_key'} if (defined($in{'nsclamav_add'}));
+  $add_item_f = $in{'nsfreshclam_add_key'} if (defined($in{'nsfreshclam_add'}));
 }
+# If there is a item to delete
+elsif (($delete_item_c = &clamav_global_settings_get_delete_item ('clamav')) ||
+       ($delete_item_f = &clamav_global_settings_get_delete_item ('freshclam')))
+{
+  &clamav_check_acl ('global_settings_write');
+}
+# Clean temp if first access
+else
+{
+  &clamav_clean_global_settings_tempfiles ();
+}
+
+my $btn_class = ($add_item_c || $add_item_f ||
+                 $delete_item_c || $delete_item_f) ? 'warning' : 'success';
 
 print qq(
   <ul>
@@ -76,23 +73,22 @@ print qq(
 
 print qq(<form method="POST" action="$scriptname">);
 
-print qq(<h2 id="clamav"><a href="#top"><small><sup>^top</sup></small></a> $text{'SETTINGS_CLAMAV_TITLE'}</h2>);
-print $msg if ($msg);
+print qq(<h2 id="clamav"><a href="#top"><sup><i class="fa fa-fw fa-caret-up"></i></sup></a> $text{'SETTINGS_CLAMAV_TITLE'}</h2>);
+
 if (&clamav_get_acl ('global_settings_write') == 1)
 {
-  print qq(<p><button type="submit" name="next" onclick="this.form.action+='#clamav'" class="btn btn-success">$text{'APPLY'}</button></p>);
+  print qq(<p/><div><button type="submit" name="next" class="btn btn-$btn_class ui_form_end_submit"><i class="fa fa-fw fa-check-circle-o"></i> <span>$text{'APPLY'}</span></button></div><p/>);
 }
 &clamav_display_settings ('clamav', $add_item_c, $delete_item_c);
 
-print qq(<h2 id="freshclam"><a href="#top"><small><sup>^top</sup></small></a> $text{'SETTINGS_FRESHCLAM_TITLE'}</h2>);
-print $msg if ($msg);
+print qq(<h2 id="freshclam"><a href="#top"><sup><i class="fa fa-fw fa-caret-up"></i></sup></a> $text{'SETTINGS_FRESHCLAM_TITLE'}</h2>);
+
 if (&clamav_get_acl ('global_settings_write') == 1)
 {
-  print qq(<p><button type="submit" name="next" onclick="this.form.action+='#freshclam'" class="btn btn-success">$text{'APPLY'}</button></p>);
+  print qq(<p/><div><button type="submit" name="next" class="btn btn-$btn_class ui_form_end_submit"><i class="fa fa-fw fa-check-circle-o"></i> <span>$text{'APPLY'}</span></button></div><p/>);
 }
 &clamav_display_settings ('freshclam', $add_item_f, $delete_item_f);
 
 print qq(</form>);
 
-print qq(<hr>);
-&footer("", $text{'RETURN_INDEX_MODULE'});
+&clamav_footer ('', $text{'RETURN_INDEX_MODULE'}, $_success, $_error);

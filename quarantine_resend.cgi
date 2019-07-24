@@ -13,6 +13,7 @@ require './clamav-lib.pl';
 &clamav_check_acl ('quarantine_resend');
 &ReadParse ();
 
+my ($_success, $_error) = ('', '');
 my $smtp = (defined ($in{"smtp"}) && $in{"smtp"} ne '') ? $in{"smtp"} : '';
 my $from = (defined ($in{"from"}) && $in{"from"} ne '') ? $in{"from"} : '';
 my $to = (defined ($in{"to"}) && $in{"to"} ne '') ? $in{"to"} : '';
@@ -27,7 +28,7 @@ if (!defined($in{'next'}) || ($smtp ne '' && !&smtphost_is_alive ($smtp)))
 
   if ($smtp ne '' && !&smtphost_is_alive ($smtp))
   {
-    printf qq(<b>$text{'MSG_ERROR_SMTP_PING'}</b>), $smtp;
+    $_error = sprintf (qq($text{'MSG_ERROR_SMTP_PING'}), $smtp);
   }
 
   if ($in{"newto"})
@@ -40,19 +41,19 @@ if (!defined($in{'next'}) || ($smtp ne '' && !&smtphost_is_alive ($smtp)))
       ($in{'emails'}) ? &html_escape ($in{'emails'}) : 
       &clamav_join_from_url ("quarantine_file", 0);
     
-    print qq(<table>);
+    print qq(<table class="clamav keys-values">);
     print qq(<tr>);
-    print qq(<td $cb><b>$text{"FROM"}</b></td>\n);
+    print qq(<td>$text{"FROM"}: </td>);
     printf qq(<td><input type="text" name="from" value="%s"></td>\n),
       &html_escape ($from);
     print qq(</tr>);
     print qq(<tr>);
-    print qq(<td $cb><b>$text{"TO"}</b></td>\n);
+    print qq(<td>$text{"TO"}: </td>);
     printf qq(<td><input type="text" name="to" value="%s"></td>\n),
       &html_escape ($to);
     print qq(</tr>);
     print qq(<tr>);
-    print qq(<td $cb><b>$text{"WITH_SMTP"}</b></td>\n);
+    print qq(<td>$text{"WITH_SMTP"}: </td>);
     printf qq(<td><input type="text" name="smtp" value="%s"></td>\n),
       &html_escape ($smtp);
     print qq(</tr>);
@@ -61,19 +62,18 @@ if (!defined($in{'next'}) || ($smtp ne '' && !&smtphost_is_alive ($smtp)))
     # If spamassassin learning tool exists
     if (&has_command ('sa-learn'))
     {
-      printf qq(<p><input type="checkbox" title="$text{'NOTASPAM_TOOLTIP'}" id="notaspam" value="1" name="notaspam"%s> <label title="$text{'NOTASPAM_TOOLTIP'}" for="notaspam">$text{'NOTASPAM'}</label></p>), ($notaspam) ? ' checked' : '';
-      print qq(<p />);
+      printf (qq(<p/><input type="checkbox" title="$text{'NOTASPAM_TOOLTIP'}" id="notaspam" value="1" name="notaspam"%s> <label title="$text{'NOTASPAM_TOOLTIP'}" for="notaspam">$text{'NOTASPAM'}</label>), ($notaspam) ? ' checked' : '');
     }
 
-    printf qq(<p><input type="checkbox" id="deleteafter" value="1" name="deleteafter"%s> <label for="deleteafter">$text{'DELETEAFTER'}</label></p>), ($deleteafter) ? ' checked' : '';
+    printf (qq(<p/><input type="checkbox" id="deleteafter" value="1" name="deleteafter"%s> <label for="deleteafter">$text{'DELETEAFTER'}</label>), ($deleteafter) ? ' checked' : '');
 
-    print qq(<p><button type="submit" name="next" class="btn btn-success">$text{'RESEND'}</button></p>\n);
+    print qq(<p/><div><button type="submit" name="next" class="btn btn-success ui_form_end_submit"><i class="fa fa-fw fa-envelope"></i> <span>$text{'RESEND'}</span></button></div>);
     
     print qq(</form>);
   }
 
-  print qq(<hr/>);
-  &footer ("quarantine_main.cgi", $text{'RETURN_QUARANTINE_LIST'});
+  &clamav_footer ('quarantine_main.cgi', $text{'RETURN_QUARANTINE_LIST'},
+                    $_success, $_error);
 }
 else
 {
@@ -91,7 +91,7 @@ else
 
     if ($res == NET_PING_KO)
     {
-      &redirect ("/$module_name/quarantine_main.cgi?resended=1&" . 
+      &redirect ("quarantine_main.cgi?resended=1&" . 
         "&errstr=" . 
 	&urlize (sprintf ($text{'MSG_ERROR_SMTP_PING'}, $smtp)) . 
 	"&errfile=" . &urlize ($email));
@@ -99,9 +99,9 @@ else
     # A error occured
     elsif ($res != OK)
     {
-      &redirect ("/$module_name/quarantine_main.cgi?resended=1&" . 
-        "&errstr=" . &urlize ($clamav_error) . 
-	"&errfile=" . &urlize ($email));
+      &redirect ("quarantine_main.cgi?resended=1&" . 
+        '&errstr='.&urlize ($clamav_error). 
+	'&errfile='.&urlize ($email));
     }
     # If all was ok
     elsif ($res == OK)
@@ -114,5 +114,5 @@ else
     }
   }
 
-  &redirect ("/$module_name/quarantine_main.cgi?resended=1");
+  &redirect ("quarantine_main.cgi?resended=1");
 }

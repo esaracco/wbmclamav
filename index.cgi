@@ -49,19 +49,20 @@ sub clamav_add_if_acl_ok ($ $ $ $)
 &clamav_add_if_acl_ok ('signature_use', 'signatures_main.cgi',
   $text{'LINK_SIGNATURES'}, 'images/signatures.png');
 
-&header($text{'FORM_TITLE'}, undef, undef, 1, 1, 0, undef, undef, undef, "<img src='images/icon.gif'/><br/><a href=\"https://wbmclamav.esaracco.fr\" target=\"_BLANK\">$text{'HOMEPAGE'}</a>&nbsp;|&nbsp;<a href=\"https://wbmclamav.esaracco.fr/download\" target=\"_BLANK\">$text{'DOWNLOAD'}</a>&nbsp;|&nbsp<a href=\"http://www.clamav.net/download\" target=\"_BLANK\">$text{'LATEST_CLAMAV'}</a>");
+&header($text{'FORM_TITLE'}, undef, basename($scriptname, '.cgi'), 1, 1, 0, undef, undef, undef, "<img src='images/icon.gif'/><br/><a href=\"https://wbmclamav.esaracco.fr\" target=\"_BLANK\">$text{'HOMEPAGE'}</a>&nbsp;|&nbsp;<a href=\"https://wbmclamav.esaracco.fr/download\" target=\"_BLANK\">$text{'DOWNLOAD'}</a>&nbsp;|&nbsp<a href=\"http://www.clamav.net/download\" target=\"_BLANK\">$text{'LATEST_CLAMAV'}</a>");
+&clamav_header_extra ();
 
-if (my ($m, $c) = &clamav_check_new_release ())
+&clamav_main_check_config (1);
+&clamav_check_deps (1);
+
+# Warn user when a new wbmclamav release is available
+if ($ENV{'HTTP_REFERER'} !~ /$module_name\/[a-z]/i &&
+    $config{'clamav_check_new'} &&
+    (my ($m, $c) = &clamav_check_new_release()))
 {
-  printf (qq(
-    <p align=center><b>$text{'NEW_RELEASE_AVAILABLE'}</b></p>
-  ), $m, $c, $m);
+  &clamav_display_msg (
+    sprintf (qq($text{'NEW_RELEASE_AVAILABLE'}), $m, $c, $m), 'info', 'bell');
 }
-
-print "<hr>\n";
-
-&clamav_main_check_config ();
-&clamav_check_deps ();
 
 print qq(<p>$text{'INDEX_PAGE_DESCRIPTION'}</p>\n);
 
@@ -81,30 +82,27 @@ if (&clamav_get_acl ('clamav_start_stop') == 1)
     }
   
     print qq(<form method="POST" action="$scriptname">\n);
-    print qq(<p align="center">\n);
+    print qq(<div style="text-align:center">);
 
     if (&clamav_is_clamd_alive () == ())
     {
       print qq(<input type="hidden" name="status" value="1">);
-      print qq(<button type="submit" class="btn btn-success">$text{'ACTIVATE'}</button>);
+      print qq(<div><button type="submit" class="btn btn-success btn-tiny ui_form_end_submit"><i class="fa fa-fw fa-play"></i> <span>$text{'ACTIVATE'}</span></button></div>);
     }
     else
     {
       print qq(<input type="hidden" name="status" value="0">);
-      print qq(<button type="submit" class="btn btn-success">$text{'DEACTIVATE'}</button>);
+      print qq(<div><button type="submit" class="btn btn-danger btn-tiny ui_form_end_submit"><i class="fa fa-fw fa-stop"></i> <span>$text{'DEACTIVATE'}</span></button></div>);
     }
-    print qq(</p></form>\n);
+    print qq(</div>);
+    print qq(</form>);
   }
 }
 
-print qq(<p>);
-&icons_table (\@links, \@titles, \@icons);
-print qq(</p>);
+print qq(<p>);&icons_table (\@links, \@titles, \@icons);print qq(</p>);
 
-print qq(<hr>);
-print '<p>';
-&clamav_footer ();
-print '</p>';
-&footer("/", $text{'index'});
-
-
+print qq(<hr/>);
+my $clamav_version = &clamav_get_version ();
+my $wbmclamav_version = $module_info{'version'};
+print qq(<p><i>ClamAV</i> <b>$clamav_version</b> / <i>wbmclamav</i> <b>$wbmclamav_version</b></p>);
+&footer ('/', $text{'index'});

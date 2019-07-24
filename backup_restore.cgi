@@ -9,7 +9,7 @@ require './clamav-lib.pl';
 &clamav_check_acl ('backup_restore_manage');
 &ReadParse ();
 
-my $msg = "";
+my ($_success, $_error) = ('', '');
 my $i = 0;
 my @files = ();
 my $restore_enabled = 0;
@@ -22,7 +22,7 @@ my $restore_enabled = 0;
 if (defined($in{"init"}))
 {
   &clamav_system_backup ();
-  $msg = qq(<b>$text{"MSG_SUCCESS_BACKUP"}</b>);
+  $_success = $text{"MSG_SUCCESS_BACKUP"};
 }
 elsif (defined($in{"restore"}))
 {
@@ -32,26 +32,25 @@ elsif (defined($in{"restore"}))
   }
 
   &clamav_system_restore (\@files, 0);
-  $msg = qq(<b>$text{"MSG_SUCCESS_RESTORE"}</b>);
+  $_success = $text{"MSG_SUCCESS_RESTORE"};
 }
 
 $restore_enabled = &clamav_system_ok ("restore");
 
 print qq(<form method="POST" action="$scriptname">);
 
-print qq(<b>$msg</b>) if ($msg);
+print qq(<p>$text{'BACKUP_RESTORE_DESCRIPTION'}</p>);
 
-printf qq(<p>$text{'BACKUP_RESTORE_DESCRIPTION'}</p>), $module_name;
-
-print qq(<table width="80%" border=1>);
-print qq(<tr><td valign="center" align="center" width="50%">);
-printf qq(<button type="submit" name="init" class="btn btn-success"%s>$text{"BACKUP"}</button></td>),
+print qq(<table class="clamav" width="80%">);
+print qq(<tr><td style="text-align:center;vertical-align:middle;width:50%">);
+printf qq(<div><button type="submit" name="init" class="btn btn-success ui_form_end_submit"%s><i class="fa fa-fw fa-floppy-o"></i> <span>$text{"BACKUP"}</span></button></div></td>),
   ($restore_enabled) ? ' disabled' : '';
 if (!&clamav_first_backup ())
 {
   print qq(<td valign="top" align="right" width="50%">);
-  print "<table border=1>";
-  print qq(<tr $tb><td><b>$text{"FILE"}</b></td><td><b>$text{"RESTORE"}</b></td></tr>);
+  print qq(<table class="clamav header">);
+  ##print qq(<tr><td>$text{"FILE"}</td><td>$text{"RESTORE"}</td></tr>);
+  print qq(<tr><td>$text{"FILES"}</td></tr>);
   foreach my $path (keys %{&clamav_get_system_files ()})
   {
     my $checked = 1;
@@ -61,20 +60,18 @@ if (!&clamav_first_backup ())
     $checked = grep (/$path/, @files) if (@files);
 
     print qq(<tr><td><code>$path</code></td>);
-    printf qq(<td><input type="checkbox" name="file%i" value="%s" %s%s></td></tr>), $i++, $path, " checked", " disabled";
+    ##printf qq(<td><input type="checkbox" name="file%i" value="%s" %s%s></td></tr>), $i++, $path, " checked", " disabled";
     # FIXME Must we let the user choose the files to restore?
     #printf qq(<td><input type="checkbox" name="file%i" value="%s" %s%s></td></tr>), $i++, $path, ($checked) ? " checked" : "", ($restore_enabled) ? "" : " disabled";
   }
   print "</table>";
   printf
-    qq(<p/><button type="submit" name="restore" class="btn btn-success"%s>$text{'RESTORE'}</button></td>),
+    qq(<p/><div><button type="submit" name="restore" class="btn btn-success ui_form_end_submit"%s><i class="fa fa-fw fa-restore fa-1_25x"></i> <span>$text{'RESTORE'}</span></button></div></td>),
       ($restore_enabled) ? '' : ' disabled';
 }
 print qq(</tr></table>);
 
 print qq(</form>);
 
-print qq(<p>);
-
-print qq(<hr>);
-&footer("", $text{'RETURN_INDEX_MODULE'});
+&clamav_footer ('', $text{'RETURN_INDEX_MODULE'}, $_success, $_error,
+                  sprintf($text{'BACKUP_RESTORE_INFO'}, $module_name));

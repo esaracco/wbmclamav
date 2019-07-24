@@ -28,3 +28,101 @@
 .circle.error {
   background-color:red;
 }
+
+.btn-tiny.ui_form_end_submit span.cspinner_container {
+  margin-top:0 !important;
+}
+
+a sup i.fa-caret-up {
+  color:silver;
+  font-size:1.5rem;
+}
+
+table.keys-values tr td:first-child {
+  background:#f6f6f6;
+  text-align:right;
+  font-weight:bold;
+}
+
+table.nokeys-values tr td:first-child {
+  background:inherit;
+  text-align:inherit;
+  font-weight:inherit;
+}
+
+table.clamav {
+  border-collapse: collapse !important;
+}
+
+table.clamav, table.clamav th, table.clamav td {
+   border: 1px solid #f4f4f4 !important;
+   padding:5px !important;
+   vertical-align:top;
+}
+
+table.clamav tbody {
+  background:#fdfdfd;
+}
+
+table.clamav.header tr:first-child td {
+  background:#dedede;
+  text-align:center;
+  font-weight:bold;
+  font-size:1rem !important;
+}
+
+table.clamav.noheader tr:first-child td {
+  background:inherit;
+  text-align:inherit;
+  font-weight:inherit;
+  font-size:inherit;
+}
+
+table.clamav td.control {
+  text-align:left !important;
+  vertical-align:middle !important;
+}
+
+tr.even {
+  background:#f6f6f6;
+}
+
+ul {
+  list-style-type: square;
+}
+
+table.nav-panel {
+  width:40%;
+  margin: 10px auto 0 auto;
+}
+
+/* from authentic theme to preserve compatiblity with old themes */
+
+.close:hover, .close:focus {
+    color: #000;
+    text-decoration: none;
+    cursor: pointer;
+    filter: alpha(opacity=50);
+    opacity: .5;
+
+}
+button.close {
+    padding: 0;
+    cursor: pointer;
+    background: transparent;
+    border: 0;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    appearance: none;
+
+}
+.close {
+    float: right;
+    font-size: 21px;
+    font-weight: bold;
+    line-height: 1;
+    color: #000;
+    text-shadow: 0 1px 0 #fff;
+    filter: alpha(opacity=20);
+    opacity: .2;
+}

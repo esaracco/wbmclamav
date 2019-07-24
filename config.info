@@ -1,4 +1,5 @@
 line1=Global,11
+clamav_check_new=Warn me when a new module release is available,1,1-Yes,0-No
 clamav_working_path=Working directory,7
 clamav_init_restore_path=Backup directory (should not be a temporary directory),7
 
@@ -8,7 +9,6 @@ clamav_quarantine=Quarantine repository directory,7
 clamav_spam_user=SpamAssassin user
 
 line3=ClamAV,11
-clamav_check_new=Warn me when a new module release is available,1,1-Yes,0-No
 clamav_sys_user=ClamAV system user
 clamav_sys_group=ClamAV system group
 clamav_init_script=Daemon init script path (if sysvinit),8

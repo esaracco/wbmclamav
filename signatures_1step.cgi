@@ -11,11 +11,13 @@ require './clamav-lib.pl';
 
 ($ENV{REQUEST_METHOD} eq 'POST') ? &ReadParseMime() : &ReadParse();
 
+my ($_success, $_error) = ('', '');
 my $sha1 = $in{'sha1'}||'';
 my $size = $in{'size'}||0;
 my $virus_name = $in{'virus_name'}||'';
-my $error = $in{'error'}||'';
 my $upload = ($in{'upload'}) ? 1 : 0;
+
+$_error = $in{'error'} if ($in{'error'});
 
 # if there is no file to upload, error
 if ($in{'main'} && !$upload)
@@ -23,7 +25,7 @@ if ($in{'main'} && !$upload)
   &redirect ("/$module_name/signatures_main.cgi?error=1");
 }
 
-&clamav_header ($text{'LINK_SIGNATURES'});
+&clamav_header ($text{'LINK_SIGNATURES'}, 'signatures_main');
 
 if ($upload)
 {
@@ -39,21 +41,18 @@ print qq(<p>$text{'SIGNATURES_DESCRIPTION'}</p>);
 
 print qq(<h2>$text{'SIGNATURES_THIRD_STEP'}</h2>);
 
-print qq(<p><b>$error</b></p>) if ($error);
-
 print qq(<p>$text{'SIGNATURES_THIRD_STEP_DESCRIPTION'}</p>);
 
-print qq(<table border=1>);
-print qq(<tr><td $cb valign="top" nowrap><b>$text{'NAME'}:</b></td><td>);
+print qq(<table class="clamav keys-values">);
+print qq(<tr><td nowrap>$text{'NAME'}: </td><td>);
 print &clamav_display_combos_viruses_prefixes ($in{'prefix0'}, $in{'prefix1'});
 printf qq(<input type="text" name="virus_name" value="%s" size="60"></td>), &html_escape($virus_name);
-printf qq(<tr><td $cb valign="top" nowrap><b>$text{'SIGNATURE'}:</b></td><td>%s</td>), &html_escape($sha1);
-printf qq(<tr><td $cb valign="top" nowrap><b>$text{'FILE_SIZE'}:</b></td><td>%s</td>), &html_escape($size);
+printf qq(<tr><td nowrap>$text{'SIGNATURE'}: </td><td>%s</td>), &html_escape($sha1);
+printf qq(<tr><td nowrap>$text{'FILE_SIZE'}: </td><td>%s</td>), &html_escape($size);
 print qq(</table>);
 
-print qq(<p/><button type="submit" name="next3" class="btn btn-success">$text{'END'}</button>);
+print qq(<p/><div><button type="submit" name="next3" class="btn btn-success ui_form_end_submit"><i class="fa fa-fw fa-bolt"></i> <span>$text{'SIGNATURE_CREATE'}</span></button></div>);
 
 print qq(</form>);
 
-print qq(<hr>);
-&footer("signatures_main.cgi", $text{'RETURN_SIGNATURES_MAIN'});
+&clamav_footer ('signatures_main.cgi', $text{'RETURN_SIGNATURES_MAIN'}, $_success, $_error);

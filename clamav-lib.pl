@@ -54,7 +54,7 @@ my %ACLs = &get_module_acl ();
 # Global array for bad perl modules dependencies
 my %deps = ();
 
-eval'use POSIX';$deps{'POSIX'} if ($@);
+eval'use POSIX';$deps{'POSIX'} = 1 if ($@);
 eval'use File::Basename';$deps{'File::Basename'} = 1 if ($@);
 eval'use File::Path qw(make_path)';$deps{'File::Path'} = 1 if ($@);
 eval'use File::Find';$deps{'File::Find'} = 1 if ($@);
@@ -92,16 +92,57 @@ if (&clamav_system_ok ('backup') &&
 }
 
 # clamav_header ()
+# IN: - Page title
+#     - Specific help file (optional)
 #
 # Display header.
 #
-sub clamav_header ( $ )
+sub clamav_header ( $ $ )
 {
-  my $title = shift;
+  my ($title, $help_file) = @_;
 
-  &header ($text{'FORM_TITLE'}, '', undef, 1, 0);
-  print qq(<link rel="stylesheet" type="text/css" href="css/styles.css?$module_info{'version'}"/><hr/>);
+  $help_file ||= basename($scriptname, '.cgi');
+
+  &header ($text{'FORM_TITLE'}, undef, $help_file, 1);
+
+  &clamav_header_extra ();
+
   print qq(<h1 id="top">$title</h1>) if ($title);
+}
+
+sub clamav_header_extra ()
+{
+  my $module_version = $module_info{'version'};
+
+  print qq(<link rel="stylesheet" type="text/css" href="css/styles.css?$module_version"/>);
+  print qq(<script src="js/scripts.js?$module_version"></script>);
+  print qq(<div id="clamav-msg"></div>);
+}
+
+sub clamav_display_msg ( $ $ $ )
+{
+  my ($msg, $msg_type, $icon) = @_;
+
+  if ($icon)
+  {
+    $msg = qq(<i class='fa fa-fw fa-$icon'></i> ).$msg;
+  }
+  elsif ($msg_type eq 'success')
+  {
+    $msg = qq(<i class='fa fa-fw fa-info-circle'></i> ).$msg;
+  }
+  elsif ($msg_type eq 'danger')
+  {
+    $msg = qq(<i class='fa fa-fw fa-exclamation-circle'></i> $text{'WARNING'} : ).$msg;
+  }
+  elsif ($msg_type eq 'info')
+  {
+    $msg = qq(<i class='fa fa-fw fa-paperclip'></i> ).$msg;
+  }
+  
+  $msg =~ s/"/\\"/g;
+
+  print qq(<script>displayMsg("$msg", "$msg_type")</script>) if ($msg);
 }
 
 # clamav_get_acl ( $ )
@@ -143,8 +184,6 @@ sub clamav_check_acl ( $ )
 #
 sub clamav_check_new_release ()
 {
-  return if (!$config{'clamav_check_new'});
-
   my $r = (LWP::UserAgent->new())->get("https://wbmclamav.esaracco.fr/VERSION");
 
   my ($local_version) = $module_info{'version'} =~ /^([^g]+)/;
@@ -222,26 +261,20 @@ sub clamav_is_amavisd_new ()
   );
 }
 
-# clamav_is_mbox_format ( $ )
+# clamav_is_mbox_format ()
 # IN: -
 # OUT: TRUE if file is in mbox format
 #
-# Check if a given file is in mbox format
+# Check if the quarantine is in mbox format
 #
-sub clamav_is_mbox_format ($)
+sub clamav_is_mbox_format ()
 {
-  my $f = shift;
+  my $d = $config{'clamav_quarantine'};
 
-  return 0 if (! -f $f);
+  return 0 if (! -f $d);
+  return 1 if (-z $d);
 
-  my $h = new FileHandle ($f);
-  my $folder_reader =
-    new Mail::Mbox::MessageParser ({
-      'file_name' => $f,
-      'file_handle' => $h
-    });
-
-  return (!ref ($folder_reader)) ? 0 : 1;
+  return (!ref (&clamav_new_mbox_parser ())) ? 0 : 1;
 }
 
 # clamav_has_clamscan ()
@@ -266,15 +299,16 @@ sub clamav_check_systemd ()
   return !system (&has_command('pidof').' systemd 2>&1 > /dev/null');
 }
 
-# clamav_check_config ()
-# IN: -
+# clamav_check_config ( $ )
+# IN: - 1 if from main page
 # OUT: -
 #
 # check if the module config is ok. if not, display a warning
 # and exit
 # 
-sub clamav_main_check_config
+sub clamav_main_check_config ( $ )
 {
+  my $from_main_page = shift;
   my $ok = 0;
   my $msg = '';
   my $have_systemd = &clamav_check_systemd ();
@@ -373,7 +407,7 @@ sub clamav_main_check_config
   }
 
   # If there was a problem, exit displaying a message
-  &clamav_check_config_exit ($msg) if (!$ok);
+  &clamav_check_config_exit ($msg, $from_main_page) if (!$ok);
 
   &clamav_setup ();
 }
@@ -477,36 +511,35 @@ sub clamav_remote_actions_take_arg ( $ )
   return $clamav_remote_actions{$ra};
 }
 
-# clamav_display_combo_quarantine_items_types ( $ )
-# IN: item to select
+# clamav_display_combo_quarantine_items_types ( $ $ )
+# IN: - Default type
+#     - Infos on types
 # OUT: A buffer with the HTML combo code of a SELECT box
 #
 # Build a HTML select box and return its code
 #
-sub clamav_display_combo_quarantine_items_types ()
+sub clamav_display_combo_quarantine_items_types ( $ $ )
 {
-  my $selected = shift;
+  my ($selected, $infos) = @_;
   my $buf = '';
-  my %types = (
-       $text{'VIRUSES'} => 'virus',
-      $text{'SPAMS'} => 'spam'
-     );
 
-  if (&clamav_is_amavisd_new ())
+  while (my ($k, $v) = each (%$infos))
   {
-    $types{$text{'BADHEADERS'}} = 'badh';
-    $types{$text{'BANNED'}} = 'banned';
+    if ($k =~ /badh|banned|spam|virus/ && int($v))
+    {
+      $types{$text{'OPTION_'.uc($k)}} = $k;
+    }
   }
 
   $buf = qq(<select name="search_type">\n);
-  foreach my $value (sort keys %types)
+  foreach my $value (sort keys (%types))
   {
     $buf .= sprintf (qq(<option value="%s"%s>%s</option>),
               $types{$value},
-              ($types{$value} eq $selected) ? ' selected' : '',
+              ($types{$value} eq $selected) ? ' selected="selected"' : '',
               $value);
   }
-  $buf .= qq(</select>\n);
+  $buf .= qq(</select>);
 
   return $buf;
 }
@@ -585,17 +618,15 @@ sub clamav_quarantine_main_check_config
       !&clamav_is_qmailscanner ()
     ))
   {
-    $msg = qq(<p>$text{'MSG_CONFIG_ALERT_AMAVIS'}</p>);
+    $msg = $text{'MSG_CONFIG_ALERT_AMAVIS'};
   }
-  elsif (
-    $config{'clamav_quarantine'} eq '' ||
-    ! -e $config{'clamav_quarantine'})
+  elsif ($config{'clamav_quarantine'} eq ''||! -e $config{'clamav_quarantine'})
   {
-    $msg = qq(<p>$text{'MSG_CONFIG_ALERT_QUARANTINE'}</p>);
+    $msg = $text{'MSG_CONFIG_ALERT_QUARANTINE'};
   }
   elsif (length ($config{'clamav_quarantine'}) < 8)
   {
-    $msg = sprintf (qq(<p>$text{'MSG_CONFIG_WARNING_QUARANTINE_TO_SHORT'}</p>),
+    $msg = sprintf ($text{'MSG_CONFIG_WARNING_QUARANTINE_TO_SHORT'},
              $config{'clamav_quarantine'});
   }
   else
@@ -630,18 +661,16 @@ sub clamav_signatures_check_config
 # 
 sub clamav_check_config_exit ( $ $ )
 {
-  my $msg = shift;
+  my $error = shift;
   my $main_page = shift;
 
-  print qq(<p>$msg</p>) if ($msg);
-  print qq(<hr>);
   if ($main_page)
   {
-    &footer('/', $text{'index'});
+    &clamav_footer ('/', $text{'index'}, '', $error, undef, 1);
   }
   else
   {
-    &footer('', $text{'RETURN_INDEX_MODULE'});
+    &clamav_footer ('', $text{'RETURN_INDEX_MODULE'}, '', $error);
   }
 
   exit (1);
@@ -921,10 +950,10 @@ sub clamav_vdb_search ( $ )
     if ($first)
     {
       $first = 0;
-      print qq(<table width="99%"><tr $tb><td><b>$text{'NAME'}</b></td></tr>);
+      print qq(<table class="clamav header" width="99%"><tr><td>$text{'NAME'}</td></tr>);
     }
 
-    print '<tr'.(($index++ % 2 == 0) ? '' : ' style="background:#f6f6f6"').'"><td>'.$_.'</td></tr>';
+    print '<tr'.(($index++ % 2)?' class="even"':'').'"><td>'.$_.'</td></tr>';
   }
   close (H);
   
@@ -978,7 +1007,7 @@ sub clamav_display_combos_viruses_prefixes ()
       qq(<select name="prefix$i" onchange="(this.selectedIndex) ? getElementById('prefix1').style.display='inline-block':getElementById('prefix1').style.display='none'">\n)
       :
       qq(<select id="prefix$i" name="prefix$i" style="display:$display1">\n);
-    $ret .= '<option value="">Choose prefix '.($i + 1).'</option>'."\n";
+    $ret .= '<option value="">'.$text{'CHOOSE_PREFIX'}.' '.($i + 1).'</option>'."\n";
     foreach my $p (@{$viruses_prefixes[$i]})
     {
       $ret .=
@@ -1137,11 +1166,10 @@ sub clamav_scandir ( $ $ $ $ )
   my $move_path_option = '';
   my $recursive_option = ($clamscan !~ /clamdscan/ && $recursive) ? ' -r ' : '';
   my $tmp_file = '';
+  my $ret = '';
 
   return if (! -e $dir || ($move_path && !-e $move_path));
 
-  $| = 1;
-      
   $dir =~ s/\/+/\//g;
   $dir = "\"$dir\"";
   if ($move_path)
@@ -1151,12 +1179,12 @@ sub clamav_scandir ( $ $ $ $ )
   }
 
   print qq(
-    <table border=0 width="100%">
-    <tr $tb><td align="center"><b>$text{'CLAMSCAN_COMMAND'}:</b> <code>$clamscan $move_path_option $recursive_option $dir</code></td></tr>
+    <table class="clamav header" width="100%">
+    <tr><td>$text{'CLAMSCAN_COMMAND'}: <code>$clamscan $move_path_option $recursive_option $dir</code></td></tr>
     <tr><td>&nbsp;</td></tr>
     <tr><td align=center>
-    <table border=0 width="80%">
-      <tr $tb><td colspan=3 align=center><b>$text{''}</b></td></tr>
+    <table class="clamav header" width="80%">
+      <tr><td colspan=3>$text{'SCAN_RESULT'}</td></tr>
   );
    
   # Display scanned files
@@ -1165,7 +1193,7 @@ sub clamav_scandir ( $ $ $ $ )
   open (H, "$clamscan $move_path_option $recursive_option $dir 2>&1 |");
   while (($line = <H>) && $line !~ /SCAN SUMMARY/)
   {
-    next if ($line !~ /^([^:]+)\s*\:\s*(.*)$/ || $2 =~ /moved to/);
+    next if ($line !~ /^([^:]+)\s*\:\s*(.*)$/ || $2 =~ /moved to|Empty file/);
     my ($file, $state) = ($1, $2);
     my $state_bg = '';
     my $right = '&nbsp;';
@@ -1187,20 +1215,18 @@ sub clamav_scandir ( $ $ $ $ )
       {
         $tmp_file = "$move_path/".basename($file);
         $right =
-          qq(&nbsp;<input type="checkbox" 
-                name="infected_file$infected" value="$tmp_file">);
+          qq(&nbsp;<input type="checkbox" onchange="updateActionsChecked(this.form, document.getElementById('btn-delete'), 'infected_file')" name="infected_file$infected" value="$tmp_file">);
       }
       else
       {
         $right =
-          qq(&nbsp;<input type="checkbox" 
-                name="infected_file$infected" value="$file">);
+          qq(&nbsp;<input type="checkbox" onchange="updateActionsChecked(this.form, document.getElementById('btn-delete'), 'infected_file')" name="infected_file$infected" value="$file">);
       }
     }
 
     if (!$infected_only || ($infected_only && $is_infected))
     {
-      my $bg = ($index++ % 2 == 0) ? '' : ' style="background:#f6f6f6"';
+      my $bg = ($index++ % 2)?' class="even"':'';
       print qq(
         <tr$bg>
           <td width="45%" align=right valign=middle>$state<span class="circle $state_bg"></span>&nbsp;</td>
@@ -1216,13 +1242,10 @@ sub clamav_scandir ( $ $ $ $ )
 
     if ($move_path)
     {
-      print qq(
-        <tr>
-          <td align=center><b>$text{'INFECTED_FILES_WHERE_MOVED'}</b> $move_path</td>
-        </tr>
-        <tr><td>&nbsp;</td></tr>);
+      $ret = qq($text{'INFECTED_FILES_WHERE_MOVED'} $move_path);
     }
-    print qq(<tr><td align=center><button type="submit" name="delete" class="btn btn-danger">$text{'DELETE_SELECTED'}</button></td></tr>);
+
+    print qq(<tr><td align=center><div><button type="submit" id="btn-delete" name="delete" class="btn btn-danger btn-tiny ui_form_end_submit disabled"><i class="fa fa-fw fa-trash"></i> <span>$text{'DELETE_SELECTED'}</span></button></div></td></tr>);
   }
   print qq(<tr><td>&nbsp;</td></tr>);
   print qq(</table>);
@@ -1230,19 +1253,21 @@ sub clamav_scandir ( $ $ $ $ )
   # Display scan report
   if ($line =~ /SCAN SUMMARY/)
   {
-    print qq(<table width="100%">);
-    print qq(<tr $tb><td colspan=2 align=center><b>$text{'REPORT'}</b></td></tr>);
+    print qq(<table class="clamav header" width="100%">);
+    print qq(<tr><td colspan=2>$text{'REPORT'}</td></tr>);
     $index = 0;
     while ($line = <H>)
     {
       my ($k, $v) = $line =~ /^([^:]+)\s*\:\s*(.*)$/;
-      my $bg = ($index++ % 2 == 0) ? '' : ' style="background:#f6f6f6"';
+      my $bg = ($index++ % 2)?' class="even"':'';
       print qq(<tr$bg><td align=right><b>$k:</b></td><td align=left>$v</td></tr>);
     }
     print qq(</table>);
   }
   
   close (H);
+
+  return $ret;
 }
 
 # clamav_get_db_path ()
@@ -1746,8 +1771,8 @@ sub clamav_check_global_settings ()
   if ($buf)
   {
     $buf = qq(
-      <table border="1">
-      <tr $tb><th>Error</th><th>Description</th></tr>
+      <table class="clamav header">
+      <tr><td>Error</td><td>Description</td></tr>
       $buf
       </table>
     );
@@ -1865,11 +1890,13 @@ sub clamav_display_settings
   {
     &clamav_display_combo_predefined ($type, 1);
     print qq( 
-      <button type="submit" name="ns${type}_add" onclick="this.form.action=(window.location.href.split('#')[0])+'#$type'" class="btn btn-info">$text{'ADD_KEY'}</button>
+      <div style="display:inline-block"><button type="submit" name="ns${type}_add" onclick="this.form.action=(window.location.href.split('#')[0])+'#$type'" class="btn btn-default btn-tiny ui_form_end_submit"><i class="fa fa-fw fa-plus-square"></i> <span>$text{'ADD_KEY'}</span></button></div>
     );
   }
 
-  print qq(<p/><table border=1>);
+  my $index = 0;
+  my $can_write = &clamav_get_acl ('global_settings_write');
+  print qq(<p/><table class="clamav">);
   foreach $key (sort keys %$c)
   {
     next if ($key eq '');
@@ -1878,33 +1905,32 @@ sub clamav_display_settings
 
     foreach $val (@{$c->{$key}})
     {
+      print '<tr'.(($index++ % 2)?' class="even"':'').'>';
+
       # If options has no value yet
       if ($val eq '')
       {
         print qq(
-          <tr><td>$key</td>
-          <input type="hidden" name="${type}_$key\[\]">
-  	<td><font color="silver"><i>$text{'NO_VALUE'}</i></font></td>
+          <td><input type="hidden" name="${type}_$key\[\]">$key</td>
+          <td style="color:silver"><i>$text{'NO_VALUE'}</i></td>
         );
       }
       # If the key has just been added
       elsif ($key eq $newkey || $val eq "$text{'UNDEFINED'}")
       {
         printf (qq(
-          <tr><td bgcolor="gray"><font color="white"><b>$key</b></font></td>
-          <td><input type="text" name="${type}_$key\[\]" size=40
-          value="%s"></td>), &clamav_html_encode ($val));
+          <td style="background:gray;color:#fff"><b>$key</b></td>
+          <td><input type="text" name="${type}_$key\[\]" size=40 value="%s"></td>), &clamav_html_encode ($val));
       }
       # Key has value
       else
       {
         printf (qq(
-          <tr><td>$key</td>
-          <td><input type="text" name="${type}_$key\[\]" size=40
-          value="%s"></td>), &clamav_html_encode ($val));
+          <td>$key</td>
+          <td><input type="text" name="${type}_$key\[\]" size=40 value="%s"></td>), &clamav_html_encode ($val));
       }
 
-      if (&clamav_get_acl ('global_settings_write') == 1)
+      if ($can_write)
       {
         my $endkey = '';
         if ($p{$key} == 2)
@@ -1913,13 +1939,12 @@ sub clamav_display_settings
           ++$i;
         }
         print qq(
-          <td><input title="$text{'DELETE_ITEM'}" type="submit"
-          name="ns${type}_delete_$key$endkey"
-          onclick="this.form.action=(window.location.href.split('#')[0])+'#$type'"
-          value="$text{'DELETE'}"></td>
-          </tr>
+          <td>
+            <div><button title="$text{'DELETE_ITEM'}" type="submit" name="ns${type}_delete_$key$endkey" class="btn btn-default ui_form_end_submit" onclick="this.form.action=(window.location.href.split('#')[0])+'#$type'"><i class="fa fa-fw fa-times-circle"></i></button></div></td>
         );
       }
+
+      print qq(</tr>);
     }
   }
   print qq(</table>);
@@ -2048,23 +2073,23 @@ sub clamav_set_cron_purge ( $ $ )
 }
 
 # clamav_update_db ()
-# IN: -
-# OUT: -
+# OUT: freshclam output.
 #
 # Update virus signatures databases displaying output on the current web page
 # 
-sub clamav_update_db
+sub clamav_update_db ()
 {
-  $| = 1;
-  print qq(<div class="raw-output">);
+  my $ret = qq(<div class="raw-output">);
   open (H, &has_command ('freshclam').' 2>&1 |');
-  while (<H>)
+  while (my $line = <H>)
   {
-    s/^*\n$/<br>/g;
-    if (/load/) {print '.'} else {print};
+    $line =~ s/\n/<br\/>/g;
+    $ret .= $line if ($line !~ /load/);
   }
   close (H);
-  print qq(</div>);
+  $ret .= qq(</div>);
+
+  return $ret;
 }
 
 # clamav_get_cron_settings ( $ )
@@ -2109,13 +2134,13 @@ sub clamav_freshclam_daemon_settings_table ( $ $ )
   my ($freq, $no_auto_update) = @_;
   my $buffer = '';
 
-  $no_auto_update = ($no_auto_update) ? ' class="disabled"' : '';
+  $no_auto_update = ($no_auto_update) ? ' disabled' : '';
 
   $buffer .= qq(
-    <table id="cron-frequency" border="1"$no_auto_update>
-    <tr $tb><td><b>$text{'FREQUENCY'}</b></td></tr>
+    <table id="cron-frequency" class="clamav header$no_auto_update">
+    <tr><td>$text{'FREQUENCY'}</td></tr>
     <tr>
-    <td><select name="freq">
+    <td align=center><select name="freq" onchange="HTMLClassReplace(document.getElementById('apply'), 'btn-success', 'btn-warning')">
   );
 
   foreach my $f (1..50)
@@ -2149,20 +2174,20 @@ sub clamav_cron_settings_table ( $ $ $ )
   ($every_hour, $hour) = split (/\//, $hour);
   ($every_hour, $hour) = ($hour, $every_hour) if (!$hour);
   
-  $no_auto_update = ($no_auto_update) ? ' class="disabled"' : '';
+  $no_auto_update = ($no_auto_update) ? ' disabled' : '';
   $default = ($every_hour) ? ' checked="checked"' : '';
   $buffer .= qq(
-    <table id="cron-frequency" border="0"$no_auto_update>
-      <tr $tb>
-        <td><b>$text{'HOUR'}</b></td>
-        <td><b>$text{'DAY'}</b></td>
+    <table id="cron-frequency" class="clamav header$no_auto_update">
+      <tr>
+        <td>$text{'HOUR'}</td>
+        <td>$text{'DAY'}</td>
       </tr>
       <tr>
-        <td><p/><small><i><input id="every_hours" type="checkbox" name="every_hours"$default>&nbsp;<label for="every_hours">$text{'EVERY_X_HOURS'}</label></i></small></td>
+        <td><p/><small><i><input id="every_hours" type="checkbox" onchange="HTMLClassReplace(document.getElementById('apply'), 'btn-success', 'btn-warning')" name="every_hours"$default>&nbsp;<label for="every_hours">$text{'EVERY_X_HOURS'}</label></i></small></td>
         <td></td>
       </tr>
       <tr>
-        <td><select name="hour">
+        <td><select name="hour" onchange="HTMLClassReplace(document.getElementById('apply'), 'btn-success', 'btn-warning')">
   );
   foreach (0..23)
   {
@@ -2170,7 +2195,7 @@ sub clamav_cron_settings_table ( $ $ $ )
     $buffer .= qq(<option value="$_"$default>$_</option>\n);
   }
   $buffer .= qq(</select></td>
-        <td valign="bottom"><select name="day">);
+        <td valign="bottom"><select name="day" onchange="HTMLClassReplace(document.getElementById('apply'), 'btn-success', 'btn-warning')">);
   $day = 7 if ($day eq '*');
   $default = ($day == 7) ? ' selected="selected"' : '';
   $buffer .= qq(<option value="7"$default>$text{'EVERYDAY'}</option>\n);
@@ -2188,6 +2213,24 @@ sub clamav_cron_settings_table ( $ $ $ )
   return $buffer;
 }
 
+sub clamav_dir_have_file ( $ )
+{
+  my $dir = shift;
+
+  opendir (DH, $dir) || return 1;
+  for (readdir (DH))
+  {
+    next if (substr ($_, 0, 1) eq '.');
+    if (&clamav_dir_have_file ("$dir/$_"))
+    {
+      close (DH);
+      return 1;
+    }
+  }
+
+  close (DH);
+}
+
 # clamav_is_quarantine_repository_empty ()
 # IN: -
 # OUT: true if empty
@@ -2196,19 +2239,10 @@ sub clamav_cron_settings_table ( $ $ $ )
 # 
 sub clamav_is_quarantine_repository_empty
 {
-  my @files = ();
-
-  if (&clamav_is_mbox_format ($config{'clamav_quarantine'}))
-  {
-    return 1 if (! -s $config{'clamav_quarantine'});
-    return 0;
-  }
-
-  opendir (DIR, $config{'clamav_quarantine'});
-  @files = readdir(DIR);
-  closedir (DIR);
-
-  return (($#files - 1) <= 0);
+          # 1 - Quarantine is an empty mbox file
+  return (-z $config{'clamav_quarantine'} ||
+          # 2 - There is no file oin the quarantine directory
+          !&clamav_dir_have_file($config{'clamav_quarantine'}));
 }
 
 # clamav_cut_string ( $ $ )
@@ -2527,14 +2561,7 @@ sub clamav_print_email ( $ )
   # If mbox format
   if ($file =~ /^\d/)
   {
-    my $filename = $config{'clamav_quarantine'};
-    my $filehandle = new FileHandle($filename);
-
-    my $folder_reader =
-    new Mail::Mbox::MessageParser( {
-      'file_name' => $filename,
-      'file_handle' => $filehandle,
-    } );
+    my $folder_reader = &clamav_new_mbox_parser ();
 
     # This is the main loop. It's executed once for each email
     while (!$folder_reader->end_of_file ())
@@ -2614,10 +2641,10 @@ sub clamav_print_email_infos ( $ )
   $to = &clamav_html_encode ($to);
 
   print qq(
-    <p><table border=0>
-    <tr><td><b>$text{'SUBJECT'}: </b></td><td>$subject</td><tr>
-    <tr><td><b>$text{'FROM'}: </b></td><td>$from</td><tr>
-    <tr><td><b>$text{'TO'}: </b></td><td>$to</td><tr>
+    <p><table class="clamav keys-values">
+    <tr><td>$text{'SUBJECT'}: </td><td>$subject</td><tr>
+    <tr><td>$text{'FROM'}: </td><td>$from</td><tr>
+    <tr><td>$text{'TO'}: </td><td>$to</td><tr>
     </table></p>
   );
 }
@@ -2633,19 +2660,28 @@ sub clamav_print_email_infos ( $ )
 #
 sub clamav_purge_quarantine ()
 {
-  my $cmd = 
-    "$root_directory/$module_name/bin/purge_quarantine " .
-    $config{'clamav_quarantine'};
+  my $out = '';
 
-  $clamav_error = '';
+  if (-f $config{'clamav_quarantine'})
+  {
+    open (H, '>', $config{'clamav_quarantine'});close (H);
+  }
+  else
+  {
+    my $cmd = 
+      "$root_directory/$module_name/bin/purge_quarantine " .
+      $config{'clamav_quarantine'};
+  
+    $clamav_error = '';
+  
+    open (H, "($cmd) 2>&1 |");
+    while (<H>) {$out .= $_}
+    close (H);
+  
+    $clamav_error = $out if ($out ne '');
+  }
 
-  open (H, "($cmd) 2>&1 |");
-  while (<H>) {$out .= $_}
-  close (H);
-
-  $clamav_error = $out if ($out ne '');
-
-  return ($out ne '') ? KO : OK;
+  return ($clamav_error) ? KO : OK;
 }
 
 # clamav_resend_email ( $ $ $ $ )
@@ -2681,14 +2717,7 @@ sub clamav_resend_email
   # mbox format
   if ($base =~ /^\d/)
   {
-    my $filename = $config{'clamav_quarantine'};
-    my $filehandle = new FileHandle($filename);
-
-    my $folder_reader =
-      new Mail::Mbox::MessageParser( {
-        'file_name' => $filename,
-        'file_handle' => $filehandle,
-      } );
+    my $folder_reader = &clamav_new_mbox_parser ();
 
     while (!$folder_reader->end_of_file ())
     {
@@ -2846,6 +2875,16 @@ sub clamav_learn_notaspam
   return OK;
 }
 
+sub clamav_new_mbox_parser ()
+{
+  my $filename = $config{'clamav_quarantine'};
+
+  return new Mail::Mbox::MessageParser ({
+           'file_name' => $filename,
+           'file_handle' => new FileHandle ($filename),
+           'enable_cache' => 0});
+}
+
 # clamav_remove_email ( $ )
 # IN: base name of the email file on the disk
 # OUT: OK if all is ok. If not: KO.
@@ -2858,26 +2897,20 @@ sub clamav_remove_email
   my $res = -1;
 
   return KO if (!&is_secure ($base));
-  
+
   # mbox format
   if ($base =~ /^\d/)
   {
-    my $filename = $config{'clamav_quarantine'};
-    my $filehandle = new FileHandle($filename);
+    my $folder_reader = &clamav_new_mbox_parser ();
 
-    my $folder_reader =
-      new Mail::Mbox::MessageParser( {
-        'file_name' => $filename,
-        'file_handle' => $filehandle,
-      } );
-
-    $tmppath = "$config{'clamav_working_path'}/.clamav/$remote_user/".time();
+    $tmppath = "$config{'clamav_working_path'}/.clamav/$remote_user/".
+                &clamav_get_uniq_id();
     open (H, '>', $tmppath);
     my $i = 0;
     while (!$folder_reader->end_of_file ())
     {
       my $email = $folder_reader->read_next_email ();
-      print H "$$email" if ($i++ != $base);
+      print H $$email if ($i++ != $base);
     }
     close (H);
 
@@ -2923,14 +2956,13 @@ sub clamav_print_log
   my ($file, $lines) = @_;
   my @content = ();
   my $tail = &has_command ('tail');
+  my @logs = &clamav_get_logfiles ();
 
-  return if (!&is_secure ($file) || !&is_secure ($lines));
+  return if (!&is_secure ($file) || !&is_secure ($lines) ||
+             !grep (/$file/, @logs));
   
   open (H, '<', $file);
-  if (!$lines)
-    {@content = <H>}
-  else
-    {@content = `$tail -n $lines $file`}
+  @content = ($lines) ? `$tail -n $lines $file` : <H>;
   close (H);
                                                                                 
   printf (qq(<textarea rows=30 style="width:100%">%s</textarea>\n), 
@@ -2989,7 +3021,6 @@ sub clamav_print_quarantine_table_mailscanner ( $ $ $ $ $ $ $ $ $ $ $)
   my @arows = ();
   my $cyear = &clamav_get_current_year ();
   my $is_spam = 0;
-  my %hrow = ();
 
   $current = int ($current);
 
@@ -3043,7 +3074,7 @@ sub clamav_print_quarantine_table_mailscanner ( $ $ $ $ $ $ $ $ $ $ $)
         );
 
       next if (!&clamav_quarantine_add_row ($header{'Subject'}, '', 
-        $msg, '...', '...', $mail_from, $header{'From'}, $mail_to, 
+        $msg, '', '', $mail_from, $header{'From'}, $mail_to, 
         $header{'To'}, "$quarantine_path/$msg", $date1, $date2, \@arows));
 
         $count++;
@@ -3065,16 +3096,11 @@ sub clamav_print_quarantine_table_mailscanner ( $ $ $ $ $ $ $ $ $ $ $)
   }
   
   # Return if no result
-  if ($count <= 0)
-  { 
-    print qq(<p><b>$text{'NO_RESULT_QUARANTINE'}</b></p>);
-    return;
-  }
+  return 0 if ($count <= 0);
 
   @arows = sort clamav_sort_by_date_quarantine_table (@arows);
 
-  &clamav_print_quarantine_table_display ($current, $search_type, 
-    \%hrow, \@arows);
+  &clamav_print_quarantine_table_display ($current, $search_type, \@arows, 1);
 
   return $count;
 }
@@ -3090,6 +3116,7 @@ sub clamav_get_current_year ()
   return ((localtime (time ()))[5]) + 1900;
 }
 
+#FIXME I need quarantine to fix this function!
 # clamav_print_quarantine_table_milter ( $ $ $ $ $ $ $ $ $ $ $ )
 # IN: search type ('virus', 'spam')
 #     current page
@@ -3116,7 +3143,6 @@ sub clamav_print_quarantine_table_milter ( $ $ $ $ $ $ $ $ $ $ $ )
       $day2, $month2, $year2) = @_;
   my @files = ();
   my @arows = ();
-  my %hrow = ();
   my $i = 0;
   my $count = 0;
   my $date1 = '';
@@ -3161,7 +3187,8 @@ sub clamav_print_quarantine_table_milter ( $ $ $ $ $ $ $ $ $ $ $ )
     my $virus = '';
     my $url_virus = '';
     
-    $msg =~ /msg\.[\w]+\.(.*)$/;
+    next if ($msg !~ /msg\.[\w]+\.(.*)$/);
+
     $virus = $1;
     $url_virus = &urlize ($virus);
 
@@ -3173,20 +3200,16 @@ sub clamav_print_quarantine_table_milter ( $ $ $ $ $ $ $ $ $ $ $ )
   }
   
   # Return if no result
-  if ($count <= 0)
-  { 
-    print qq(<p><b>$text{'NO_RESULT_QUARANTINE'}</b></p>);
-    return;
-  }
+  return 0 if ($count <= 0);
 
   @arows = sort clamav_sort_by_date_quarantine_table (@arows);
-
-  &clamav_print_quarantine_table_display ($current, $search_type, 
-    \%hrow, \@arows);
+  
+  &clamav_print_quarantine_table_display ($current, $search_type, \@arows);
 
   return $count;
 }
 
+#FIXME I need quarantine to fix this function!
 # clamav_print_quarantine_table_amavis_ng ( $ $ $ $ $ $ $ $ $ $ $ )
 # IN: search type ('virus', 'spam')
 #     current page
@@ -3267,29 +3290,37 @@ sub clamav_print_quarantine_table_amavis_ng ( $ $ $ $ $ $ $ $ $ $ $ )
   }
   
   # Return if no result
-  if ($count <= 0)
-  { 
-    print qq(<p><b>$text{'NO_RESULT_QUARANTINE'}</b></p>);
-    return;
-  }
+  return 0 if ($count <= 0);
 
   print qq(
-    <table>
-    <tr $tb>
-    <td><b>$text{'DATE'}</b></td>
-    <td><b>$text{'SUBJECT'}</b></td>
-    <td><b>$text{'VIRUS'}</b></td>
-    <td><b>$text{'FROM'}</b></td><td><b>$text{'TO'}</b></td>);
+    <table class="clamav header">
+    <tr>
+    <td>$text{'DATE'}</td>
+    <td>$text{'SUBJECT'}</td>
+    <td>$text{'VIRUS'}</td>
+    <td>$text{'FROM'}</td>
+    <td>$text{'TO'}</td>);
     
   if (&clamav_get_acl ('quarantine_resend') +
     &clamav_get_acl ('quarantine_delete') != 0)
-    {print qq(<td colspan=2><b>$text{'ACTION'}</b></td>)}
+    {print qq(<td colspan=2>$text{'ACTION'}</td>)}
     
   print qq(</tr>);
 
-  # Write javascript function to select/unselect all items
-  &clamav_print_javascript_check_uncheck_all (
-    'quarantine-result', 'quarantine_file');
+  #FIXME Need to be removed
+  print qq(
+    <script>
+      function check_uncheck_all (value)
+      {
+        var form = document.getElementById('quarantine-result');
+        for (var i = 0, len = form.length; i < len; i++)
+        {
+	  if (form[i].name.indexOf ('quarantine_file') >= 0)
+	    form[i].checked = value;
+        }
+      }
+    </script>
+  );
 
   # Display search result
   for ($i = ceil ($current * MAX_PAGE_ITEMS); 
@@ -3431,7 +3462,6 @@ sub clamav_print_quarantine_table_amavisd_new ( $ $ $ $ $ $ $ $ $ $ $ )
   my $end = 0;
   my @files = ();
   my @arows = ();
-  my %hrow = ();
   my $cyear = &clamav_get_current_year ();
   my $mbox = 0;
 
@@ -3445,24 +3475,20 @@ sub clamav_print_quarantine_table_amavisd_new ( $ $ $ $ $ $ $ $ $ $ $ )
   $mail_to =~ s/ //g;
 
   # If mbox format
-  if (&clamav_is_mbox_format ($config{'clamav_quarantine'}))
+  if (&clamav_is_mbox_format ())
   {
-    my $filename = $config{'clamav_quarantine'};
-    my $filehandle = new FileHandle($filename);
-
     $mbox = 1;
 
-    my $folder_reader =
-      new Mail::Mbox::MessageParser( {
-        'file_name' => $filename,
-        'file_handle' => $filehandle,
-      } );
-
-    # This is the main loop. It's executed once for each email
-    while (!$folder_reader->end_of_file ())
+    if (! -z $config{'clamav_quarantine'})
     {
-      my $email = $folder_reader->read_next_email ();
-      $files[$i++] = $$email;
+      my $folder_reader = &clamav_new_mbox_parser ();
+
+      # This is the main loop. It's executed once for each email
+      while (!$folder_reader->end_of_file ())
+      {
+        my $email = $folder_reader->read_next_email ();
+        $files[$i++] = $$email;
+      }
     }
   }
   else
@@ -3490,7 +3516,7 @@ sub clamav_print_quarantine_table_amavisd_new ( $ $ $ $ $ $ $ $ $ $ $ )
     }
     else
     {
-      my $msg = $i;
+      $msg = $i;
       $mail = $files[$i];
       my %header = &clamav_get_email_header_values (
           $files[$i], qw(Delivered-To));
@@ -3568,16 +3594,11 @@ sub clamav_print_quarantine_table_amavisd_new ( $ $ $ $ $ $ $ $ $ $ $ )
   }
 
   # Return if no result
-  if ($count <= 0)
-  { 
-    print qq(<p><b>$text{'NO_RESULT_QUARANTINE'}</b></p>);
-    return;
-  }
+  return 0 if ($count <= 0);
 
   @arows = sort clamav_sort_by_date_quarantine_table (@arows);
 
-  &clamav_print_quarantine_table_display ($current, $search_type, 
-    \%hrow, \@arows);
+  &clamav_print_quarantine_table_display ($current, $search_type, \@arows);
 
   return $count;
 }
@@ -3612,7 +3633,6 @@ sub clamav_print_quarantine_table_qmailscanner ( $ $ $ $ $ $ $ $ $ $ $ )
   my $count = 0;
   my @files = ();
   my @arows = ();
-  my %hrow = ();
   my $cyear = &clamav_get_current_year ();
 
   $current = int ($current);
@@ -3665,16 +3685,11 @@ sub clamav_print_quarantine_table_qmailscanner ( $ $ $ $ $ $ $ $ $ $ $ )
   }
 
   # Return if no result
-  if ($count <= 0)
-  { 
-    print qq(<p><b>$text{'NO_RESULT_QUARANTINE'}</b></p>);
-    return;
-  }
+  return 0 if ($count <= 0);
 
   @arows = sort clamav_sort_by_date_quarantine_table (@arows);
 
-  &clamav_print_quarantine_table_display ($current, $search_type, 
-    \%hrow, \@arows);
+  &clamav_print_quarantine_table_display ($current, $search_type, \@arows);
 
   return $count;
 }
@@ -3790,20 +3805,19 @@ sub clamav_download ()
   exit;
 }
 
-# clamav_print_quarantine_table_display ( $ $ \% \@ )
+# clamav_print_quarantine_table_display ( $ $ \@ $ )
 # IN: current page
 #     search type ('virus', 'spam')
-#     hash ref on rows items
 #     array ref of rows
+#     1 if we must not display "virus" column
 # OUT: -
 #
 # This function is shared by all functions that display quarantine
 # search results
 # 
-sub clamav_print_quarantine_table_display ( $ $ \% \@ )
+sub clamav_print_quarantine_table_display ( $ $ \@ $ )
 {
-  my ($current, $search_type, $a, $b) = @_;
-  my %hrow = %$a;
+  my ($current, $search_type, $b, $no_virus) = @_;
   my @arows = @$b;
   my $page_count = 0;
   my $i = 0;
@@ -3812,64 +3826,59 @@ sub clamav_print_quarantine_table_display ( $ $ \% \@ )
   if (&clamav_get_acl ('quarantine_delete') == 1 ||
       &clamav_get_acl ('quarantine_resend') == 1)
   {
-    # Write javascript function to select/unselect all items
-    &clamav_print_javascript_check_uncheck_all (
-      'quarantine-result', 'quarantine_file');
-
     print '<hr/>';
 
     if (&clamav_get_acl ('quarantine_export') == 1)
     {
-      print qq(<p/><button type="button" class="btn btn-info" onclick="location.href='quarantine_main.cgi?export=1'">$text{'EXPORT'}</button>);
+      print qq(<p/><button type="button" class="btn btn-info btn-tiny" onclick="location.href='quarantine_main.cgi?export=1'"><i class="fa fa-fw fa-download"></i> <span>$text{'EXPORT'}</span></button>);
     }
 
      print qq(
        <p/>
-       <input id="checkuncheck" type="checkbox" 
-              onClick="check_uncheck_all (this.checked)"> 
-       <label for="checkuncheck">$text{'CHECK_UNCHECK_ALL'}</label>
+       <a data-checked="0" class="btn btn-inverse btn-tiny ui_link_replaced" href="#" onclick="checkUncheckAll(this, 'quarantine_file', '$text{'CHECK_ALL'}', '$text{'UNCHECK_ALL'}');updateActionsChecked(document.getElementById('quarantine-result'), document.getElementById('actions-checked'), 'quarantine_file');return false"><i class="fa fa-fw fa-check-square-o"></i> <span>$text{'CHECK_ALL'}</span></a>
      );
 	 
+    print qq(<br/><div id="actions-checked" class="btn-group disabled">);
     if (&clamav_get_acl ('quarantine_delete') == 1)
     {
       print qq(
-        <p/><button type="submit" name="delete" 
-	          class="btn btn-info">$text{'DELETE_SELECTED'}</button>);
+        <p/><button type="submit" name="delete" class="btn btn-danger btn-tiny ui_form_end_submit"><i class="fa fa-fw fa-times-circle"></i> <span>$text{'DELETE_SELECTED'}</span></button>);
     }
     
     if (&clamav_get_acl ('quarantine_resend') == 1)
     {
-      print qq(&nbsp;<button type="submit" name="resend" 
-                      class="btn btn-info">$text{'RESEND_SELECTED'}</button>);
+      print qq(&nbsp;<button type="submit" name="resend" class="btn btn-info btn-tiny ui_form_end_submit"><i class="fa fa-fw fa-envelope"></i> <span>$text{'RESEND_SELECTED'}</span></button>);
     }
+    print qq(</div>);
   }
 
   print qq(
-    <p/><table border=1 width="100%">
-    <tr $tb>
-    <td><b>$text{'DATE'}</b></td><td><b>$text{'SUBJECT'}</b></td>);
+    <p/><table class="clamav header" width="100%">
+    <tr>
+    <td>$text{'DATE'}</td><td>$text{'SUBJECT'}</td>);
   # Spam
   if ($search_type eq 'spam') 
   {
-    print "<td><b>$text{'SPAM_LEVEL'}</b></td>" 
+    print "<td>$text{'SPAM_LEVEL'}</td>" 
       if (!&clamav_is_mailscanner ());
   }
   # Bad header
   elsif ($search_type eq 'badh' || $search_type eq 'banned')
   {
-    print "<td><b>$text{'DESCRIPTION'}</b></td>";
+    print "<td>$text{'DESCRIPTION'}</td>";
   }
   # Virus
-  else 
+  elsif (!$no_virus)
   {
-    print "<td><b>$text{'VIRUS'}</b></td>";
+    print "<td>$text{'VIRUS'}</td>";
   }
-  print qq(<td><b>$text{'FROM'}</b></td><td><b>$text{'TO'}</b></td>);
+  print qq(<td>$text{'FROM'}</td>
+           <td>$text{'TO'}</td>);
 
   if (&clamav_get_acl ('quarantine_resend') == 1 ||
       &clamav_get_acl ('quarantine_delete') == 1)
   {
-    print qq(<td><b>$text{'ACTION'}</b></td>);
+    print qq(<td>$text{'ACTION'}</td>);
   }
     
   print qq(</tr>);
@@ -3909,7 +3918,7 @@ sub clamav_print_quarantine_table_display ( $ $ \% \@ )
     if ($search_type eq 'spam') {$virusc = length ($virusc)}
       else {$virusc = &clamav_html_encode ($virusc)}
 
-    my $bg = ($index++ % 2 == 0) ? '' : ' style="background:#f6f6f6"';
+    my $bg = ($index++ % 2)?' class="even"':'';
     print qq(
         <tr$bg>
 	<td title="$text{'DATE'}: $hrow{'date'} | $text{'FROM'}: $from | $text{'TO'}: $to | );
@@ -3937,7 +3946,7 @@ sub clamav_print_quarantine_table_display ( $ $ \% \@ )
       # Spam
       if ($search_type eq 'spam')
       {
-        print qq(<td title="$text{'SPAM_LEVEL'}: $virus"><b>$virusc</b></td>) if (!&clamav_is_mailscanner ());
+        print qq(<td align=center title="$text{'SPAM_LEVEL'}: $virus"><b>$virusc</b></td>) if (!&clamav_is_mailscanner ());
 	$export_line .= ';"";"'.$viruscsv.'";""';
       }
       # Bad header
@@ -3949,8 +3958,12 @@ sub clamav_print_quarantine_table_display ( $ $ \% \@ )
       #virus
       else
       {
-        print qq(<td><b><a href="/$module_name/vdb_search_main.cgi?search=on&virus=$hrow{'url_virus'}" title="$text{'VIRUS'}: $virus" target="_BLANK">$virusc</a></b></td>);
 	$export_line .= ';"";"";"'.$viruscsv.'"';
+
+        if (!$no_virus)
+        {
+          print qq(<td><b><a href="/$module_name/vdb_search_main.cgi?search=on&virus=$hrow{'url_virus'}" title="$text{'VIRUS'}: $virus" target="_BLANK">$virusc</a></b></td>);
+        }
       }
       print qq(  <td title="$text{'FROM'}: $from">$fromc</td>
         <td title="$text{'TO'}: $to">$toc</td>);
@@ -3958,8 +3971,7 @@ sub clamav_print_quarantine_table_display ( $ $ \% \@ )
 	if (&clamav_get_acl ('quarantine_resend') == 1 || 
 	&clamav_get_acl ('quarantine_delete') == 1)
 	{
-	  print qq(<td><input type="checkbox" name="quarantine_file$i" 
-	                          value="$hrow{'base'}"></td>);
+	  print qq(<td align=center><input type="checkbox" name="quarantine_file$i" onchange="updateActionsChecked(this.form, document.getElementById('actions-checked'), 'quarantine_file')" value="$hrow{'base'}"/></td>);
 	}
 	else
 	{
@@ -4022,32 +4034,6 @@ sub clamav_html_encode ( $ )
   return $str;
 }
 
-# clamav_print_javascript_check_uncheck_all ( $ $ )
-# IN: id of the form.
-#     field name.
-# OUT: -
-#
-# Print the necessary javascript to manage check/unckeck all feature.
-# 
-sub clamav_print_javascript_check_uncheck_all ( $ $ )
-{
-  my ($form, $name) = @_;
-  
-  print qq(
-    <script>
-      function check_uncheck_all (value)
-      {
-        var form = document.getElementById('$form');
-        for (var i = 0, len = form.length; i < len; i++)
-        {
-	  if (form[i].name.indexOf ('$name') >= 0)
-	    form[i].checked = value;
-        }
-      }
-    </script>
-  );
-}
-
 # clamav_format_date ( $ $ $ )
 # IN: The days, month and year
 # OUT: The formated date (YYYY-MM-DD)
@@ -4108,7 +4094,7 @@ sub clamav_get_period_chooser ( $ $ $ $ $ $ )
   my ($day1, $month1, $year1, $day2, $month2, $year2) = @_;
   
   # First period
-  print "<table border=0><tr>";
+  print qq(<table class="clamav noheader nokeys-values"><tr>);
   print qq(<td>$text{'FROM_PERIOD'}</td><td><input type="text" name="day1" size="2" maxlength="2" value="$day1"></td><td><select name="month1">);
   print &clamav_get_months_combo_options ($month1);
   print qq(</select></td><td><input type="text" name="year1" size="4" maxlength="4" value="$year1"></td><td>);
@@ -4164,18 +4150,12 @@ sub clamav_display_page_panel ( $ $ % )
     $url .= "&$k=".&urlize($v);
   }
 
-  print qq(<p><table border="0" cellspacing="2" cellpadding="2" width="40%">);
-  if ($current > 0)
-  {
-    print qq(<tr><td valign="top" align="center" width="10%">);
-    print qq(<a href="quarantine_main.cgi?cp=$previous&$url">);
-    print qq($text{'PREVIOUS'}</a>);
-  }
-  else
-  {
-    print qq(<tr><td valign="top" align="center" width="10%">&nbsp;);
-  };
-  print qq(</td><td valign="top" align="center" nowrap>&nbsp;);
+  print qq(<div><table class="clamav nav-panel">);
+
+  $disabled = ($current > 0) ? '' : ' disabled';
+  print qq(<tr><td align="center" width="10%">);
+  print qq(<a class="btn btn-inverse ui_link_replaced$disabled" href="quarantine_main.cgi?cp=$previous&$url"><i class="fa fa-fw fa-arrow-left"></i> <span>$text{'PREVIOUS'}</span></a>);
+  print qq(</td><td style="text-align:center;vertical-align:middle" nowrap>&nbsp;);
 
   my $i = 0;
   my $mask = 0;
@@ -4206,48 +4186,59 @@ sub clamav_display_page_panel ( $ $ % )
     $i++;
   }
 
-  if ($current < $limit - 1)
-  {
-    print qq(&nbsp;</td><td valign="top" align="center" width="10%">);
-    print qq(<a href="quarantine_main.cgi?cp=$next&$url">$text{'NEXT'}</a>);
-  }
-  else
-  {
-    print qq(</td><td valign="top" align="center" width="10%">&nbsp;);
-  };
+  $disabled = ($current < $limit - 1) ? '' : ' disabled';
+  print qq(&nbsp;</td><td align="center" width="10%">);
+  print qq(<a class="btn btn-inverse ui_link_replaced$disabled" href="quarantine_main.cgi?cp=$next&$url"><span>$text{'NEXT'}</span> <i class="fa fa-fw fa-arrow-right"></i></a>);
   print qq(
     </td></tr>
-    </table></p>
+    </table></div>
   );
 }
 
 # clamav_footer ()
-# IN: -
-# OUT: -
+# IN: - url to redirect to
+#     - text for return link button
+#     - msg success
+#     - msg error
 #
-# Display versions for both this module and clamav
+# Display sucess or error mesage.
 # 
-sub clamav_footer ()
+sub clamav_footer ( $ $ $ $ $ $)
 {
-  my $clamav_version = &clamav_get_version ();
-  my $wbmclamav_version = $module_info{'version'};
-  
-  print qq(
-    <i>ClamAV</i> <b>$clamav_version</b> / 
-    <i>wbmclamav</i> <b>$wbmclamav_version</b>
-  );
+  my ($url, $link_label, $success, $error, $info, $from_main_page) = @_;
+  my $msg;
+
+  if ($msg = $error)
+  {
+    $msg_type = 'danger';
+  }
+  elsif ($msg = $success)
+  {
+    $msg_type = 'success';
+  }
+  elsif ($msg = $info)
+  {
+    $msg_type = 'info';
+  }
+
+  print qq(<hr/>) if (!$from_main_page);
+  &clamav_display_msg ($msg, $msg_type) if ($msg);
+  &footer ($url, $link_label);
 }
 
-# clamav_check_deps ()
-# IN: -
+# clamav_check_deps ( $ )
+# IN: - 1 if from main_page
 # OUT: -
 #
 # Check if all dependencies are ok for perl
 # -> test them before with the "eval" function and add all bad
 #    dependencies in the global %deps hash
 #
-sub clamav_check_deps ()
+sub clamav_check_deps ( $ )
 {
+  my $from_main_page = shift;
+  my $error = '';
+
   # If no quarantine management, we do not need the following modules, so
   # remove them from the error list
   if ($config{'clamav_quarantine_soft'} == CS_NONE)
@@ -4283,20 +4274,21 @@ sub clamav_check_deps ()
 
   return if (!%deps);
                                                                                 
-  print qq($text{'PERL_DEPS_ERROR'});
-  print qq(<ul>);
+  $error = qq($text{'PERL_DEPS_ERROR'}<p/>);
+  $error .= qq(<ul>);
   while (my ($k, $v) = each (%deps))
   {
-    print qq(<li><b>$k</b></li>\n);
+    $error .= qq(<li><b>$k</b></li>);
   }
-  print qq(</ul>);
+  $error .= qq(</ul>);
   
-  &clamav_check_config_exit ('', 1);
+  &clamav_check_config_exit ($error, $from_main_page);
 }
 
 # clamav_get_quarantine_infos ()
 # IN: -
-# OUT: a hash with quarantine informations (size, viruses count, spams count).
+# OUT: A array  with 0 -> hash with quarantine informations (size, viruses
+#      count, spams count) and 1 -> 0 if quarantine empty.
 #
 # Return informations about the quarantine repository.
 # 
@@ -4312,11 +4304,12 @@ sub clamav_get_quarantine_infos ()
 
   $infos{'directory'} = $config{'clamav_quarantine'};
   $infos{'size'} = $text{'EMPTY'};
-  $infos{'viruses'} = $text{'NONE'};
-  $infos{'spams'} = $text{'NONE'};
+  $infos{'virus'} = $text{'NONE'};
+  $infos{'spam'} = $text{'NONE'};
   $infos{'badh'} = $text{'NONE'};
   $infos{'banned'} = $text{'NONE'};
   $infos{'graph_name'} = '';
+  $infos{'empty'} = 1;
     
   if (!&clamav_is_quarantine_repository_empty ())
   {
@@ -4328,37 +4321,43 @@ sub clamav_get_quarantine_infos ()
     # amavisd-new
     if (&clamav_is_amavisd_new ())
     {
-      ($infos{'viruses'}, $infos{'spams'}, $infos{'badh'}, $infos{'banned'},
+      ($infos{'virus'}, $infos{'spam'}, $infos{'badh'}, $infos{'banned'},
        %graph_data) = &quarantine_get_infos_amavisd_new ();
     }
     # mailscanner
     elsif (&clamav_is_mailscanner ())
     {
-      ($infos{'viruses'}, $infos{'spams'}, %graph_data) = 
+      ($infos{'virus'}, $infos{'spam'}, %graph_data) = 
         &quarantine_get_infos_mailscanner ();
     }
     # qmailscanner
     elsif (&clamav_is_qmailscanner ())
     {
-      ($infos{'viruses'}, $infos{'spams'}, %graph_data) = 
+      ($infos{'virus'}, $infos{'spam'}, %graph_data) = 
         &quarantine_get_infos_qmailscanner ();
     }
     # amavis-ng
     elsif (&clamav_is_amavis_ng ())
     {
-      ($infos{'viruses'}, $infos{'spams'}) = &quarantine_get_infos_amavis_ng ();
+      ($infos{'virus'}, $infos{'spam'}) = &quarantine_get_infos_amavis_ng ();
     }
     # milter
     elsif (&clamav_is_milter ())
     {
-      ($infos{'viruses'}, $infos{'spams'}) = &quarantine_get_infos_milter ();
+      ($infos{'virus'}, $infos{'spam'}) = &quarantine_get_infos_milter ();
     }
+
+    $infos{'empty'} = !($infos{'virus'}||$infos{'spam'}||
+                        $infos{'badh'}||$infos{'banned'});
 
     # For the moment, quarantine evolution graph is only available
     # for amavisd-new, mailscanner and qmailscanner quarantines
-    if (&clamav_is_amavisd_new () || 
-        &clamav_is_qmailscanner () || 
-        &clamav_is_mailscanner)
+    if (!$infos{'empty'} &&
+        (
+          &clamav_is_amavisd_new () || 
+          &clamav_is_qmailscanner () || 
+          &clamav_is_mailscanner ()
+        ))
     {
       my @date = ();
       my @virus = ();
@@ -4395,6 +4394,7 @@ sub clamav_get_quarantine_infos ()
       @banned = () if (!$bannedcount);
       @badh = () if (!$badhcount);
 
+      # No UTF-8 support for now...
       my $graph = new GD::Graph::lines (QG_WIDTH, QG_HEIGHT);
       $graph->set (
           title => "Quarantine evolution",
@@ -4416,9 +4416,7 @@ sub clamav_get_quarantine_infos ()
           legendclr => 'white',
           valuesclr => 'white',
           textclr => 'green',
-          transparent => 0,
-          logo => "$root_directory/$module_name/images/icon.gif",
-          logo_position => 'UR'
+          transparent => 0
       );
   
       if (&clamav_is_amavisd_new ())
@@ -4448,7 +4446,7 @@ sub clamav_get_quarantine_infos ()
     }
   }
 
-  return %infos;
+  return %infos
 }
 
 # quarantine_get_infos_milter ()
@@ -4525,24 +4523,20 @@ sub quarantine_get_infos_amavisd_new ()
   my $mbox = 0;
   
   # If mbox format
-  if (&clamav_is_mbox_format ($config{'clamav_quarantine'}))
+  if (&clamav_is_mbox_format ())
   {
-    my $filename = $config{'clamav_quarantine'};
-    my $filehandle = new FileHandle ($filename);
-
     $mbox = 1;
 
-    my $folder_reader =
-      new Mail::Mbox::MessageParser( {
-        'file_name' => $filename,
-        'file_handle' => $filehandle,
-      } );
-
-    # This is the main loop. It's executed once for each email
-    while (!$folder_reader->end_of_file ())
+    if (! -z $config{'clamav_quarantine'})
     {
-      my $email = $folder_reader->read_next_email ();
-      $files[$i++] = $$email;
+      my $folder_reader = &clamav_new_mbox_parser ();
+  
+      # This is the main loop. It's executed once for each email
+      while (!$folder_reader->end_of_file ())
+      {
+        my $email = $folder_reader->read_next_email ();
+        $files[$i++] = $$email;
+      }
     }
   }
   else
@@ -4742,19 +4736,25 @@ sub clamav_display_remote_actions ($ $ $ $)
   $action ||= 'PING';
 
   print qq(
-    <table border="1">
-      <tr><td><b>$text{'HOST'}</b></td>
-      <td><input type="text" name="host" value="$host"></td></tr>
-      <tr><td><b>$text{'PORT'}</b></td>
-      <td><input type="text" name="port" value="$port"></td></tr>
-      <tr><td><b>$text{'COMMAND'}</b><br><select name="action" onchange="var v=this.options[this.selectedIndex].text;var a=document.getElementById('clamd-arg');var av=document.getElementById('clamd-arg-v');if(v.indexOf('*')!=-1){a.style.display='block'}else{av.value='';a.style.display='none'}">);
+    <table class="clamav keys-values">
+      <tr>
+        <td>$text{'HOST'}</td>
+        <td><input type="text" name="host" value="$host"></td>
+      </tr>
+      <tr>
+        <td>$text{'PORT'}</td>
+        <td><input type="text" name="port" value="$port"></td>
+      </tr>
+      <tr>
+        <td>$text{'COMMAND'}</td>
+        <td><select name="action" onchange="var v=this.options[this.selectedIndex].text;var a=document.getElementById('clamd-arg');var av=document.getElementById('clamd-arg-v');if(v.indexOf('*')!=-1){HTMLClassRemove(document.getElementById('clamd-arg'), 'disabled')}else{av.value='';HTMLClassAdd(document.getElementById('clamd-arg', 'disabled'))}">);
 
   foreach my $key (sort keys %clamav_remote_actions)
   {
     my $selected = ($key eq $action);
     my $have_arg = ($clamav_remote_actions{$key} == 1);
 
-    $class = ' style="display:none"' if ($selected && !$have_arg);
+    $class = ' class="disabled"' if ($selected && !$have_arg);
 
     my $name = sprintf ("$key%s", ($have_arg) ? ' *' : '');
     printf (qq(<option value="$key"%s>$name</option>),
@@ -4763,7 +4763,12 @@ sub clamav_display_remote_actions ($ $ $ $)
 
   print qq(
     </select></td>
-    <td id="clamd-arg" $class valign="bottom"><small><i>$text{'FD_TO_SCAN'}:</i></small><br/><input type="text" name="arg" id="clamd-arg-v" value="$arg"></td></tr>
+    </tr>
+    <tr id="clamd-arg"$class>
+      <td><b>$text{'FD_TO_SCAN'}:</b></td>
+      <td nowrap><input type="text" name="arg" id="clamd-arg-v" value="$arg">);
+  print &file_chooser_button('clamd-arg-v', 1, 0);
+  print qq(</td></tr>
     </table>);
 }
 

@@ -14,10 +14,9 @@ Open the Webmin modules manager and upload the wbmclamav file.
 
 ### From the Git repository:
 
-1. Change the owner and permissions of the entire tree:
+1. Rename your local Git repository (optional):
 ```bash
-chmod -R 755 clamav/
-chown -R root:bin clamav/
+mv wbmclamav/ clamav/
 ```
 2. Build a gzipped tarball archive:
 ```bash
