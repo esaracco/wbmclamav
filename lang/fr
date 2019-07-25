@@ -148,8 +148,8 @@ NONE=Aucun
 NOTASPAM=Ne plus considérer ces courriels comme spam
 NOTASPAM_TOOLTIP=Dire à SpamAssassin que ces courriels ne sont pas du spam
 NOT_YET_UPDATED=Aucune mise à jour de la base de données des viruses n'a encore été faite.
-NO_RESULT=<b>Pas de résultat pour "%s"</b>
-NO_RESULT_QUARANTINE=Aucun résultat pour cette recherche
+NO_RESULT=<b>Pas de résultat pour "%s"</b>.
+NO_RESULT_QUARANTINE=Aucun résultat pour cette recherche.
 NO_VALUE=Pas de valeur
 PERIOD=Période
 PERL_DEPS_ERROR=Veuillez installer les modules perl suivants à l'aide du <a href="/cpan" target="_BLANK">module Webmin CPAN</a> ou bien téléchargez-les directement sur le <a href="http://www.cpan.org/modules/01modules.index.html" target="_BLANK">site web du CPAN</a> et installez-le manuellement (lisez le fichier <a href="README.md" target="_blank">README</a> de wbmclamav pour ça) pour pouvoir utiliser cette application:

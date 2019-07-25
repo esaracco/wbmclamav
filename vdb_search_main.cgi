@@ -9,7 +9,7 @@ require './clamav-lib.pl';
 &clamav_check_acl ('database_search_search');
 &ReadParse ();
 
-my ($_success, $_error) = ('', '');
+my ($_success, $_error, $_info) = ('', '', '');
 
 &clamav_vdb_preprocess_inputs (\%in);
 
@@ -32,7 +32,7 @@ print qq(<form method="POST" action="$scriptname">);
 print &clamav_display_combos_viruses_prefixes ($in{'prefix0'}, $in{'prefix1'});
 
 # search string input
-print qq(<input type="text" name="virus" value="$in{'virus'}"/>);
+print "<input type='text' name='virus' value=\"".&clamav_html_encode($in{'virus'})."\"/>";
 
 # strict match check box
 $checked = ($in{'strict'} eq 'on') ? ' checked="checked"' : '';
@@ -56,8 +56,18 @@ print qq(</form>);
 if ($search)
 {
   print qq(<p>);
-  &clamav_vdb_search (\%in);
+  if (my $r = &clamav_vdb_search (\%in))
+  {
+    if (exists ($r->{'info'}))
+    {
+      $_info = $r->{'info'};
+    }
+    elsif ($r->{'error'})
+    {
+      $_error = $r->{'error'};
+    }
+  }
   print qq(</p>);
 }
 
-&clamav_footer ('', $text{'RETURN_INDEX_MODULE'}, $_success, $_error);
+&clamav_footer ('', $text{'RETURN_INDEX_MODULE'}, $_success, $_error, $_info);

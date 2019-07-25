@@ -896,7 +896,7 @@ sub clamav_vdb_preprocess_inputs ( $ )
 
 # clamav_vdb_search ( $ )
 # IN: script args
-# OUT: -
+# OUT: undef if result, str error otherwise.
 #
 # Do a search in ClamAV database and display the result
 # 
@@ -912,12 +912,14 @@ sub clamav_vdb_search ( $ )
   my $string = '';
   my $first = 1;
   my $grep = &has_command('grep');
+  my $ret;
 
-  return if (
-    $p1 && $p1 !~ /^[a-z]+$/i ||
-    $p2 && $p2 !~ /^[a-z]+$/i ||
-    $virus && ($virus !~ /^[a-z0-9\._\-\/:]+$/i || $virus =~ /^[\s\.]+$/)
-  );
+  if ($p1 && $p1 !~ /^[a-z]+$/i ||
+      $p2 && $p2 !~ /^[a-z]+$/i ||
+      $virus && ($virus !~ /^[a-z0-9\._\-\/:]+$/i || $virus =~ /^[\s\.]+$/))
+  {
+    return {'error' => 'Chaine incorrecte'};
+  }
 
   if ($p1)
   {
@@ -963,8 +965,10 @@ sub clamav_vdb_search ( $ )
   }
   else
   {
-    printf qq(<p>$text{'NO_RESULT'}</p>), $virus;
+    $ret = {'info' => sprintf ($text{'NO_RESULT'}, $virus)};
   }
+
+  return $ret;
 }
 
 # clamav_get_db_viruses_count ()
