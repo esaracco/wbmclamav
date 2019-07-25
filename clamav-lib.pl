@@ -876,10 +876,11 @@ sub clamav_vdb_preprocess_inputs ( $ )
     if ($r[$i])
     {
       $r[$i] = ucfirst (lc ($r[$i]));
-      if (grep (/^$r[$i]$/, @{$viruses_prefixes[$i]}))
+      my $regex = quotemeta ($r[$i]);
+      if (grep (/^$regex$/, @{$viruses_prefixes[$i]}))
       {
         $in->{"prefix$i"} = $r[$i];
-        $virus =~ s/$r[$i]\.?//i;
+        $virus =~ s/$regex\.?//i;
       }
     }
   }
