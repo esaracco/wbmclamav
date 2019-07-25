@@ -2423,7 +2423,31 @@ sub clamav_get_file_content ( $ )
   return $content;
 }
 
-#TODO Factorization
+sub _clamav_get_email_header_values ( $ \@ \% )
+{
+  my ($item, $names, $header) = @_;
+  my $i = 0;
+
+  chomp ($item);
+  $item =~ s/^H\?\?//;
+  $item =~ s/^[ ,\t]*//g;
+
+  foreach my $name (@$names)
+  {
+    if ($item =~ /^$name: /i)
+    {
+      $i++ if (!defined $header->{$name});
+      $item =~ s/^$name: //i;
+      if (!exists ($header->{$name}))
+      {
+        utf8::encode ($item) if ($_convert_utf8);
+        $header->{$name} = $item;
+      }
+      return;
+    }
+  }
+}
+
 # clamav_get_email_header_values ( $ @ )
 # IN: email file name on the disk, field to retreive value for
 # OUT: a array with requested values
@@ -2441,88 +2465,29 @@ sub clamav_get_email_header_values ( $ @ )
   # If mbox format
   if (! -f $file)
   {
-    my @f = split (/\n/, $file);
-
-    LOOP1: foreach $item (@f)
+    foreach $item (split (/\n/, $file))
     {
-      chomp ($item);
-      $item =~ s/^H\?\?//;
-      $item =~ s/^[ ,\t]*//g;
-      
-      foreach my $name (@names)
-      {
-        if ($item =~ /^$name: /i)
-        {
-          $i++ if (!defined $header{$name});
-          $item =~ s/^$name: //i;
-          if (!exists ($header{$name}))
-          {
-            utf8::encode ($item) if ($_convert_utf8);
-            $header{$name} = $item;
-          }
-	  next LOOP1;
-        }
-      }
+      &_clamav_get_email_header_values ($item, \@names, \%header);
     }
-
     return %header;
   }
 
   # Compressed file
-  if ($file =~ /\.gz$/)
+  if (substr ($file, -3) eq '.gz' && (my $gzip = gzopen ($file, 'rb')))
   {
-    my $gzip = undef;
-    
-    $gzip = gzopen ($file, 'rb');
-    LOOP2: while ($gzip->gzreadline ($item) && ($i <= $#names))
+    while ($gzip->gzreadline ($item) && ($i <= $#names))
     {
-      chomp ($item);
-      $item =~ s/^H\?\?//;
-      $item =~ s/^[ ,\t]*//g;
-      
-      foreach my $name (@names)
-      {
-        if ($item =~ /^$name: /i)
-        {
-          $i++ if (!defined $header{$name});
-          $item =~ s/^$name: //i;
-          if (!exists ($header{$name}))
-          {
-            utf8::encode ($item) if ($_convert_utf8);
-            $header{$name} = $item;
-          }
-	  next LOOP2;
-        }
-      }
+      &_clamav_get_email_header_values ($item, \@names, \%header);
     }
-
     $gzip->gzclose ();
   }
   # Uncompressed file
   elsif (open (H, '<', $file))
   {
-    LOOP3: while (defined ($item = <H>) && ($i <= $#names))
+    while (defined ($item = <H>) && ($i <= $#names))
     {
-      chomp ($item);
-      $item =~ s/^H\?\?//;
-      $item =~ s/^[ ,\t]*//g;
-
-      foreach my $name (@names)
-      {
-        if ($item =~ /^$name: /i)
-        {
-          $i++ if (!defined $header{$name});
-          $item =~ s/^$name: //i;
-          if (!exists ($header{$name}))
-          {
-            utf8::encode ($item) if ($_convert_utf8);
-            $header{$name} = $item;
-          }
-	  next LOOP3;
-        }
-      }
+      &_clamav_get_email_header_values ($item, \@names, \%header);
     }
-
     close (H);
   }
 
