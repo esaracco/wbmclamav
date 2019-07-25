@@ -1,3 +1,17 @@
+2019-07-25 Emmanuel Saracco <emmanuel@esaracco.fr>
+
+	* Version: 0.21
+
+	  Please, consider to upgrade to 0.21 as soon as possible. This release
+	  fix a lot of important bugs and Authentic Theme compatibility
+	  problems.
+
+	- Big rewrite of the entire module in order to take full advantage of
+	  the power of the Authentic theme.
+	- Added help for each feature.
+	- Removed no longer maintained translations.
+	- And as usual: a lot of debugging.
+
 2019-07-21 Emmanuel Saracco <emmanuel@esaracco.fr>
 
 	* Version: 0.20.1
