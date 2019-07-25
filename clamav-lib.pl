@@ -2626,17 +2626,15 @@ sub clamav_print_email_infos ( $ )
     $to = $header{'To'};
   }
 
-  $subject = &clamav_html_encode ($subject);
-  $from = &clamav_html_encode ($from);
-  $to = &clamav_html_encode ($to);
-
-  print qq(
-    <p><table class="clamav keys-values">
-    <tr><td>$text{'SUBJECT'}: </td><td>$subject</td><tr>
-    <tr><td>$text{'FROM'}: </td><td>$from</td><tr>
-    <tr><td>$text{'TO'}: </td><td>$to</td><tr>
-    </table></p>
-  );
+  printf (qq(
+    <p><table class="clamav keys-values" width="100%">
+    <tr><td width="1%">$text{'SUBJECT'}: </td><td>%s</td><tr>
+    <tr><td>$text{'FROM'}: </td><td>%s</td><tr>
+    <tr><td>$text{'TO'}: </td><td>%s</td><tr>
+    </table></p>),
+    &clamav_html_encode ($subject),
+    &clamav_html_encode ($from),
+    &clamav_html_encode ($to));
 }
 
 # clamav_purge_quarantine
