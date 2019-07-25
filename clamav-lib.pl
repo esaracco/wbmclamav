@@ -2617,10 +2617,30 @@ sub clamav_print_email_infos ( $ )
   # If amavisd-new or clamav-milter are installed
   else
   {
-    %header = &clamav_get_email_header_values (
-      "$config{'clamav_quarantine'}/$base",
-      qw(Subject From To)
-    );
+    my @names = qw(Subject From To);
+
+    # mbox
+    if (&clamav_is_mbox_format ())
+    {
+      my $data;
+      my $i = 0;
+      my $folder_reader = &clamav_new_mbox_parser ();
+
+      # This is the main loop. It's executed once for each email
+      while (!$folder_reader->end_of_file () && !$data)
+      {
+        my $email = $folder_reader->read_next_email ();
+        $data = $$email if ($i++ == $base);
+      }
+
+      %header = &clamav_get_email_header_values($data, @names);
+    }
+    else
+    {
+      %header = &clamav_get_email_header_values (
+        "$config{'clamav_quarantine'}/$base", @names);
+    }
+
     $subject = $header{'Subject'};
     $from = $header{'From'};
     $to = $header{'To'};
