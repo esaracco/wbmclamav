@@ -15,5 +15,4 @@ print qq(<p>$text{'QUARANTINE_VIEWMAIL_PAGE_DESCRIPTION'}</p>);
 
 &clamav_print_email ($in{'base'});
 
-print qq(<hr/>);
-&footer('quarantine_main.cgi', $text{'RETURN_QUARANTINE_LIST'});
+&clamav_footer ('quarantine_main.cgi', $text{'RETURN_QUARANTINE_LIST'});

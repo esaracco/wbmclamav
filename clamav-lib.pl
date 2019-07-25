@@ -3,6 +3,7 @@
 #
 # GNU GENERAL PUBLIC LICENSE
 
+use utf8;
 use WebminCore;
 &init_config ();
 
@@ -78,6 +79,9 @@ my %freshclam_config = ();
 
 # Clamav configuration
 my %clamav_config = ();
+
+# If current webmin locale is UTF-8
+my $_convert_utf8 = ($current_lang =~ /UTF\-8/);
 
 # Clean config inputs
 &clamav_trim_config ();
@@ -876,11 +880,10 @@ sub clamav_vdb_preprocess_inputs ( $ )
     if ($r[$i])
     {
       $r[$i] = ucfirst (lc ($r[$i]));
-      my $regex = quotemeta ($r[$i]);
-      if (grep (/^$regex$/, @{$viruses_prefixes[$i]}))
+      if (grep (/^\Q$r[$i]\E$/, @{$viruses_prefixes[$i]}))
       {
         $in->{"prefix$i"} = $r[$i];
-        $virus =~ s/$regex\.?//i;
+        $virus =~ s/\Q$r[$i]\E\.?//i;
       }
     }
   }
@@ -2420,6 +2423,7 @@ sub clamav_get_file_content ( $ )
   return $content;
 }
 
+#TODO Factorization
 # clamav_get_email_header_values ( $ @ )
 # IN: email file name on the disk, field to retreive value for
 # OUT: a array with requested values
@@ -2451,7 +2455,11 @@ sub clamav_get_email_header_values ( $ @ )
         {
           $i++ if (!defined $header{$name});
           $item =~ s/^$name: //i;
-          $header{$name} = $item if (!exists ($header{$name}));
+          if (!exists ($header{$name}))
+          {
+            utf8::encode ($item) if ($_convert_utf8);
+            $header{$name} = $item;
+          }
 	  next LOOP1;
         }
       }
@@ -2478,7 +2486,11 @@ sub clamav_get_email_header_values ( $ @ )
         {
           $i++ if (!defined $header{$name});
           $item =~ s/^$name: //i;
-          $header{$name} = $item if (!exists ($header{$name}));
+          if (!exists ($header{$name}))
+          {
+            utf8::encode ($item) if ($_convert_utf8);
+            $header{$name} = $item;
+          }
 	  next LOOP2;
         }
       }
@@ -2501,7 +2513,11 @@ sub clamav_get_email_header_values ( $ @ )
         {
           $i++ if (!defined $header{$name});
           $item =~ s/^$name: //i;
-          $header{$name} = $item if (!exists ($header{$name}));
+          if (!exists ($header{$name}))
+          {
+            utf8::encode ($item) if ($_convert_utf8);
+            $header{$name} = $item;
+          }
 	  next LOOP3;
         }
       }
@@ -2509,7 +2525,7 @@ sub clamav_get_email_header_values ( $ @ )
 
     close (H);
   }
-                                                                                
+
   return %header;
 }
 
@@ -2599,9 +2615,13 @@ sub clamav_print_email ( $ )
     $body = "\n" .
       &clamav_get_file_content ("$config{'clamav_quarantine'}/$dir/$name");
   }
+
+  $content .= $body;
+
+  utf8::encode ($content) if ($_convert_utf8);
     
   printf (qq(<textarea cols=80 rows=30>%s</textarea>\n), 
-          &clamav_html_encode ("$content$body"));
+    &clamav_html_encode ($content));
 }
 
 # clamav_print_email_infos ( $ )
@@ -3033,8 +3053,8 @@ sub clamav_print_quarantine_table_mailscanner ( $ $ $ $ $ $ $ $ $ $ $)
   $date2 = &clamav_format_date ($day2, $month2, ($year2) ? $year2 : $cyear);
 
   $virus_name =~ s/ //g;
-  $mail_from =~ s/ //g;
-  $mail_to =~ s/ //g;
+  $mail_from =~ s/^\s+|\s+$//g;
+  $mail_to =~ s/^\s+|\s+$//g;
 
   opendir (DIR, $config{'clamav_quarantine'});
   while (my $dir = readdir (DIR))
@@ -3160,8 +3180,8 @@ sub clamav_print_quarantine_table_milter ( $ $ $ $ $ $ $ $ $ $ $ )
   $date2 = &clamav_format_date ($day2, $month2, ($year2) ? $year2 : $cyear);
 
   $virus_name =~ s/ //g;
-  $mail_from =~ s/ //g;
-  $mail_to =~ s/ //g;
+  $mail_from =~ s/^\s+|\s+$//g;
+  $mail_to =~ s/^\s+|\s+$//g;
 
   opendir (DIR, $config{'clamav_quarantine'});
   while (my $dir = readdir (DIR))
@@ -3255,8 +3275,8 @@ sub clamav_print_quarantine_table_amavis_ng ( $ $ $ $ $ $ $ $ $ $ $ )
   $date2 = &clamav_format_date ($day2, $month2, ($year2) ? $year2 : $cyear);
 
   $virus_name =~ s/ //g;
-  $mail_from =~ s/ //g;
-  $mail_to =~ s/ //g;
+  $mail_from =~ s/^\s+|\s+$//g;
+  $mail_to =~ s/^\s+|\s+$//g;
 
   opendir (DIR, $config{'clamav_quarantine'});
   @files = readdir (DIR);
@@ -3476,8 +3496,8 @@ sub clamav_print_quarantine_table_amavisd_new ( $ $ $ $ $ $ $ $ $ $ $ )
   $date2 = &clamav_format_date ($day2, $month2, ($year2) ? $year2 : $cyear);
 
   $virus_name =~ s/ //g;
-  $mail_from =~ s/ //g;
-  $mail_to =~ s/ //g;
+  $mail_from =~ s/^\s+|\s+$//g;
+  $mail_to =~ s/^\s+|\s+$//g;
 
   # If mbox format
   if (&clamav_is_mbox_format ())
@@ -3556,7 +3576,6 @@ sub clamav_print_quarantine_table_amavisd_new ( $ $ $ $ $ $ $ $ $ $ $ )
       my $level = ": $header{'X-Spam-Level'}";
       ($level) = (split (/:/, $level))[1];
       $level =~ s/[ ,\n,\r]//g;
-
       next if (!&clamav_quarantine_add_row ($header{'Subject'}, '', 
         $msg, '', $level, $mail_from, $header{'From'}, $mail_to, 
 	$header{'To'}, ($mbox) ? $header{'Date'} : $mail,
@@ -3646,8 +3665,8 @@ sub clamav_print_quarantine_table_qmailscanner ( $ $ $ $ $ $ $ $ $ $ $ )
   $date2 = &clamav_format_date ($day2, $month2, ($year2) ? $year2 : $cyear);
 
   $virus_name =~ s/ //g;
-  $mail_from =~ s/ //g;
-  $mail_to =~ s/ //g;
+  $mail_from =~ s/^\s+|\s+$//g;
+  $mail_to =~ s/^\s+|\s+$//g;
 
   &get_match_files_in_dirs ($config{'clamav_quarantine'}, \@files, "\/new\/");
 
@@ -3724,13 +3743,12 @@ sub clamav_quarantine_add_row ( $ $ $ $ $ $ $ $ $ $ $ $ \@ )
   my ($subject, $url_virus, $base, $virus_name, $virus, $mail_from, $from, 
     $mail_to, $to, $file, $date1, $date2, $a) = @_;
   my $mbox = (! -f $file);
-  
+
   # Applying filters
   return 0 if (
-    ($virus_name && $virus !~ /$virus_name/i) ||
-    ($mail_from && $from !~ /$mail_from/i) ||
-    ($mail_to && $to !~ /$mail_to/i)
-  );
+    ($virus_name && $virus !~ /\Q$virus_name\E/i) ||
+    ($mail_from && $from !~ /\Q$mail_from\E/i) ||
+    ($mail_to && $to !~ /\Q$mail_to\E/i));
     
   if ($mbox)
   {
@@ -3900,16 +3918,15 @@ sub clamav_print_quarantine_table_display ( $ $ \@ $ )
   {
     $export_line = '"'.$search_type.'"';
     my %hrow = %{$arows[$i]};
+    my $subject = &clamav_html_encode ($hrow{'subject'});
+    my $from = &clamav_html_encode ($hrow{'from'});
+    my $to = &clamav_html_encode ($hrow{'to'});
+    my $virus = &clamav_html_encode ($hrow{'virus'});
 
-    my $subject = &clamav_html_encode_quotes ($hrow{'subject'}); 
-    my $from = &clamav_html_encode_quotes ($hrow{'from'}); 
-    my $to = &clamav_html_encode_quotes ($hrow{'to'}); 
-    my $virus = &clamav_html_encode_quotes ($hrow{'virus'}); 
-
-    my $subjectcsv = &clamav_escape_quotes ($hrow{'subject'}); 
-    my $fromcsv = &clamav_escape_quotes ($hrow{'from'}); 
-    my $tocsv = &clamav_escape_quotes ($hrow{'to'}); 
-    my $viruscsv = &clamav_escape_quotes ($hrow{'virus'}); 
+    my $subjectcsv = &clamav_csv_encode ($hrow{'subject'});
+    my $fromcsv = &clamav_csv_encode ($hrow{'from'});
+    my $tocsv = &clamav_csv_encode ($hrow{'to'});
+    my $viruscsv = &clamav_csv_encode ($hrow{'virus'});
 
     my $subjectc = &clamav_cut_string ($hrow{'subject'}, $STRING_MAX_LEN);
     my $fromc = &clamav_cut_string ($hrow{'from'}, $STRING_MAX_LEN);
@@ -3999,26 +4016,11 @@ sub clamav_print_quarantine_table_display ( $ $ \@ $ )
 #
 # Escape quotes in a string.
 # 
-sub clamav_escape_quotes ( $ )
+sub clamav_csv_encode ( $ )
 {
   my $str = shift;
 
   $str =~ s/"/""/g;
-
-  return $str;
-}
-
-# clamav_html_encode_quotes ( $ )
-# IN: the string to encode.
-# OUT: a encoded string.
-#
-# Encode quotes in a string.
-# 
-sub clamav_html_encode_quotes ( $ )
-{
-  my $str = shift;
-
-  $str =~ s/"/&quot;/g;
 
   return $str;
 }
@@ -4031,12 +4033,7 @@ sub clamav_html_encode_quotes ( $ )
 # 
 sub clamav_html_encode ( $ )
 {
-  my $str = shift;
-
-  $str = HTML::Entities::encode ($str);
-  $str =~ s/"/&quot;/g;
-
-  return $str;
+  return HTML::Entities::encode (shift, '<>&"\'');
 }
 
 # clamav_format_date ( $ $ $ )
@@ -4738,7 +4735,10 @@ sub clamav_display_remote_actions ($ $ $ $)
 
   require "$root_directory/$module_name/data/clamav_remote_actions.pm";
 
+  $host = &clamav_html_encode ($host);
+  $port = &clamav_html_encode ($port);
   $action ||= 'PING';
+  $arg = &clamav_html_encode ($arg);
 
   print qq(
     <table class="clamav keys-values">

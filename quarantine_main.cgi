@@ -272,17 +272,38 @@ if (!$quarantine_infos{'empty'})
     &clamav_is_mailscanner () || 
     &clamav_is_qmailscanner ()))
   {
-    print qq(<tr><td>$text{'VIRUS'}: </td><td><input type="text" name="virus_name" value="$in{'virus_name'}"></td></tr>);
+    printf (qq(
+      <tr>
+        <td>$text{'VIRUS'}: </td>
+        <td><input type="text" name="virus_name" value="%s"></td>
+      </tr>
+      ),
+      &clamav_html_encode ($in{'virus_name'})
+    );
   }
   else
   {
     print qq(<input type="hidden" name="virus_name" value="">);
   }
   
-  print qq(<tr><td>$text{'SENDER'}: </td><td><input type="text" name="mail_from" value="$in{'mail_from'}"></td></tr>
-    <tr><td>$text{'RECIPIENT'}: </td><td><input type="text" name="mail_to" value="$in{'mail_to'}"></td></tr>
-    <tr><td>$text{'PERIOD'}: </td><td colspan="2" nowrap>);
-  &clamav_get_period_chooser ($in{'day1'}, $in{'month1'}, $in{'year1'}, $in{'day2'}, $in{'month2'}, $in{'year2'});
+  printf (qq(
+    <tr>
+      <td>$text{'SENDER'}: </td>
+      <td><input type="text" name="mail_from" value="%s"></td>
+    </tr>
+    <tr>
+      <td>$text{'RECIPIENT'}: </td>
+      <td><input type="text" name="mail_to" value="%s"></td>
+    </tr>
+    <tr>
+      <td>$text{'PERIOD'}: </td>
+      <td colspan="2" nowrap>
+    ),
+    &clamav_html_encode($in{'mail_from'}),
+    &clamav_html_encode($in{'mail_to'})
+  );
+  &clamav_get_period_chooser ($in{'day1'}, $in{'month1'}, $in{'year1'},
+                              $in{'day2'}, $in{'month2'}, $in{'year2'});
   print qq(
     </td></tr>
     <tr><td colspan="2" class="control"><div><button type="submit" class="btn btn-success ui_form_end_submit" name="search"><i class="fa fa-fw fa-search"></i> <span>$text{'SEARCH'}</span></button></div></td></tr>
