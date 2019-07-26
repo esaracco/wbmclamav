@@ -1,3 +1,10 @@
+> ***IMPORTANT:***
+>
+> _We are actively looking for quarantines (mbox files or entire directories)._
+> _Please, contact me if you can share them to help this project._
+>
+> _Thanks!_
+
 <p align="center"><img src="https://wbmclamav.esaracco.fr/images/wbmclamav.png"/></p>
 
 # wbmclamav
