@@ -44,11 +44,11 @@ print qq(<h2>$text{'SIGNATURES_THIRD_STEP'}</h2>);
 print qq(<p>$text{'SIGNATURES_THIRD_STEP_DESCRIPTION'}</p>);
 
 print qq(<table class="clamav keys-values">);
-print qq(<tr><td nowrap>$text{'NAME'}: </td><td>);
+print qq(<tr><td nowrap>$text{'NAME'}: </td><td nowrap style="width:1px">);
 print &clamav_display_combos_viruses_prefixes ($in{'prefix0'}, $in{'prefix1'});
-printf qq(<input type="text" name="virus_name" value="%s" size="60"></td>), &html_escape($virus_name);
-printf qq(<tr><td nowrap>$text{'SIGNATURE'}: </td><td>%s</td>), &html_escape($sha1);
-printf qq(<tr><td nowrap>$text{'FILE_SIZE'}: </td><td>%s</td>), &html_escape($size);
+printf qq(</td><td><input type="text" name="virus_name" value="%s" size=60></td>), &html_escape($virus_name);
+printf qq(<tr><td nowrap>$text{'SIGNATURE'}: </td><td colspan=2>%s</td>), &html_escape($sha1);
+printf qq(<tr><td nowrap>$text{'FILE_SIZE'}: </td><td colspan=2>%s</td>), &html_escape($size);
 print qq(</table>);
 
 print qq(<p/><div><button type="submit" name="next3" class="btn btn-success ui_form_end_submit"><i class="fa fa-fw fa-bolt"></i> <span>$text{'SIGNATURE_CREATE'}</span></button></div>);

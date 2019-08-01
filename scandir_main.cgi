@@ -73,11 +73,11 @@ print qq(</span></p>);
 
 print qq(<p/><div><button type="submit" name="next" class="btn btn-success ui_form_end_submit"><i class="fa fa-fw fa-search"></i> <span>$text{'CHECK_DIR'}</span></button></div>);
 
-if ($scandir)
+if ($scandir == 1)
 {
   print qq(<hr>);
  
-  $_info = &clamav_scandir ($in{'what'}, 
+  ($_info, $_error) = &clamav_scandir ($in{'what'}, 
     ($in{'recursive'} eq 'on'),
     ($in{'infected'} eq 'on'),
     (($in{'move'} eq 'on')) ? $in{'move_path'} : ''

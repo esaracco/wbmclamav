@@ -20,6 +20,7 @@ my $old_search_type = $in{'old_search_type'};
 my $search_type_virus = ($search_type eq 'virus' || !$search_type);
 my $search_type_spam = ($search_type eq 'spam');
 my %quarantine_infos = ();
+my $default_tab = $in{'tab'}||'cleaning';
 
 $cp = 0 if ($old_search_type ne '');
 
@@ -29,11 +30,11 @@ if (defined($in{'resend'}))
   if ($args)
   {
     &redirect (
-      "/$module_name/quarantine_resend.cgi?" .
-      'notaspam=1&'.
-      'deleteafter=1&'.
-      'newto=1&'.
-      $args);
+      "/$module_name/quarantine_resend.cgi?tab=$default_tab".
+      '&notaspam=1'.
+      '&deleteafter=1'.
+      '&newto=1'.
+      "&$args");
   }
 
   delete $in{'resend'};
@@ -50,8 +51,9 @@ elsif (defined($in{'export'}))
 
 print qq(
   <form action="$scriptname" method="post" id="quarantine-result">
-  <input type="hidden" name="cp" value="$cp">
-  <input type="hidden" name="old_search_type" value="$search_type">);
+  <input type="hidden" name="cp" value="$cp"/>
+  <input type="hidden" name="old_search_type" value="$search_type"/>
+  <input type="hidden" name="tab" value=""/>);
 
 if (defined($in{'next'}))
 {
@@ -195,6 +197,32 @@ print qq(</table>);
 
 print qq(<p/><p>$text{'QUARANTINE_PAGE_DESCRIPTION'}</p>);
 
+# Tabs management
+my @tabs = (['cleaning', $text{'CLEANING'}]);
+if (!$quarantine_infos{'empty'})
+{
+  push @tabs, (['search', $text{'RESEARCH'}]);
+}
+else
+{
+  $default_tab = 'cleaning';
+}
+print ui_tabs_start(\@tabs, 'quarantine', $default_tab);
+print ui_tabs_start_tab('quarantine', 'cleaning');
+&_cleaning ();
+print ui_tabs_end_tab('quarantine', 'cleaning');
+
+if (!$quarantine_infos{'empty'})
+{
+  print ui_tabs_start_tab('quarantine', 'search');
+  &_search ();
+  print ui_tabs_end_tab('quarantine', 'search');
+}
+print ui_tabs_end();
+
+# Tab 1 "Cleaning"
+sub _cleaning ()
+{
 print qq(<h2>$text{'QUARANTINE_CLEANING'}</h2>);
 
 if (&clamav_get_acl ('quarantine_delete') == 1 && !$quarantine_infos{'empty'})
@@ -227,6 +255,11 @@ if (&clamav_get_acl ('quarantine_delete') == 1)
   print qq(<div><button type="submit" name="next" id="apply" class="btn btn-success ui_form_end_submit"><i class="fa fa-fw fa-check-circle-o"></i> <span>$text{'APPLY'}</span></button></div>);
 }
 
+}
+
+# Tab 2 "Search"
+sub _search ()
+{
 if (!$quarantine_infos{'empty'})
 {
   print qq(<h2>$text{'QUARANTINE_RESEARCH'}</h2>);
@@ -306,7 +339,7 @@ if (!$quarantine_infos{'empty'})
                               $in{'day2'}, $in{'month2'}, $in{'year2'});
   print qq(
     </td></tr>
-    <tr><td colspan="2" class="control"><div><button type="submit" class="btn btn-success ui_form_end_submit" name="search"><i class="fa fa-fw fa-search"></i> <span>$text{'SEARCH'}</span></button></div></td></tr>
+    <tr><td colspan="2" class="control"><div><button type="submit" onclick="document.querySelector('[name=tab]').value='search'" class="btn btn-success ui_form_end_submit" name="search"><i class="fa fa-fw fa-search"></i> <span>$text{'SEARCH'}</span></button></div></td></tr>
     </table>
     <p/>
   );
@@ -386,6 +419,8 @@ if (!$quarantine_infos{'empty'})
       }
     }
   }
+}
+
 }
 
 print qq(</form>);

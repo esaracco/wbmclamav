@@ -22,6 +22,7 @@ CHOOSE_PREFIX=Choisir préfixe
 CLAMAV_DB_FUNCTIONALITY_LEVEL=Niveau de fonctionnalité
 CLAMAV_DB_VERSION=Version
 CLAMSCAN_COMMAND=Commande exécutée
+CLEANING=Nettoyage
 COMMAND=Commande:
 DAEMON_ANSWER=Réponse du démon Clamd
 DAILY_UPDATE_DATE=Base quotidienne
@@ -186,6 +187,7 @@ RECIPIENT=Destinataire
 REMOTE_CONTROL=Contrôl distant
 REMOTE_CONTROL_DESCRIPTION=Cette section permet de contrôler à un démon ClamAV tournant sur une machine distante. Pour faire en sorte que le démon ClamAV accepte les connexions distantes il faut supprimer <code>LocalSocket</code> et définir <code>TCPAddr</code> et <code>TCPSocket</code> dans la configuration de ClamAV depuis les <a href="settings_main.cgi" target="_BLANK">préférences globales</a>.
 REPORT=Rapport
+RESEARCH=Recherche
 RESEND=Renvoyer
 RESEND_SELECTED=Renvoyer les éléments sélectionnés
 RESTORE=Restaurer

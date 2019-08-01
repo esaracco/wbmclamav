@@ -10,6 +10,7 @@ require './clamav-lib.pl';
 &ReadParse ();
 
 my ($_success, $_error) = ('', '');
+my $default_tab = $in{'tab'}||'clamav';
 
 &clamav_header ($text{'LINK_SETTINGS'});
 
@@ -64,30 +65,45 @@ else
 my $btn_class = ($add_item_c || $add_item_f ||
                  $delete_item_c || $delete_item_f) ? 'warning' : 'success';
 
-print qq(
-  <ul>
-    <li><a href="#clamav">$text{'SETTINGS_CLAMAV_TITLE'}</a></li>
-    <li><a href="#freshclam">$text{'SETTINGS_FRESHCLAM_TITLE'}</a></li>
-  </ul>
-);
+print qq(<form method="post" action="$scriptname">);
+print qq(<input type="hidden" name="tab" value="$default_tab">);
 
-print qq(<form method="POST" action="$scriptname">);
+# Tabs management
+my @tabs = (['clamav', 'ClamAV'],
+            ['freshclam', 'Freshclam']);
+print ui_tabs_start(\@tabs, 'settings', $default_tab);
+print ui_tabs_start_tab('settings', 'clamav');
+&_clamav ();
+print ui_tabs_end_tab('settings', 'clamav');
+print ui_tabs_start_tab('settings', 'freshclam');
+&_freshclam ();
+print ui_tabs_end_tab('settings', 'freshclam');
 
-print qq(<h2 id="clamav"><a href="#top"><sup><i class="fa fa-fw fa-caret-up"></i></sup></a> $text{'SETTINGS_CLAMAV_TITLE'}</h2>);
-
-if (&clamav_get_acl ('global_settings_write') == 1)
+# Tab 1 "ClamAV"
+sub _clamav ()
 {
-  print qq(<p/><div><button type="submit" name="next" class="btn btn-$btn_class ui_form_end_submit"><i class="fa fa-fw fa-check-circle-o"></i> <span>$text{'APPLY'}</span></button></div><p/>);
+  print qq(<h2>$text{'SETTINGS_CLAMAV_TITLE'}</h2>);
+
+  &clamav_display_settings ('clamav', $add_item_c, $delete_item_c);
+
+  if (&clamav_get_acl ('global_settings_write') == 1)
+  {
+    print qq(<p/><div><button type="submit" onclick="document.querySelector('[name=tab]').value='clamav'" name="next" class="btn btn-$btn_class ui_form_end_submit"><i class="fa fa-fw fa-check-circle-o"></i> <span>$text{'APPLY'}</span></button></div><p/>);
+  }
 }
-&clamav_display_settings ('clamav', $add_item_c, $delete_item_c);
 
-print qq(<h2 id="freshclam"><a href="#top"><sup><i class="fa fa-fw fa-caret-up"></i></sup></a> $text{'SETTINGS_FRESHCLAM_TITLE'}</h2>);
-
-if (&clamav_get_acl ('global_settings_write') == 1)
+# Tab 2 "Freshclam"
+sub _freshclam ()
 {
-  print qq(<p/><div><button type="submit" name="next" class="btn btn-$btn_class ui_form_end_submit"><i class="fa fa-fw fa-check-circle-o"></i> <span>$text{'APPLY'}</span></button></div><p/>);
+  print qq(<h2>$text{'SETTINGS_FRESHCLAM_TITLE'}</h2>);
+
+  &clamav_display_settings ('freshclam', $add_item_f, $delete_item_f);
+
+  if (&clamav_get_acl ('global_settings_write') == 1)
+  {
+    print qq(<p/><div><button type="submit" onclick="document.querySelector('[name=tab]').value='freshclam'" name="next" class="btn btn-$btn_class ui_form_end_submit"><i class="fa fa-fw fa-check-circle-o"></i> <span>$text{'APPLY'}</span></button></div><p/>);
+  }
 }
-&clamav_display_settings ('freshclam', $add_item_f, $delete_item_f);
 
 print qq(</form>);
 

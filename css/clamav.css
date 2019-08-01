@@ -1,3 +1,24 @@
+table.clamav input[type="text"] {
+  width:100%;
+  box-sizing: border-box;
+}
+
+table.ui_tabs {
+  margin-top:20px;
+}
+
+.tab-pane > div {
+  margin-top:20px;
+}
+
+img {
+  border:0;
+}
+
+textarea {
+  width:100%;
+}
+
 .disabled {
   opacity:.6;
   pointer-events:none;
@@ -56,6 +77,10 @@ table.clamav {
   border-collapse: collapse !important;
 }
 
+table.clamav.dyn tr:hover {
+  background:#e5e5e5;
+}
+
 table.clamav, table.clamav th, table.clamav td {
    border: 1px solid #f4f4f4 !important;
    padding:5px !important;
@@ -99,6 +124,30 @@ table.nav-panel {
 }
 
 /* from authentic theme to preserve compatiblity with old themes */
+
+.alert {
+  padding: 15px;
+  border: 1px solid transparent;
+  border-radius:5px;
+}
+
+.alert-success {
+  color: #3c763d;
+  background-color: #dff0d8;
+  border-color: #d6e9c6;
+}
+
+.alert-info {
+  color: #31708f;
+  background-color: #d9edf7;
+  border-color: #bce8f1;
+}
+
+.alert-danger {
+  color: #a94442;
+  background-color: #f2dede;
+  border-color: #ebccd1;
+}
 
 .close:hover, .close:focus {
     color: #000;

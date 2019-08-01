@@ -52,10 +52,10 @@ function checkUncheckAll (e, name, checkedText, uncheckedText)
 
 function displayMsg (msg, type, title)
 {
-  var e = document.getElementById ('clamav-msg');
+  var e = document.getElementById ('alert-msg');
 
   e.innerHTML =
-    "<button class='close' onclick='document.getElementById(\"clamav-msg\").style.display=\"none\"'>&times;</button>"+((title)?"<strong>"+title+"</strong>":'')+"<p>"+msg+"</p>";
+    "<button class='close' onclick='document.getElementById(\"alert-msg\").style.display=\"none\"'>&times;</button>"+((title)?"<strong>"+title+"</strong>":'')+"<p>"+msg+"</p>";
 
   e.className = 'alert alert-'+((type)?type:'info');
   e.style.display = 'block';

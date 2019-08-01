@@ -118,9 +118,9 @@ sub clamav_header_extra ()
 {
   my $module_version = $module_info{'version'};
 
-  print qq(<link rel="stylesheet" type="text/css" href="css/styles.css?$module_version"/>);
-  print qq(<script src="js/scripts.js?$module_version"></script>);
-  print qq(<div id="clamav-msg"></div>);
+  print qq(<link rel="stylesheet" type="text/css" href="css/clamav.css?$module_version"/>);
+  print qq(<script src="js/clamav.js?$module_version"></script>);
+  print qq(<div id="alert-msg"></div>);
 }
 
 sub clamav_display_msg ( $ $ $ )
@@ -1174,7 +1174,7 @@ sub clamav_scandir ( $ $ $ $ )
   my $move_path_option = '';
   my $recursive_option = ($clamscan !~ /clamdscan/ && $recursive) ? ' -r ' : '';
   my $tmp_file = '';
-  my $ret = '';
+  my ($info, $warning) = ('', '');
 
   return if (! -e $dir || ($move_path && !-e $move_path));
 
@@ -1191,7 +1191,7 @@ sub clamav_scandir ( $ $ $ $ )
     <tr><td>$text{'CLAMSCAN_COMMAND'}: <code>$clamscan $move_path_option $recursive_option $dir</code></td></tr>
     <tr><td>&nbsp;</td></tr>
     <tr><td align=center>
-    <table class="clamav header" width="80%">
+    <table class="clamav header dyn" width="80%">
       <tr><td colspan=3>$text{'SCAN_RESULT'}</td></tr>
   );
    
@@ -1202,6 +1202,11 @@ sub clamav_scandir ( $ $ $ $ )
   while (($line = <H>) && $line !~ /SCAN SUMMARY/)
   {
     next if ($line !~ /^([^:]+)\s*\:\s*(.*)$/ || $2 =~ /moved to|Empty file/);
+    if (substr ($2, 0, 1) eq '*')
+    {
+      $warning .= $2;
+      next;
+    }
     my ($file, $state) = ($1, $2);
     my $state_bg = '';
     my $right = '&nbsp;';
@@ -1250,7 +1255,7 @@ sub clamav_scandir ( $ $ $ $ )
 
     if ($move_path)
     {
-      $ret = qq($text{'INFECTED_FILES_WHERE_MOVED'} $move_path);
+      $info = qq($text{'INFECTED_FILES_WHERE_MOVED'} $move_path);
     }
 
     print qq(<tr><td align=center><div><button type="submit" id="btn-delete" name="delete" class="btn btn-danger btn-tiny ui_form_end_submit disabled"><i class="fa fa-fw fa-trash"></i> <span>$text{'DELETE_SELECTED'}</span></button></div></td></tr>);
@@ -1275,7 +1280,9 @@ sub clamav_scandir ( $ $ $ $ )
   
   close (H);
 
-  return $ret;
+  $warning =~ s/\*//g if ($warning);
+
+  return ($info, $warning);
 }
 
 # clamav_get_db_path ()
@@ -1898,13 +1905,13 @@ sub clamav_display_settings
   {
     &clamav_display_combo_predefined ($type, 1);
     print qq( 
-      <div style="display:inline-block"><button type="submit" name="ns${type}_add" onclick="this.form.action=(window.location.href.split('#')[0])+'#$type'" class="btn btn-default btn-tiny ui_form_end_submit"><i class="fa fa-fw fa-plus-square"></i> <span>$text{'ADD_KEY'}</span></button></div>
+      <div style="display:inline-block"><button type="submit" name="ns${type}_add" onclick="document.querySelector('[name=tab]').value='$type'" class="btn btn-default btn-tiny ui_form_end_submit"><i class="fa fa-fw fa-plus-square"></i> <span>$text{'ADD_KEY'}</span></button></div>
     );
   }
 
   my $index = 0;
   my $can_write = &clamav_get_acl ('global_settings_write');
-  print qq(<p/><table class="clamav">);
+  print qq(<p/><table class="clamav keys-values dyn" width="100%">);
   foreach $key (sort keys %$c)
   {
     next if ($key eq '');
@@ -1928,14 +1935,14 @@ sub clamav_display_settings
       {
         printf (qq(
           <td style="background:gray;color:#fff"><b>$key</b></td>
-          <td><input type="text" name="${type}_$key\[\]" size=40 value="%s"></td>), &clamav_html_encode ($val));
+          <td><input type="text" name="${type}_$key\[\]" value="%s" style="width:100%"></td>), &clamav_html_encode ($val));
       }
       # Key has value
       else
       {
         printf (qq(
           <td>$key</td>
-          <td><input type="text" name="${type}_$key\[\]" size=40 value="%s"></td>), &clamav_html_encode ($val));
+          <td><input type="text" name="${type}_$key\[\]" value="%s"></td>), &clamav_html_encode ($val));
       }
 
       if ($can_write)
@@ -1947,8 +1954,7 @@ sub clamav_display_settings
           ++$i;
         }
         print qq(
-          <td>
-            <div><button title="$text{'DELETE_ITEM'}" type="submit" name="ns${type}_delete_$key$endkey" class="btn btn-default ui_form_end_submit" onclick="this.form.action=(window.location.href.split('#')[0])+'#$type'"><i class="fa fa-fw fa-times-circle"></i></button></div></td>
+          <td style="vertical-align:middle;width:1px"><div><button title="$text{'DELETE_ITEM'}" type="submit" name="ns${type}_delete_$key$endkey" class="btn btn-default btn-tiny ui_form_end_submit" onclick="document.querySelector('[name=tab]').value='$type'"><i class="fa fa-fw fa-times-circle"></i> <span>$text{'DELETE'}</span></button></div></td>
         );
       }
 
@@ -3301,7 +3307,7 @@ sub clamav_print_quarantine_table_amavis_ng ( $ $ $ $ $ $ $ $ $ $ $ )
   return 0 if ($count <= 0);
 
   print qq(
-    <table class="clamav header">
+    <table class="clamav header dyn">
     <tr>
     <td>$text{'DATE'}</td>
     <td>$text{'SUBJECT'}</td>
@@ -3848,18 +3854,18 @@ sub clamav_print_quarantine_table_display ( $ $ \@ $ )
     if (&clamav_get_acl ('quarantine_delete') == 1)
     {
       print qq(
-        <p/><button type="submit" name="delete" class="btn btn-danger btn-tiny ui_form_end_submit"><i class="fa fa-fw fa-times-circle"></i> <span>$text{'DELETE_SELECTED'}</span></button>);
+        <p/><button type="submit" onclick="document.querySelector('[name=tab]').value='search'" name="delete" class="btn btn-danger btn-tiny ui_form_end_submit"><i class="fa fa-fw fa-times-circle"></i> <span>$text{'DELETE_SELECTED'}</span></button>);
     }
     
     if (&clamav_get_acl ('quarantine_resend') == 1)
     {
-      print qq(&nbsp;<button type="submit" name="resend" class="btn btn-info btn-tiny ui_form_end_submit"><i class="fa fa-fw fa-envelope"></i> <span>$text{'RESEND_SELECTED'}</span></button>);
+      print qq(&nbsp;<button type="submit" onclick="console.log(document.querySelector('[name=tab]'));document.querySelector('[name=tab]').value='search'" name="resend" class="btn btn-info btn-tiny ui_form_end_submit"><i class="fa fa-fw fa-envelope"></i> <span>$text{'RESEND_SELECTED'}</span></button>);
     }
     print qq(</div>);
   }
 
   print qq(
-    <p/><table class="clamav header" width="100%">
+    <p/><table class="clamav header dyn" width="100%">
     <tr>
     <td>$text{'DATE'}</td><td>$text{'SUBJECT'}</td>);
   # Spam
@@ -4729,15 +4735,15 @@ sub clamav_display_remote_actions ($ $ $ $)
     <table class="clamav keys-values">
       <tr>
         <td>$text{'HOST'}</td>
-        <td><input type="text" name="host" value="$host"></td>
+        <td colspan=2><input type="text" name="host" value="$host"></td>
       </tr>
       <tr>
         <td>$text{'PORT'}</td>
-        <td><input type="text" name="port" value="$port"></td>
+        <td colspan=2><input type="text" name="port" value="$port"></td>
       </tr>
       <tr>
         <td>$text{'COMMAND'}</td>
-        <td><select name="action" onchange="var v=this.options[this.selectedIndex].text;var a=document.getElementById('clamd-arg');var av=document.getElementById('clamd-arg-v');if(v.indexOf('*')!=-1){HTMLClassRemove(document.getElementById('clamd-arg'), 'disabled')}else{av.value='';HTMLClassAdd(document.getElementById('clamd-arg', 'disabled'))}">);
+        <td colspan=2><select name="action" onchange="var v=this.options[this.selectedIndex].text;console.log(v);var a=document.getElementById('clamd-arg');var av=document.getElementById('clamd_arg_v');if(v.indexOf('*')!=-1){HTMLClassRemove(document.getElementById('clamd-arg'), 'disabled')}else{av.value='';HTMLClassAdd(document.getElementById('clamd-arg'), 'disabled')}">);
 
   foreach my $key (sort keys %clamav_remote_actions)
   {
@@ -4756,8 +4762,8 @@ sub clamav_display_remote_actions ($ $ $ $)
     </tr>
     <tr id="clamd-arg"$class>
       <td><b>$text{'FD_TO_SCAN'}:</b></td>
-      <td nowrap><input type="text" name="arg" id="clamd-arg-v" value="$arg">);
-  print &file_chooser_button('clamd-arg-v', 1, 0);
+      <td><input type="text" name="arg" id="clamd_arg_v" value="$arg"></td><td style="width:1px">);
+  print &file_chooser_button('clamd_arg_v', 1, 0);
   print qq(</td></tr>
     </table>);
 }
