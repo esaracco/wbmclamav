@@ -155,7 +155,7 @@ OPTION_BANNED=Banned
 OPTION_SPAM=Spams
 OPTION_VIRUS=Viruses
 PERIOD=Period
-PERL_DEPS_ERROR=Please, install the following perl modules from the <a href="/cpan" target="_BLANK">Webmin CPAN module</a> or download them directly from the <a href="http://www.cpan.org/modules/01modules.index.html" target="_BLANK">CPAN web site</a> and install them manually (read wbmclamav <a href="README.md" target="_blank">README</a> file for this) in order to use this application:
+PERL_DEPS_ERROR=Please, install the following perl modules from the <a href="/cpan" target="_blank">Webmin CPAN module</a> or download them directly from the <a href="http://www.cpan.org/modules/01modules.index.html" target="_blank">CPAN web site</a> and install them manually (read wbmclamav <a href="README.md" target="_blank">README</a> file for this) in order to use this application:
 PORT=Port
 PREVIOUS=Previous
 PURGE_QUARANTINE_NOW=Purge quarantine now

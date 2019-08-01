@@ -42,6 +42,8 @@ table.keys-values tr td:first-child {
   background:#f6f6f6;
   text-align:right;
   font-weight:bold;
+  width:1px;
+  white-space:nowrap;
 }
 
 table.nokeys-values tr td:first-child {

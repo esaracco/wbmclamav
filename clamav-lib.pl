@@ -3784,7 +3784,7 @@ sub clamav_sort_by_date_quarantine_table ( $ $ )
 sub clamav_download ()
 {
   my $file = shift;
-  my $size = (stat ($file))[7];
+  my $size = -s $file;
 
   print "Content-Type: text/csv\n";
   print "Content-Length: $size\n";
@@ -4223,6 +4223,8 @@ sub clamav_check_deps ( $ )
 {
   my $from_main_page = shift;
   my $error = '';
+
+  return if (!%deps);
 
   # If no quarantine management, we do not need the following modules, so
   # remove them from the error list
