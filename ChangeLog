@@ -1,3 +1,17 @@
+2019-08-01 Emmanuel Saracco <emmanuel@esaracco.fr>
+
+	* Version: 0.21.1
+
+	  - Better management of the virus search message.
+	  - Fixed virus search string handling.
+	  - Fixed email header parser for mbox quarantaines.
+	  - Fixed encoding and escape issues.
+	  - Fixed Clamd remote control.
+	  - Local scan enhancement.
+	  - Added tabs for "Quarantine" and "Settings" sections.
+	  - Added help for viewing emails and resending them.
+	  - Alert popup enhancement for old webmin theme.
+
 2019-07-25 Emmanuel Saracco <emmanuel@esaracco.fr>
 
 	* Version: 0.21
