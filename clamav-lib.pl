@@ -1,4 +1,4 @@
-# Copyright (C) 2003-2019
+# Copyright (C) 2003-2021
 # Emmanuel Saracco <emmanuel@esaracco.fr>
 #
 # GNU GENERAL PUBLIC LICENSE
@@ -12,9 +12,9 @@ use ClamavConstants;
 
 use constant {
   # Min stable clamav version supported by this module
-  SUPPORTED_VERSION => '0.101.2',
+  SUPPORTED_VERSION => '0.102.4',
   # Min devel (Git) clamav version supported by this module
-  SUPPORTED_DEVEL_DATE => '20190326',
+  SUPPORTED_DEVEL_DATE => '20200716',
   # Max items to display/page for quarantine search result
   MAX_PAGE_ITEMS => 50,
   # Default SpamAssassin user (can be overrided by module configuration)

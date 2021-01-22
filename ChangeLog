@@ -1,3 +1,22 @@
+2021-01-22 Emmanuel Saracco <emmanuel@esaracco.fr>
+
+	* Version: 0.22
+
+	* Other:
+
+	  - Updated for new clamav 0.102.4. Old versions of ClamAV are not
+	    supported anymore.
+
+	  - Added the following clamav options:
+		OnAccessMaxThreads
+		OnAccessDenyOnError
+		OnAccessExcludeUname
+		OnAccessRetryAttempts
+	  - Removed the following clamav options:
+		ScanOnAccess
+
+	  - Some warning messages enhancement.
+
 2019-08-01 Emmanuel Saracco <emmanuel@esaracco.fr>
 
 	* Version: 0.21.1
