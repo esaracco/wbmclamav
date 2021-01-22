@@ -4235,7 +4235,6 @@ sub clamav_footer ( $ $ $ $ $ $)
 sub clamav_check_deps ( $ )
 {
   my $from_main_page = shift;
-  my $error = '';
 
   return if (!%deps);
 
@@ -4274,11 +4273,17 @@ sub clamav_check_deps ( $ )
 
   return if (!%deps);
                                                                                 
-  $error = qq($text{'PERL_DEPS_ERROR'}<p/>);
-  $error .= qq(<ul>);
+  my $error = qq($text{'PERL_DEPS_ERROR'}<p/><ul>);
   while (my ($k, $v) = each (%deps))
   {
-    $error .= qq(<li><b>$k</b></li>);
+    my $more = '';
+
+    if ($k eq 'Mail::SpamAssassin')
+    {
+      $more = qq(($text{'PERL_DEPS_MORE_SA'}));
+    }
+
+    $error .= qq(<li><b>$k</b> <i>$more</i></li>);
   }
   $error .= qq(</ul>);
   
