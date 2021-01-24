@@ -80,9 +80,6 @@ my %freshclam_config = ();
 # Clamav configuration
 my %clamav_config = ();
 
-# If current webmin locale is UTF-8
-my $_convert_utf8 = ($current_lang =~ /UTF\-8/);
-
 # Clean config inputs
 &clamav_trim_config ();
 
@@ -2453,7 +2450,7 @@ sub _clamav_get_email_header_values ( $ \@ \% )
       $item =~ s/^$name: //i;
       if (!exists ($header->{$name}))
       {
-        utf8::encode ($item) if ($_convert_utf8);
+        utf8::encode ($item);
         $header->{$name} = $item;
       }
       return;
@@ -2596,7 +2593,7 @@ sub clamav_print_email ( $ )
 
   $content .= $body;
 
-  utf8::encode ($content) if ($_convert_utf8);
+  utf8::encode ($content);
     
   printf (qq(<textarea cols=80 rows=30>%s</textarea>\n), 
     &clamav_html_encode ($content));
