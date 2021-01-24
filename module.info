@@ -1,5 +1,5 @@
 name=clamav
-version=0.22
+version=0.22.1
 category=system
 desc=ClamAV Antivirus
 desc_fr=Antivirus ClamAV
