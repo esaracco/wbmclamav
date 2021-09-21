@@ -61,7 +61,7 @@ HOMEPAGE=Homepage
 HOST=Host
 HOUR=Hour
 I/O_BUFFER_SIZE=I/O buffer size
-INDEX_PAGE_DESCRIPTION=The <a href="http://www.clamav.net" target="_BLANK">ClamAV Antivirus</a> protects you from most viruses (worms, Trojan horses, polymorphics etc). Used in conjunction with content scanners like <a href="http://www.amavis.org" target="_BLANK">amavisd-new</a>, <a href="http://www.mailscanner.info/" target="_BLANK">MailScanner</a>, <a href="http://qmail-scanner.sourceforge.net/" target="_BLANK">Qmail-Scanner</a> or ClamAV-Milter, it moves infected E-Mails in quarantine. Its signatures database must be updated pretty often (this base contains identification strings of almost every known viruses).
+INDEX_PAGE_DESCRIPTION=The <a href="https://www.clamav.net" target="_BLANK">ClamAV Antivirus</a> protects you from most viruses (worms, Trojan horses, polymorphics etc). Used in conjunction with content scanners like <a href="http://www.amavis.org" target="_BLANK">amavisd-new</a>, <a href="http://www.mailscanner.info/" target="_BLANK">MailScanner</a>, <a href="http://qmail-scanner.sourceforge.net/" target="_BLANK">Qmail-Scanner</a> or ClamAV-Milter, it moves infected E-Mails in quarantine. Its signatures database must be updated pretty often (this base contains identification strings of almost every known viruses).
 INFECTED_FILES=Infected files
 INFECTED_FILES_WHERE_MOVED=Infected files have been moved to:
 KNOWN_VIRUSES=Known viruses

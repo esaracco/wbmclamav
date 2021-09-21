@@ -62,7 +62,7 @@ HOMEPAGE=Accueil
 HOST=Machine
 HOUR=Heure
 I/O_BUFFER_SIZE=Taille du tampon des E/S
-INDEX_PAGE_DESCRIPTION=<a href="http://www.clamav.net" target="_BLANK">ClamAV Antivirus</a> vous protège de la majeure partie des virus (vers, chevaux de troie, polymorphes etc.). Associé à des scanners de contenu comme <a href="http://www.amavis.org" target="_BLANK">amavisd-new</a>, <a href="http://www.mailscanner.info/" target="_BLANK">MailScanner</a>, <a href="http://qmail-scanner.sourceforge.net/" target="_BLANK">Qmail-Scanner</a> ou ClamAV-Milter, il permet de détecter les courriels infectés pour les mettre en quarantaine. Sa base de signatures doit être mise à jour régulièrement (cette base contient les chaînes d'identification propres à chaque virus connu).
+INDEX_PAGE_DESCRIPTION=<a href="https://www.clamav.net" target="_BLANK">ClamAV Antivirus</a> vous protège de la majeure partie des virus (vers, chevaux de troie, polymorphes etc.). Associé à des scanners de contenu comme <a href="http://www.amavis.org" target="_BLANK">amavisd-new</a>, <a href="http://www.mailscanner.info/" target="_BLANK">MailScanner</a>, <a href="http://qmail-scanner.sourceforge.net/" target="_BLANK">Qmail-Scanner</a> ou ClamAV-Milter, il permet de détecter les courriels infectés pour les mettre en quarantaine. Sa base de signatures doit être mise à jour régulièrement (cette base contient les chaînes d'identification propres à chaque virus connu).
 INFECTED_FILES=Fichiers infectés
 INFECTED_FILES_WHERE_MOVED=Les fichiers infectés ont été déplacés dans:
 KNOWN_VIRUSES=Virus connus
