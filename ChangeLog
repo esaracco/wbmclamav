@@ -1,3 +1,21 @@
+2021-09-21 Emmanuel Saracco <emmanuel@esaracco.fr>
+
+	* Version: 0.23
+
+	* Other:
+
+	  - Updated for new clamav 0.103.3. Old versions of ClamAV are not
+	    supported anymore.
+
+	  - Added the following clamav options:
+		ConcurrentDatabase
+		ReloadAlertBrokenMedia
+		StructuredCCOnly
+		MaxScanTime
+		BytecodeUnsigned
+	  - Removed the following freshclam options:
+		SafeBrowsing
+
 2021-01-24 Emmanuel Saracco <emmanuel@esaracco.fr>
 
 	* Version: 0.22.1

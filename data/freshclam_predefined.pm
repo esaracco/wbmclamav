@@ -36,7 +36,6 @@
   'ConnectTimeout' => 1,
   'ReceiveTimeout' => 1,
   'TestDatabases' => 0,
-  'SafeBrowsing' => 0,
   'Bytecode' => 0,
   'ExtraDatabase' => 2,
   'ExcludeDatabase' => 2

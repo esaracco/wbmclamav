@@ -12,9 +12,9 @@ use ClamavConstants;
 
 use constant {
   # Min stable clamav version supported by this module
-  SUPPORTED_VERSION => '0.102.4',
+  SUPPORTED_VERSION => '0.103.3',
   # Min devel (Git) clamav version supported by this module
-  SUPPORTED_DEVEL_DATE => '20200716',
+  SUPPORTED_DEVEL_DATE => '20210621',
   # Max items to display/page for quarantine search result
   MAX_PAGE_ITEMS => 50,
   # Default SpamAssassin user (can be overrided by module configuration)
