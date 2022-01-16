@@ -1,3 +1,11 @@
+2022-01-16 Emmanuel Saracco <emmanuel@esaracco.fr>
+
+	* Version: 0.23.1
+
+	* Other:
+
+	  - Fix CSS warning (#7).
+
 2021-09-21 Emmanuel Saracco <emmanuel@esaracco.fr>
 
 	* Version: 0.23
