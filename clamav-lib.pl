@@ -1,4 +1,4 @@
-# Copyright (C) 2003-2021
+# Copyright (C) 2003-2022
 # Emmanuel Saracco <emmanuel@esaracco.fr>
 #
 # GNU GENERAL PUBLIC LICENSE
@@ -115,8 +115,8 @@ sub clamav_header_extra ()
 {
   my $module_version = $module_info{'version'};
 
-  print qq(<link rel="stylesheet" type="text/css" href="css/clamav.css?$module_version"/>);
-  print qq(<script src="js/clamav.js?$module_version"></script>);
+  print qq(<link rel="stylesheet" href="/$module_name/css/clamav.css?$module_version"/>);
+  print qq(<script src="/$module_name/js/clamav.js?$module_version"></script>);
   print qq(<div id="alert-msg"></div>);
 }
 
