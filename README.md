@@ -1,3 +1,10 @@
+⚠️ This project has been archived
+
+wbmclamav is no longer maintained.
+
+This repository remains available for historical reference.
+---------------------------------
+
 > ***IMPORTANT:***
 >
 > _We are actively looking for quarantines (mbox files or entire directories)._
